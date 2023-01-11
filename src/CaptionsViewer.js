@@ -48,7 +48,7 @@ export class CaptionsViewer extends HTMLElement {
       color: hsla(var(--base), 40%, 80%, .8);
     }
     .active {
-      font-size: 110%;
+      font-size: 115%;
     }
       .active .timecode, .active .chapter {
         color: hsla(var(--base), 50%, 80%, 1);
