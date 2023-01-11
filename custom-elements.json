@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "1.0.0",
+  "readme": "",
+  "modules": [
+    {
+      "kind": "javascript-module",
+      "path": "captions-viewer.js",
+      "declarations": [],
+      "exports": [
+        {
+          "kind": "custom-element-definition",
+          "name": "captions-viewer",
+          "declaration": {
+            "name": "CaptionsViewer",
+            "module": "/src/CaptionsViewer.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "index.js",
+      "declarations": [],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "CaptionsViewer",
+          "declaration": {
+            "name": "CaptionsViewer",
+            "module": "./src/CaptionsViewer.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/CaptionsViewer.js",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "CaptionsViewer",
+          "members": [
+            {
+              "kind": "method",
+              "name": "__increment"
+            },
+            {
+              "kind": "field",
+              "name": "title",
+              "privacy": "public",
+              "type": {
+                "text": "string"
+              },
+              "default": "'Hey there'",
+              "attribute": "title"
+            },
+            {
+              "kind": "field",
+              "name": "counter",
+              "privacy": "public",
+              "type": {
+                "text": "number"
+              },
+              "default": "5",
+              "attribute": "counter"
+            }
+          ],
+          "attributes": [
+            {
+              "name": "title",
+              "type": {
+                "text": "string"
+              },
+              "default": "'Hey there'",
+              "fieldName": "title"
+            },
+            {
+              "name": "counter",
+              "type": {
+                "text": "number"
+              },
+              "default": "5",
+              "fieldName": "counter"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "tagName": "captions-viewer",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "CaptionsViewer",
+          "declaration": {
+            "name": "CaptionsViewer",
+            "module": "src/CaptionsViewer.js"
+          }
+        }
+      ]
+    }
+  ]
+}

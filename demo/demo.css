@@ -1,0 +1,124 @@
+* {
+  box-sizing:border-box;
+}
+body {
+  padding: .5em 1em;
+  color: white;
+  font-family: sans-serif;
+  background-color:#999eff;
+  min-height: 100vh;
+  background-image:
+  radial-gradient(at 66% 53%, hsla(298,68%,21%,1) 0px, transparent 50%),
+  radial-gradient(at 28% 94%, hsla(198,68%,21%,1) 0px, transparent 50%),
+  radial-gradient(at 72% 1%, hsla(305,68%,21%,1) 0px, transparent 50%),
+  radial-gradient(at 85% 5%, hsla(260,68%,21%,1) 0px, transparent 50%),
+  radial-gradient(at 8% 20%, hsla(278,68%,21%,1) 0px, transparent 50%),
+  radial-gradient(at 54% 38%, hsla(94,68%,21%,1) 0px, transparent 50%),
+  radial-gradient(at 94% 82%, hsla(328,68%,21%,1) 0px, transparent 50%);  
+}
+a {
+  color:white;
+}
+.container {
+  max-width: 1000px;
+  margin: 2em auto;
+}
+
+/*** Styles inside the Component ***/
+livestream-wrapper {
+  background:rgba(0,0,0,0.1);
+  display: block;
+  border-radius: 10px;
+}
+.landing {
+  justify-content: center;
+  border-radius: 10px;
+}
+.landing button {
+  font-size: 2em;
+  background: rgba(0,0,0,.3);
+  border: none;
+  color: white;
+  padding: 1.5em 1.2em;
+  border-radius: 50%;
+  box-shadow: 0 0 50px 10px rgba(0,0,0,.3);
+}
+.landing button:hover {
+  cursor: pointer;
+  background: rgba(31, 17, 30, 0.8)
+}
+.landing button:active {
+  box-shadow: 0 0 50px 7px rgba(0,0,0,.2);
+  background: rgba(28, 15, 28, 0.9)
+}
+.playerblock {
+  display: flex;
+  aspect-ratio: 16/9;
+  background: rgba(0,0,0,.3);
+  align-items: center;
+  border-radius: 10px;
+}
+.start, .end {
+  padding: 2em;
+}
+.start {
+  line-height: 1.5em;
+}
+
+fieldset {
+  margin: 1em 0;
+  border:1px solid rgba(0,0,0,.1);
+  padding: .8em;
+  border-radius: 5px;
+  display: flex;
+  align-items: stretch;
+  gap: 1em;
+}
+
+input {
+  appearance: none;
+  border: 0;
+  color: white;
+  padding: .5em 1em;
+  border-radius: 5px;
+  background: rgba(255,255,255, .2);
+  outline: rgba(255,255,255.5);
+}
+input[type="datetime-local"] {
+  font-family: sans-serif;
+}
+input:hover, input:active, input:focus {
+  cursor: pointer;
+  background: rgba(255,255,255, .4);  
+  outline: 1px solid rgba(255,255,255, .5);
+}
+button {
+  appearance: none;
+  border: 0;
+  color: white;
+  padding: .5em 1em;
+  border-radius: 5px;
+  background: rgba(255,255,255, .2);  
+}
+button:hover, button:active, button:focus {
+  cursor: pointer;
+  background: rgba(255,255,255, .4);
+  outline: 1px solid rgba(255,255,255, .5);
+}
+fieldset label {
+  background: rgba(255,255,255, .2);
+  border-radius: 5px;
+  font-weight: bold;
+  padding: .5em 1em;
+}
+fieldset label:hover {
+  background: rgba(255,255,255, .5);
+  cursor: pointer;
+}
+
+fieldset input:checked + label {
+  background: rgba(255,255,255, .5);
+}  
+fieldset input[type=radio] {
+  display: none;
+}
