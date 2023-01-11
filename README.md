@@ -11,7 +11,7 @@ Example connecting a native video tag to the component;
 ```html
 <video controls src="video.mp4"></video>
 
-<captions-viewer file="caption.vtt">
+<captions-viewer file="caption.vtt"></caption-viewer>
 
 <script type="module" src="../../captions-viewer.js"></script>
 <script>
@@ -41,12 +41,13 @@ component.addEventListener('seek', e => {
 
 |  Name | Default | Description |
 | - | - | - |
-| `file` | null | (required) Location of the vtt file. |
-| `height` | 300px | Height of the scrolling box.  Valid CSS unit. |
-| `singleline` | false | True will show all text for a cue on a single line.  False will obey the line breaks in the caption file. |
-| `playhead` | 0 | The time the player is at, in seconds.  Used to keep the player and reader in-sync. (see more below) |
-| `debounce` | 5000 | Control the time between scrolling. Time in ms between the last scroll (user or automatic) |
-| `disable` | empty | Turn off displaying `timecode` `chapters` or `text`. Use a `|` between each option, such as `timecode|chapters` |
+| `file`       | null   | (required) Location of the vtt/srt file. |
+| `height`     | 300px  | Height of the scrolling box.  Valid CSS unit. |
+| `singleline` | false  | True will show all text for a cue on a single line.  False will obey the line breaks in the caption file. |
+| `playhead`   | 0      | The time the player is at, in seconds.  Used to keep the player and reader in-sync. (see more below) |
+| `debounce`   | 5000   | Control the time between scrolling. Time in ms between the last scroll (user or automatic) |
+| `disable`    | empty  | Turn off displaying `timecode` `chapters` or `text`. Use a `|` between each option, such as `timecode|chapters` |
+| `color` | 360 | The Hue (0-360) of the base color to use.  This is put into an hsla color. |
 
 ## Methods
 

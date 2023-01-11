@@ -45,17 +45,17 @@ export class CaptionsViewer extends HTMLElement {
       background: hsla(var(--base), 60%, 70%, .1);
     }
     .pending {
-      
-      color: hsla(var(--base), 100%, 80%, .8);
+      color: hsla(var(--base), 40%, 80%, .8);
     }
     .active {
-      font-size: 115%;
+      font-size: 110%;
     }
       .active .timecode, .active .chapter {
         color: hsla(var(--base), 50%, 80%, 1);
       }
       .active .text, .active .chapter {
         color: hsla(var(--base), 0%, 100%, 1);
+        font-weight: bold;
       }
     .disabled {
       color: hsla(var(--base), 20%, 80%, .9);

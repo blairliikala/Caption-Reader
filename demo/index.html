@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="demo.css" rel="stylesheet" type="text/css">
-  <script src="https://kit.fontawesome.com/41aa90cc96.js" crossorigin="anonymous"></script>  
   <style>
+    /* Hides the component until it has loaded */
     captions-viewer:not(:defined) {
       visibility: hidden
     }
@@ -15,7 +15,7 @@
       border-radius: 5px;
       font-family: arial;
       display: block;
-      background: rgba(0,0,0,.1)
+      background: rgba(0,0,0,.2)
     }
   </style>    
 </head>
@@ -31,11 +31,10 @@
       height="30vw"
       singleline="true"
       color="300"
-      disable="chapters|timecode"
     >
     </captions-viewer>
 
-    <button id="pause" type="button">Toggle Caption Reading</button>
+    <button id="pause" type="button" title="Turns the UI updates on/off">Toggle Caption Reading</button>
 
     <fieldset id="lang_change">
       <legend>Language</legend>
@@ -44,17 +43,18 @@
         <input type="radio" id="es" name="language" value="dune_es.vtt" />
         <label for="es">Spanish</label>
         <input type="radio" id="fr" name="language" value="dune_fr.vtt" />
-        <label for="fr"> French</label>
+        <label for="fr">French</label>
     </fieldset>
 
     <fieldset>
       <legend>Toggle</legend>
-      <button type="button" id="toggleTimecode">Timecode</button>
-      <button type="button" id="toggleChapters">Chapters</button>
-      <button type="button" id="toggleText">Text</button>
-      <button type="button" id="toggleSingleLine">Single Line</button>
+      <button type="button" id="toggleTimecode" title="Turn on/off timecode">Timecode</button>
+      <button type="button" id="toggleChapters" title="Turn on/off chapters (might not be any)">Chapters</button>
+      <button type="button" id="toggleText" title="Toggle the cue text.">Text</button>
+      <button type="button" id="toggleSingleLine" title="Put the cue text on a single line or not, ignoring the caption file.">Single Line</button>
     </fieldset>
-
+    
+    <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
   </main>
 
   <script type="module" src="../../captions-viewer.js"></script>
