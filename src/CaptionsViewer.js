@@ -233,6 +233,9 @@ export class CaptionsViewer extends HTMLElement {
   get disable() {
     return this.#disable;
   }
+  get theme() {
+    return this.#theme;
+  } 
 
   connectedCallback() {
     this.#init();
@@ -664,7 +667,7 @@ export class CaptionsViewer extends HTMLElement {
   }
 
   setTheme(userPreference) {
-    const theme = CaptionsViewer.getTheme(userPreference || '');
+    const theme = CaptionsViewer.getTheme(userPreference || this.#theme || '');
     this.#theme = theme;
     this.#divs.root.dataset.theme = theme;
   }
