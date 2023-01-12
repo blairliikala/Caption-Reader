@@ -8,8 +8,9 @@ export class CaptionsViewer extends HTMLElement {
   #height = '300px';
   #debounce = 0; // In seconds how long to
   #singleline = false;
-  #color = '';
-  #disable = {};
+  #color = ''; // Base 360 color for text.
+  #disable = {}; // What vtt properties to disable, uses |
+  #theme = ''; // blank/light or dark.  Dark shows lighter text.
 
   // Internal
   #captions = {}; // Array of the vtt cues.
@@ -20,8 +21,9 @@ export class CaptionsViewer extends HTMLElement {
   css = `<style>
     #root {
       scroll-behavior: smooth;
-      height: ${this.#height};
+      height: 300px;
       overflow-y: scroll;
+      overflow-x: hidden;
       scroll-snap-stop: always;
       position: relative;
       padding: .5rem;
@@ -32,37 +34,99 @@ export class CaptionsViewer extends HTMLElement {
       margin: 0;
     }
     li {
-      margin: 0;
-      padding: 0.3rem;
+      list-style:none;
+      width: 100%;
+    }
+    .cue {
+      border: none;
+      font: inherit;
+      padding: 0.4rem;
       display: flex;
       gap: 1rem;
       list-style: none;
-      color: hsla(var(--base), var(--sat)%, 50%, 1);
-      transition: color 0.2s ease, font-size .3s ease;
+      transform: scale(1);
+      transform-origin: left;
+      color: hsla(var(--base), 20%, 40%, .9);
+      transition: color 0.3s ease, font-size .2s ease, transform .1s ease;
+      background: none;
+      width: 100%;
+      text-align: start;
     }
-    li:hover {
+    .cue:hover, .cue:active, .cue:focus-visible {
       cursor: pointer;
       background: hsla(var(--base), 60%, 70%, .1);
+      outline: 1px solid hsla(var(--base), 60%, 50%, .1);
+      color: hsla(var(--base), 10%, 20%, 1);
     }
-    .pending {
-      color: hsla(var(--base), 40%, 80%, .8);
+    .upcoming, .upcoming:focus-visable {
+      color: hsla(var(--base), 20%, 60%, .7);
+      transform: scale(1);
+      transform-origin: left;
+    }
+    .next, .next:focus-visable {
+      color: hsla(var(--base), 20%, 40%, .9);
+      transform: scale(1);
+      transform-origin: left;
     }
     .active {
-      font-size: 115%;
+      transform: scale(1.2);
+      transform-origin: left;
     }
       .active .timecode, .active .chapter {
-        color: hsla(var(--base), 50%, 80%, 1);
+        color: hsla(var(--base), 50%, 30%, 1);
       }
       .active .text, .active .chapter {
-        color: hsla(var(--base), 0%, 100%, 1);
+        color: hsla(var(--base), 0%, 30%, 1);
         font-weight: bold;
       }
-    .disabled {
-      color: hsla(var(--base), 20%, 80%, .9);
-      font-size: 110%;
+    .passed, .passed:focus-visable  {
+      color: hsla(var(--base), 20%, 60%, .7);
+      transform: scale(1);
+      transform-origin: left;
     }
-    .passed {
-      color: hsla(var(--base), 10%, 80%, .8);
+    .spacer .text {
+      color: hsla(var(--base), 20%, 60%, .5);
+      letter-spacing: 5px;
+      font-weight: bold;
+    }
+
+
+    [data-theme="dark"] .cue {
+      color: hsla(var(--base), 10%, 80%, .7);
+    }
+    [data-theme="dark"] .cue:hover, .cue:active, .cue:focus-visible {
+      background: hsla(var(--base), 60%, 70%, .1);
+      outline: 1px solid hsla(var(--base), 60%, 50%, .1);
+      color: hsla(var(--base), 0%, 100%, 1);
+    }
+    [data-theme="dark"] .upcoming, .upcoming:focus-visable {
+      color: hsla(var(--base), 10%, 80%, .7);
+    }
+    [data-theme="dark"] .next, .next:focus-visable {
+      color: hsla(var(--base), 20%, 80%, .9);
+    }
+    [data-theme="dark"] .active .timecode,
+    [data-theme="dark"] .active .chapter
+      {
+        color: hsla(var(--base), 50%, 80%, 1);
+      }
+      [data-theme="dark"] .active .text,
+      [data-theme="dark"] .active .chapter
+      {
+        color: hsla(var(--base), 0%, 100%, 1);
+      }
+
+    [data-theme="dark"] .previous, .previous:focus-visable {
+      color: hsla(var(--base), 20%, 80%, .9);
+    }
+    [data-theme="dark"] .passed, .passed:focus-visable {
+      color: hsla(var(--base), 10%, 80%, .7);
+    }
+
+    @media (prefers-reduced-motion) {
+      .active, .previous {
+        font-size: unset;
+      }
     }
   </style>`;
 
@@ -112,6 +176,13 @@ export class CaptionsViewer extends HTMLElement {
   set disable(item) {
     this.setAttribute('disable', item);
   }
+  set debounceScrolling(item) {
+    if (typeof item != "boolean") {
+      console.warn('debounceScrolling must be a boolean.');
+      return;
+    }
+    this.#debounceScrolling = item;
+  }
 
   get file() {
     return this.#file;
@@ -127,7 +198,7 @@ export class CaptionsViewer extends HTMLElement {
   }
   get singleline() {
     return this.#singleline;
-  } 
+  }
   get height() {
     return this.#height;
   }
@@ -136,7 +207,7 @@ export class CaptionsViewer extends HTMLElement {
   }
   get disable() {
     return this.#disable;
-  } 
+  }
 
   connectedCallback() {
     this.#init();
@@ -153,7 +224,7 @@ export class CaptionsViewer extends HTMLElement {
 
     template.innerHTML = `
       ${this.css}
-      <section id="root"><slot name="cue"></slot></section>
+      <section id="root" data-theme="" ><slot name="cue"></slot></section>
     `;
 
     const html = template.content.cloneNode(true);
@@ -162,18 +233,13 @@ export class CaptionsViewer extends HTMLElement {
 
     this.#divs = {
       root: this.shadowRoot?.querySelector('#root'),
-      /*
-      cue: this.shadowRoot?.querySelector('slot[name=cue]'),
-      time: this.querySelector('[data-timecode]'),
-      text: this.querySelector('[data-text]'),
-      */
     };
 
     this.#divs.root.addEventListener('click', e => {
       // Mozilla has explicitOriginalTarget, but not path.
       const elm = 'explicitOriginalTarget' in e ? e.explicitOriginalTarget : e.path[0];
-      const div = elm.closest('li');
-      if (div.localName === 'li') {
+      const div = elm.closest('button');
+      if ('localName' in div && div.localName === 'button') {
         const index = div.dataset.index;
         const seconds = this.#captions.cues[index].seconds.start;
         this.#event('seek', seconds);
@@ -195,9 +261,10 @@ export class CaptionsViewer extends HTMLElement {
     this.#playhead = this.getAttribute('playhead') || 0;
     this.#height   = this.getAttribute('height') || '400px';
     this.#debounce = parseInt(this.getAttribute('debounce')) || 5000;
-    this.#singleline = (this.getAttribute('singleline') === 'true') || false;
+    this.#singleline = (this.getAttribute('singleline') === true) || false;
     this.#color    = this.getAttribute('color');
     this.#disable  = this.getAttribute('disable') || null;
+    this.#theme    = this.getAttribute('theme') || '';
     const styles   = this.getAttribute('styles'); // Full replacement of css.
 
     if (!this.#file) {
@@ -205,6 +272,8 @@ export class CaptionsViewer extends HTMLElement {
       this.#event('error', 'The file parameter pointing to a VTT or SRT file is required.');
       return;
     }
+
+    this.setTheme();
 
     if (this.#height !== '400px') {
       this.#divs.root.style.height = this.#height;
@@ -216,14 +285,15 @@ export class CaptionsViewer extends HTMLElement {
 
     if (styles) {
       const existing = this.shadowRoot?.querySelector('style');
-      existing.innerHTML = `<style>${styles}</style>`;
-    }    
+      existing.innerHTML += `${styles}`;
+    }
 
     const fileContents = await fetch(this.#file).then(response => response.text()); // TODO more on this.
 
     this.#captions = this.parseVTT(fileContents);
+    this.#addCueSpaces(this.#captions.cues);
     this.#setCuesStatus();
-    console.log(this.#captions); // TODO remove.
+    //console.log(this.#captions); // TODO remove.
 
     if (!this.querySelector('#cue')) {
       this.#showCaptions();
@@ -237,6 +307,24 @@ export class CaptionsViewer extends HTMLElement {
     this.#playhead = playhead;
     this.#setCuesStatus();
     const index = this.#captions.cues?.findIndex(cue => cue.status === 'active');
+    const activeCues = this.#captions.cues?.filter(cue => cue.status === 'active');
+
+    // Clear other Progress bar.
+    const progressbars = this.#divs.root.querySelectorAll('[data-progress]');
+    if (progressbars) {
+      [...progressbars].map(bar => bar.value = 0);
+    }
+
+    // Update progress bar.
+    this.#captions.cues.forEach((cue,index) => {
+      if (cue.type === 'spacer' && cue.status === 'active') {
+        let progValue = Math.round(this.#playhead - cue.seconds.start);
+        //progValue = progValue > 0 ? progValue : 0; // Keep postive number or 0
+        const progress = this.#divs.root.querySelector(`[data-progress="${index}"]`);
+        if (progress) progress.value = progValue;
+      }
+    })
+
     if (index !== this.#currentCue) {
       this.#currentCue = index;
       this.#updateCaption();
@@ -248,7 +336,7 @@ export class CaptionsViewer extends HTMLElement {
     if (!this.#captions) return;
     const disabled = this.#disable ? this.#disable.split('|') : [];
     this.#divs.root.innerHTML = '';
-    let html = '<ol>';
+    let html = '<ol tabindex="0">';
     this.#captions.cues.forEach( (cue, index) => {
       if (cue.timecode) {
         const styleName = cue.status;
@@ -256,8 +344,15 @@ export class CaptionsViewer extends HTMLElement {
         const chapter = cue.chapter ? `<span class="chapter">${cue.chapter}</span>` : '';
         //const text = `<span class="text">`+cue.text.map(line => `${line}<br />`).join('')+`</span>`;
         const textJoiner = this.#singleline ? " " : "<br />";
+
+        let spacerProgress = '';
+        if (cue.type === 'spacer') {
+          let progMax = Math.round(cue.seconds.end - cue.seconds.start);
+          spacerProgress = `<progress max="${progMax}" value="0" data-progress="${index}"></progress>`;
+        }
+
         const text = `<span class="text">`+cue.text.join(textJoiner)+`</span>`;
-        html += `<li class="${styleName}" data-index="${index}">${!disabled.includes('timecode') ? timecode : ''} ${!disabled.includes('chapters') ? chapter : ''} ${!disabled.includes('text') ? text : ''}</li>`;
+        html += `<li><button type="button" tabindex="${index + 1}" class="cue ${styleName} ${cue.type || ''}" data-index="${index}">${!disabled.includes('timecode') && cue.type !== 'spacer' ? timecode : ''} ${!disabled.includes('chapters') ? chapter : ''} ${!disabled.includes('text') ? text : ''} ${spacerProgress}</button></li>`;
       }
     })
     html += '</ol>';
@@ -301,7 +396,7 @@ export class CaptionsViewer extends HTMLElement {
     divs.forEach( (item) => {
       const index = item.dataset.index;
       const cue = this.#captions.cues[index];
-      item.classList.remove('active', 'pending', 'passed', 'disabled');
+      item.classList.remove('upcoming', 'next', 'active', 'previous', 'passed');
       item.classList.add(cue.status);
     });
   }
@@ -314,7 +409,7 @@ export class CaptionsViewer extends HTMLElement {
         cue.status = 'passed';
       }
       if (cue.seconds.start > this.#playhead) {
-        cue.status = 'pending';
+        cue.status = 'upcoming';
       }
       if (cue.seconds.start < this.#playhead && cue.seconds.end > this.#playhead) {
         cue.active = true;
@@ -323,18 +418,20 @@ export class CaptionsViewer extends HTMLElement {
       return cue;
     })
 
-    const active = this.#captions.cues.filter(cue => cue.status === 'active');
+    //const active = this.#captions.cues.filter(cue => cue.status === 'active');
+    const passed = this.#captions.cues.filter(cue => cue.status === 'passed');
 
-    // no active cue, so mark last one as disabled.
-    if (!active || active.length === 0) {
-      const passed = this.#captions.cues.filter(cue => cue.status === 'passed');
-      if (passed && passed.length > 0) {
-        const lastCue = passed[passed.length -1];
-        lastCue.status = 'disabled';
-        const index = this.#captions.cues.findIndex(cue => cue.text === lastCue.text);
-        this.#captions.cues[index] = lastCue;
-      }
+    // Mark the upcoming cue.
+    const upcomingIndex = this.#captions.cues.findIndex(cue => cue.status === 'upcoming');
+    if (upcomingIndex > 0) {
+      this.#captions.cues[upcomingIndex].status = 'next';
     }
+
+    // Mark the previous cue.
+    if (passed && passed.length > 0) {
+      this.#captions.cues[passed.length - 1].status = 'previous';
+    }
+
   }
 
   #scrollToCue() {
@@ -385,7 +482,7 @@ export class CaptionsViewer extends HTMLElement {
     // TODO account for srt using , instead of .
     return (hours * 3600) + (minutes * 60) + seconds;
   }
-  
+
 
   // This is a simple parser, used for now to keep the filesize down.
   parseVTT(file, type) {
@@ -459,6 +556,7 @@ export class CaptionsViewer extends HTMLElement {
           start: CaptionsViewer.timecodeToSeconds(times[0]),
           end: CaptionsViewer.timecodeToSeconds(times[1]),
         }
+        currentCue.length =  times[0].trim() + times[1].trim();
         // Check for position after the timecode.
         const spaces = line.split(" ");
         if (spaces.length > 2) {
@@ -520,5 +618,66 @@ export class CaptionsViewer extends HTMLElement {
     return split.join(":");
   }
 
+  static secondsToTimecode(seconds) {
+    if (seconds === undefined || seconds === null) return;
+    if (seconds < 0) return '00:00:00';
+    return new Date(seconds * 1000).toISOString().substring(11, 11+8);
+  }
+
+  static getTheme(userPreference) {
+      if (userPreference === 'light') {
+        return 'light';
+      }
+      if (userPreference === 'dark') {
+        return 'dark';
+      }
+      // system
+      if (matchMedia('(prefers-color-scheme: light)').matches) {
+        return 'light';
+      }
+      return 'dark';
+  }
+
+  setTheme(userPreference) {
+    const theme = CaptionsViewer.getTheme(userPreference || '');
+    this.#theme = theme;
+    this.#divs.root.dataset.theme = theme;
+  }
+
+  #addCueSpaces(cues) {
+    const distance = 5; // 10 seconds.
+    // When blank is added to array, it messes with next loop.
+    let isBlank = false;
+    cues.forEach((cue, index, array) => {
+      const next = cues[index+1];
+      if (isBlank) {
+        isBlank = false
+        return;
+      }
+      if (!next) return;
+      const diff = next.seconds.start - cue.seconds.end;
+      if (diff > distance) {
+        const start = cue.seconds.end;
+        const end   = next.seconds.start;
+        const newCue = {
+          chapter: '',
+          text: ['- - -'],
+          status: '',
+          type: 'spacer',
+          timecode: {
+            start: CaptionsViewer.secondsToTimecode(start),
+            end: CaptionsViewer.secondsToTimecode(start)
+          },
+          seconds: {
+            start: start,
+            end: end
+          }            
+        }
+        this.#captions.cues.splice(index + 1, 0, newCue);
+        isBlank = true;
+      }
+    })
+
+  }
 
 }

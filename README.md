@@ -37,6 +37,14 @@ component.addEventListener('seek', e => {
 });
 ```
 
+To force an instant cue scroll when user skips in the player timeline:
+
+```javascript
+player.addEventListener('seeking', () => {
+  component.debounceScrolling = false;
+});
+```
+
 ## Tag Parameters
 
 |  Name | Default | Description |
@@ -51,9 +59,9 @@ component.addEventListener('seek', e => {
 
 ## Methods
 
-### `pause`
+### `pause()`
 
-Toggle pausing the automatic reading.
+Calling this method will toggle pausing the automatic reading.
 
 ```html
 <button>Toggle Caption Reading</button>
@@ -67,9 +75,22 @@ button.addEventListener('click', () => {
 </script>
 ```
 
+### `setTheme(theme)`
+
+Calling this method with the name of the theme will immediately change the color scheme.  Options are currently only `dark` for making the text lighter for dark backgrounds, `light` for dark text on ligher backgrounds, and blank/empty for user's system theme.
+
+```javascript
+component.setTheme('dark');
+```
+
+## Events
+
+|  Name | Description |
+| - | - |
 
 
 
+REMOVE:
 
 ## Installation
 
