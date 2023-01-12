@@ -16,13 +16,15 @@
       border-radius: 5px;
       font-family: arial;
       display: block;
-      background: rgba(0,0,0,.2)
+      background: rgba(0,0,0,.2);
+      /*background: rgba(255,255,255, .9)*/
     }
   </style>    
 </head>
 <body>
 
   <main class="container">
+
     <video controls width="100%" playsinline autopictureinpicture>
       <source src="content/dune/dune.mp4" type="video/mp4">
     </video>
@@ -32,8 +34,23 @@
       height="30vw"
       singleline="true"
       color="300"
+      theme="dark"
     >
     </captions-viewer>
+    
+  <!--
+    <video controls width="100%" playsinline autopictureinpicture>
+      <source src="content/agent/agent.mp4" type="video/mp4">
+    </video>
+    <captions-viewer 
+      file="content/agent/agent_en.vtt"
+      height="30vw"
+      singleline="true"
+      color="300"
+      singleline="false"
+    >
+    </captions-viewer>  
+  -->
 
     <button id="pause" type="button" title="Turns the UI updates on/off">Toggle Caption Reading</button>
 
@@ -73,8 +90,12 @@
 
     // On click, Seek's player to caption location.
     component.addEventListener('seek', e => {
-      console.log(e.detail.value);
       player.currentTime = e.detail.value;
+    });
+
+    // (optional) Scroll to the cue when user skips in the player timeline.
+    player.addEventListener('seeking', () => {
+      component.debounceScrolling = false;
     });
 
 
