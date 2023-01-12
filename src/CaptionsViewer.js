@@ -17,142 +17,141 @@ export class CaptionsViewer extends HTMLElement {
   #currentCue = undefined; // for parser.
   #debounceScrolling = false; // for throttling scrolling.
   #paused = false; // toggle scrolling and highlighting.
+  #textTrack = {}; // Native textTrack from video element.
 
   css = `<style>
-
-  #root {
-    scroll-behavior: smooth;
-    height: 300px;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    scroll-snap-stop: always;
-    position: relative;
-    padding: .5rem;
-    --base: 360;
-  }
-  ol {
-    padding: 0;
-    margin: 0;
-  }
-  li {
-    list-style:none;
-    width: 100%;
-  }
-  .cue {
-    border: none;
-    font: inherit;
-    padding: 0.4rem;
-    display: flex;
-    gap: 1rem;
-    list-style: none;
-    transform: scale(1);
-    transform-origin: left;
-    color: hsla(var(--base), 20%, 40%, .9);
-    transition: color 0.3s ease, font-size .2s ease, transform .1s ease;
-    background: none;
-    width: 100%;
-    text-align: start;
-  }
-  .cue:hover, .cue:active, .cue:focus-visible {
-    cursor: pointer;
-    background: hsla(var(--base), 60%, 70%, .1);
-    outline: 1px solid hsla(var(--base), 60%, 50%, .1);
-    color: hsla(var(--base), 10%, 20%, 1);
-  }
-  .upcoming, .upcoming:focus-visable {
-    color: hsla(var(--base), 20%, 60%, .7);
-    transform: scale(1);
-    transform-origin: left;
-  }
-  .next, .next:focus-visable {
-    color: hsla(var(--base), 20%, 40%, .9);
-    transform: scale(1);
-    transform-origin: left;
-  }
-  .active {
-    transform: scale(1.2);
-    transform-origin: left;
-  }
-    .active .timecode, .active .chapter {
-      color: hsla(var(--base), 50%, 30%, 1);
+    #root {
+      scroll-behavior: smooth;
+      height: 300px;
+      overflow-y: scroll;
+      overflow-x: hidden;
+      scroll-snap-stop: always;
+      position: relative;
+      padding: .5rem;
+      --base: 360;
     }
-    .active .text, .active .chapter {
-      color: hsla(var(--base), 0%, 30%, 1);
+    ol {
+      padding: 0;
+      margin: 0;
+    }
+    li {
+      list-style:none;
+      width: 100%;
+    }
+    .cue {
+      border: none;
+      font: inherit;
+      padding: 0.4rem;
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      transform: scale(1);
+      transform-origin: left;
+      color: hsla(var(--base), 20%, 40%, .9);
+      transition: color 0.3s ease, font-size .2s ease, transform .1s ease;
+      background: none;
+      width: 100%;
+      text-align: start;
+    }
+    .cue:hover, .cue:active, .cue:focus-visible {
+      cursor: pointer;
+      background: hsla(var(--base), 60%, 70%, .1);
+      outline: 1px solid hsla(var(--base), 60%, 50%, .1);
+      color: hsla(var(--base), 10%, 20%, 1);
+    }
+    .upcoming, .upcoming:focus-visable {
+      color: hsla(var(--base), 20%, 60%, .7);
+      transform: scale(1);
+      transform-origin: left;
+    }
+    .next, .next:focus-visable {
+      color: hsla(var(--base), 20%, 40%, .9);
+      transform: scale(1);
+      transform-origin: left;
+    }
+    .active {
+      transform: scale(1.15);
+      transform-origin: left;
+    }
+      .active .timecode, .active .chapter {
+        color: hsla(var(--base), 50%, 30%, 1);
+      }
+      .active .text, .active .chapter {
+        color: hsla(var(--base), 0%, 30%, 1);
+        font-weight: bold;
+      }
+    .passed, .passed:focus-visable  {
+      color: hsla(var(--base), 20%, 60%, .7);
+      transform: scale(1);
+      transform-origin: left;
+    }
+    .spacer .text {
+      color: hsla(var(--base), 20%, 60%, .5);
+      letter-spacing: 5px;
       font-weight: bold;
     }
-  .passed, .passed:focus-visable  {
-    color: hsla(var(--base), 20%, 60%, .7);
-    transform: scale(1);
-    transform-origin: left;
-  }
-  .spacer .text {
-    color: hsla(var(--base), 20%, 60%, .5);
-    letter-spacing: 5px;
-    font-weight: bold;
-  }
 
 
-  [data-theme="dark"] .cue {
-    color: hsla(var(--base), 10%, 80%, .7);
-  }
-  [data-theme="dark"] .cue:hover, .cue:active, .cue:focus-visible {
-    background: hsla(var(--base), 60%, 70%, .1);
-    outline: 1px solid hsla(var(--base), 60%, 50%, .1);
-    color: hsla(var(--base), 0%, 100%, 1);
-  }
-  [data-theme="dark"] .upcoming, .upcoming:focus-visable {
-    color: hsla(var(--base), 10%, 80%, .7);
-  }
-  [data-theme="dark"] .next, .next:focus-visable {
-    color: hsla(var(--base), 20%, 80%, .9);
-  }
-  [data-theme="dark"] .active .timecode,
-  [data-theme="dark"] .active .chapter
-    {
-      color: hsla(var(--base), 50%, 80%, 1);
+    [data-theme="dark"] .cue {
+      color: hsla(var(--base), 10%, 80%, .7);
     }
-    [data-theme="dark"] .active .text,
-    [data-theme="dark"] .active .chapter
-    {
+    [data-theme="dark"] .cue:hover, .cue:active, .cue:focus-visible {
+      background: hsla(var(--base), 60%, 70%, .1);
+      outline: 1px solid hsla(var(--base), 60%, 50%, .1);
       color: hsla(var(--base), 0%, 100%, 1);
     }
-
-  [data-theme="dark"] .previous, .previous:focus-visable {
-    color: hsla(var(--base), 20%, 80%, .9);
-  }
-  [data-theme="dark"] .passed, .passed:focus-visable {
-    color: hsla(var(--base), 10%, 80%, .7);
-  }
-
-  @media (prefers-reduced-motion) {
-    .active, .previous {
-      font-size: unset;
+    [data-theme="dark"] .upcoming, .upcoming:focus-visable {
+      color: hsla(var(--base), 10%, 80%, .7);
     }
-  }
+    [data-theme="dark"] .next, .next:focus-visable {
+      color: hsla(var(--base), 20%, 80%, .9);
+    }
+    [data-theme="dark"] .active .timecode,
+    [data-theme="dark"] .active .chapter
+      {
+        color: hsla(var(--base), 50%, 80%, 1);
+      }
+      [data-theme="dark"] .active .text,
+      [data-theme="dark"] .active .chapter
+      {
+        color: hsla(var(--base), 0%, 100%, 1);
+      }
 
-  progress {
-      appearance: none;
-      background: hsla(var(--base), 10%, 10%, .1);
-      border: none;
-      border-radius: 2px;
-      height: 8px;
-      align-self: center;
-  }
+    [data-theme="dark"] .previous, .previous:focus-visable {
+      color: hsla(var(--base), 20%, 80%, .9);
+    }
+    [data-theme="dark"] .passed, .passed:focus-visable {
+      color: hsla(var(--base), 10%, 80%, .7);
+    }
 
-  progress[value]::-webkit-progress-bar {
-      background: var(--cfs-gray-10);
-      box-shadow: 0 2px 3px rgba(0, 0, 0, .3) inset;
-  }
+    @media (prefers-reduced-motion) {
+      .active, .previous {
+        font-size: unset;
+      }
+    }
 
-  progress[value]::-moz-progress-bar {
+    progress {
+        appearance: none;
+        background: hsla(var(--base), 10%, 10%, .1);
+        border: none;
+        border-radius: 2px;
+        height: 8px;
+        align-self: center;
+    }
+
+    progress[value]::-webkit-progress-bar {
       background: hsla(var(--base), 10%, 10%, .2);
       box-shadow: none;
-  }
+    }
 
-  progress[value]::-webkit-progress-value {
-      background: var(--cfs-progressbar-bar);
-  }
-
+    progress[value]::-moz-progress-bar {
+        background: hsla(var(--base), 10%, 10%, .2);
+        box-shadow: none;
+    }
+    progress[value]::-webkit-progress-value {
+      background: hsla(var(--base), 10%, 10%, .2);
+      box-shadow: none;
+    }
   </style>`;
 
   constructor() {
@@ -196,8 +195,12 @@ export class CaptionsViewer extends HTMLElement {
     this.setAttribute('debounce', item);
   }
   set singleline(item) {
-    this.setAttribute('singleline', (item === true));
-  }
+    if (typeof item != "boolean") {
+      console.warn('debounceScrolling must be a boolean.');
+      return;
+    }    
+    this.setAttribute('singleline', item);
+  } 
   set disable(item) {
     this.setAttribute('disable', item);
   }
@@ -207,6 +210,10 @@ export class CaptionsViewer extends HTMLElement {
       return;
     }
     this.#debounceScrolling = item;
+  }
+  set textTrack(item) {
+    this.#textTrack = item;
+    this.#create();
   }
 
   get file() {
@@ -285,19 +292,19 @@ export class CaptionsViewer extends HTMLElement {
 
   async #create() {
 
-    this.#file     = this.getAttribute('file') || '';
+    this.#file     = this.getAttribute('file') || undefined;
     this.#playhead = this.getAttribute('playhead') || 0;
     this.#height   = this.getAttribute('height') || '400px';
     this.#debounce = parseInt(this.getAttribute('debounce')) || 5000;
-    this.#singleline = (this.getAttribute('singleline') === true) || false;
+    this.#singleline = (this.getAttribute('singleline') == 'true') || false;
     this.#color    = this.getAttribute('color');
-    this.#disable  = this.getAttribute('disable') || null;
+    this.#disable  = this.getAttribute('disable') || '';
     this.#theme    = this.getAttribute('theme') || '';
     const styles   = this.getAttribute('styles'); // Full replacement of css.
 
-    if (!this.#file) {
-      console.error('The file parameter pointing to a VTT or SRT file is required.');
-      this.#event('error', 'The file parameter pointing to a VTT or SRT file is required.');
+    if (!this.#file && !('id' in this.#textTrack)) {
+      //console.warn('The file parameter pointing to a VTT or SRT file is required.');
+      //this.#event('error', 'The file parameter pointing to a VTT or SRT file is required.');
       return;
     }
 
@@ -316,9 +323,15 @@ export class CaptionsViewer extends HTMLElement {
       existing.innerHTML += `${styles}`;
     }
 
-    const fileContents = await fetch(this.#file).then(response => response.text()); // TODO more on this.
+    if (this.#file) {
+      const fileContents = await fetch(this.#file).then(res => res.text()); // TODO more on this.
+      this.#captions = this.#parseVTT(fileContents);
+    }
 
-    this.#captions = this.parseVTT(fileContents);
+    if ('id' in this.#textTrack) {
+      this.#captions = this.#parseTextTrack(this.#textTrack);
+    }
+
     this.#addCueSpaces(this.#captions.cues);
     this.#setCuesStatus();
     //console.log(this.#captions); // TODO remove.
@@ -513,7 +526,7 @@ export class CaptionsViewer extends HTMLElement {
 
 
   // This is a simple parser, used for now to keep the filesize down.
-  parseVTT(file, type) {
+  #parseVTT(file, type) {
     const lines = file.split('\n');
 
     if (!type) {
@@ -613,6 +626,34 @@ export class CaptionsViewer extends HTMLElement {
 
     }
     return caption;
+  }
+
+  #parseTextTrack(textTrack) {
+    const cues = Object.entries(textTrack.cues).map(cues => {
+      const cue = cues[1];
+      return {
+        chapter: cue.id,
+        status: '',
+        text: cue.text.split("\n"),
+        seconds: {
+          start: cue.startTime,
+          end: cue.endTime
+        },
+        timecode: {
+          start: CaptionsViewer.secondsToTimecode(cue.startTime),
+          end: CaptionsViewer.secondsToTimecode(cue.endTime)
+        }
+      }
+    })
+
+    return {
+      kind: textTrack.kind,
+      lang: textTrack.language,
+      label: textTrack.label,
+      header: textTrack.id,
+      styles: undefined,
+      cues: cues
+    }
   }
 
   // Credit: Chat GPT

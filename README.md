@@ -2,9 +2,66 @@
 
 A web component to display captions as a video plays. Includes automatic scrolling to the caption cue, and events when a chapter is clicked.
 
-## Usage
+## Basic Usage
 
-First add video and the component to a web page.  Add the caption file to the component using the `file` parameter. Then connect the component to the player with a little bit of scripting.  The component needs to know the player's time (in seconds) to stay in sync.  
+## Install
+
+```bash
+npm i captions-viewer
+```
+
+Add video and the component to a web page.
+
+```html
+<video controls>
+   <source src="video.mp4" type="video/mp4">
+</video>
+
+<captions-viewer></caption-viewer>
+
+<script type="module" src="../../captions-viewer.js"></script>
+```
+
+## Add Captions
+
+### Option 1: TextTrack Method (recomended)
+
+Using a native `video` element or player, provide the `textTrack` object ([offical docs](https://developer.mozilla.org/en-US/docs/Web/API/TextTrack)).  First include the text track html in the video element, then push the object to the component.  This has the major advantage of allowing captions in the video player, and using the browser's more robust caption decoder.
+
+```html
+<video controls>
+   <source src="video.mp4" type="video/mp4">
+   <!-- Add text tracks -->
+   <track label="English" kind="subtitles" srclang="en" src="en.vtt" default />
+   <track label="French" kind="subtitles" srclang="fr" src="fr.vtt" />
+   <track label="Spanish" kind="subtitles" srclang="es" src="es.es" />
+</video>
+
+<captions-viewer></caption-viewer>
+
+<script>
+    const component = document.querySelector('captions-viewer');
+    const player = document.querySelector('video');
+    const track = 0; // index of the caption you want to use.
+    component.textTrack = player.textTracks[track];
+</script>
+```
+
+### Option 2: File
+
+Provide the path to a caption file the `file` parameter on the element.  This uses a lightweight caption parser and may be a bit more strict to file types.
+
+```html
+<video controls>
+   <source src="video.mp4" type="video/mp4">
+</video>
+
+<captions-viewer file="caption.vtt"></caption-viewer>
+```
+
+## Link Elements
+
+For the captions to update when the player is playing, the player's current position (playhead) must be sent to the captions component on a regular basis.  Luckily this is easy to do with the native video element, and most video players provide a time update event to listen for.
 
 Example connecting a native video tag to the component;
 
@@ -13,13 +70,7 @@ Example connecting a native video tag to the component;
 
 <captions-viewer file="caption.vtt"></caption-viewer>
 
-<script type="module" src="../../captions-viewer.js"></script>
 <script>
-/*
- - The timeupdate fires a few times a second during playback.
- - player.currentTime gets the <video> playhead location in seconds.
- - component.playhead tells the component where the player is at to show the right caption cue.
-*/  
 const component = document.querySelector('captions-viewer');
 const player = document.querySelector('video');
 
@@ -29,7 +80,7 @@ player.addEventListener('timeupdate', (e) => {
 </script>
 ```
 
-To enable player seeking when a cue is clicked, listen for the component event and seek the video player:
+The component can also jump the player when a cue is clicked.  To do this, setup a listener on the component `seek` event and then seek the video player:
 
 ```javascript
 component.addEventListener('seek', e => {
@@ -37,7 +88,7 @@ component.addEventListener('seek', e => {
 });
 ```
 
-To force an instant cue scroll when user skips in the player timeline:
+When the viewer skips around in the video timeline the captions may not update as quickly as you would like.  To force an immediate jump, turn the debounce time off (to `false`).  This will reset on the next cue so no need to put it back to another value.
 
 ```javascript
 player.addEventListener('seeking', () => {
@@ -87,16 +138,73 @@ component.setTheme('dark');
 
 |  Name | Description |
 | - | - |
+| `error` | Fired when an error occurs. Returns the text description of the error. |
+| `seek` | Fired when a click/select is made on a caption cue. Returns the start of that cue in seconds. |
 
+## Complete Examples
+
+Show captions for a video using the native caption tracy system, with a dynamic container height, custom color, and only showing timecode and the text.  The theme is set for dark, so the background will darker with lighter captions.
+
+```html
+<style>
+  /* Hides the component until it has loaded */
+  captions-viewer:not(:defined) {
+    visibility: hidden
+  }
+  /* set the container styles */
+  captions-viewer {
+    margin: 1em 0;
+    border: 3px solid hsla(200, 20%, 50%, .5);
+    border-radius: 5px;
+    font-family: arial;
+    display: block;
+    background: rgba(0,0,0,.2);
+  }
+</style>
+
+<video controls width="100%" playsinline autopictureinpicture>
+  <source src="content/dune/dune.mp4" type="video/mp4">
+  <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" default />
+</video>
+
+<captions-viewer
+  height="30vw"
+  singleline="true"
+  color="300"
+  theme="dark"
+  disable="chapters"
+>
+</captions-viewer>
+
+<script type="module" src="../../captions-viewer.js"></script>
+<script type="module">
+
+  const component = document.querySelector('captions-viewer');
+  const player = document.querySelector('video');
+
+  if (player.textTracks.length) {
+   component.textTrack = player.textTracks[0];
+  }
+
+  // Updates the captions.
+  player.addEventListener('timeupdate', (e) => {
+    component.playhead = player.currentTime;
+  })
+
+  // On click, Seek's player to caption location.
+  component.addEventListener('seek', e => {
+    player.currentTime = e.detail.value;
+  });
+
+  // (optional) Scroll to the cue when user skips in the player timeline.
+  player.addEventListener('seeking', () => {
+    component.debounceScrolling = false;
+  });
+</script>
+```
 
 
 REMOVE:
-
-## Installation
-
-```bash
-npm i captions-viewer
-```
 
 ## Linting and formatting
 

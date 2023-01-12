@@ -19,7 +19,7 @@
       background: rgba(0,0,0,.2);
       /*background: rgba(255,255,255, .9)*/
     }
-  </style>    
+  </style>
 </head>
 <body>
 
@@ -27,29 +27,32 @@
 
     <video controls width="100%" playsinline autopictureinpicture>
       <source src="content/dune/dune.mp4" type="video/mp4">
+      <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" default />
+      <track label="French" kind="subtitles" srclang="fr" src="content/dune/dune_fr.vtt" />
+      <track label="Spanish" kind="subtitles" srclang="es" src="content/dune/dune_fr.es" />
     </video>
 
-    <captions-viewer 
-      file="content/dune/dune_en.vtt"
+    <captions-viewer
       height="30vw"
       singleline="true"
       color="300"
       theme="dark"
+      disable=""
     >
     </captions-viewer>
-    
+
   <!--
     <video controls width="100%" playsinline autopictureinpicture>
       <source src="content/agent/agent.mp4" type="video/mp4">
     </video>
-    <captions-viewer 
+    <captions-viewer
       file="content/agent/agent_en.vtt"
       height="30vw"
       singleline="true"
       color="300"
       singleline="false"
     >
-    </captions-viewer>  
+    </captions-viewer>
   -->
 
     <button id="pause" type="button" title="Turns the UI updates on/off">Toggle Caption Reading</button>
@@ -57,7 +60,7 @@
     <fieldset id="lang_change">
       <legend>Language</legend>
         <input type="radio" id="en" name="language" value="dune_en.vtt" selected />
-        <label for="en">English</label>  
+        <label for="en">English</label>
         <input type="radio" id="es" name="language" value="dune_es.vtt" />
         <label for="es">Spanish</label>
         <input type="radio" id="fr" name="language" value="dune_fr.vtt" />
@@ -71,7 +74,7 @@
       <button type="button" id="toggleText" title="Toggle the cue text.">Text</button>
       <button type="button" id="toggleSingleLine" title="Put the cue text on a single line or not, ignoring the caption file.">Single Line</button>
     </fieldset>
-    
+
     <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
   </main>
 
@@ -80,6 +83,10 @@
 
     const component = document.querySelector('captions-viewer');
     const player = document.querySelector('video');
+
+    //console.log(player.textTracks[0]);
+    component.textTrack = player.textTracks[0];
+
 
     /***** Required *****/
 
@@ -127,8 +134,10 @@
       toggleDisabledProp('text', split);
     })
     document.querySelector('#toggleSingleLine').addEventListener('click', e => {
-      component.singleline = (!component.singleline);
-    })    
+      //component.singleline = (!component.singleline);
+      component.singleline = component.singleline === true ? false : true;
+      console.log(component.singleline)
+    })
 
     function toggleDisabledProp(prop, split) {
       if (split.indexOf(prop) > 0) {
@@ -137,7 +146,7 @@
       } else {
         split.push(prop);
         component.disable = split.join("|");
-      }      
+      }
     }
 
   </script>
