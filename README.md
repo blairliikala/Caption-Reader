@@ -182,14 +182,14 @@ Show captions for a video using the native caption tracy system, with a dynamic 
   const component = document.querySelector('captions-viewer');
   const player = document.querySelector('video');
 
-  if (player.textTracks.length) {
-   component.textTrack = player.textTracks[0];
-  }
+  player.onloadeddata = () => {
+    component.textTrack = player.textTracks[0];
+  }  
 
   // Updates the captions.
-  player.addEventListener('timeupdate', (e) => {
+  player.ontimeupdate = () => {
     component.playhead = player.currentTime;
-  })
+  }
 
   // On click, Seek's player to caption location.
   component.addEventListener('seek', e => {
@@ -197,9 +197,9 @@ Show captions for a video using the native caption tracy system, with a dynamic 
   });
 
   // (optional) Scroll to the cue when user skips in the player timeline.
-  player.addEventListener('seeking', () => {
+  player.onseeking = () => {
     component.debounceScrolling = false;
-  });
+  };
 </script>
 ```
 

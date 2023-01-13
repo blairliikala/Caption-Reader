@@ -25,9 +25,9 @@
 
   <main class="container">
 
-    <video controls width="100%" playsinline autopictureinpicture>
+    <video controls width="100%" playsinline autopictureinpicture preload="auto">
       <source src="content/dune/dune.mp4" type="video/mp4">
-      <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" default />
+      <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" />
       <track label="French" kind="subtitles" srclang="fr" src="content/dune/dune_fr.vtt" />
       <track label="Spanish" kind="subtitles" srclang="es" src="content/dune/dune_fr.es" />
     </video>
@@ -84,16 +84,21 @@
     const component = document.querySelector('captions-viewer');
     const player = document.querySelector('video');
 
-    //console.log(player.textTracks[0]);
-    component.textTrack = player.textTracks[0];
+    player.onloadeddata = () => {
+      player.textTracks[0].mode = "hidden";
+      setTimeout(() => {
+        const index = 0;
+        component.textTrack = player.textTracks[index];
+      },100)
 
+    }
 
-    /***** Required *****/
+    /* **** Required **** */
 
     // Updates the captions.
-    player.addEventListener('timeupdate', (e) => {
+    player.ontimeupdate = () => {
       component.playhead = player.currentTime;
-    })
+    }
 
     // On click, Seek's player to caption location.
     component.addEventListener('seek', e => {
@@ -101,12 +106,12 @@
     });
 
     // (optional) Scroll to the cue when user skips in the player timeline.
-    player.addEventListener('seeking', () => {
+    player.onseeking = () => {
       component.debounceScrolling = false;
-    });
+    };
 
 
-    /***** Optional *****/
+    /* **** Optional *** */
 
     document.querySelector('#pause').addEventListener('click', () => {
       component.pause();
@@ -121,23 +126,6 @@
       if (filename) component.file = `content/dune/${filename}`;
     })
 
-    document.querySelector('#toggleTimecode').addEventListener('click', e => {
-      const split = component.disable.split('|');
-      toggleDisabledProp('timecode', split);
-    })
-    document.querySelector('#toggleChapters').addEventListener('click', e => {
-      const split = component.disable.split('|');
-      toggleDisabledProp('chapters', split);
-    })
-    document.querySelector('#toggleText').addEventListener('click', e => {
-      const split = component.disable.split('|');
-      toggleDisabledProp('text', split);
-    })
-    document.querySelector('#toggleSingleLine').addEventListener('click', e => {
-      //component.singleline = (!component.singleline);
-      component.singleline = component.singleline === true ? false : true;
-      console.log(component.singleline)
-    })
 
     function toggleDisabledProp(prop, split) {
       if (split.indexOf(prop) > 0) {
@@ -147,7 +135,26 @@
         split.push(prop);
         component.disable = split.join("|");
       }
-    }
+    }    
+
+    document.querySelector('#toggleTimecode').addEventListener('click', () => {
+      const split = component.disable.split('|');
+      toggleDisabledProp('timecode', split);
+    })
+    document.querySelector('#toggleChapters').addEventListener('click', () => {
+      const split = component.disable.split('|');
+      toggleDisabledProp('chapters', split);
+    })
+    document.querySelector('#toggleText').addEventListener('click', () => {
+      const split = component.disable.split('|');
+      toggleDisabledProp('text', split);
+    })
+    document.querySelector('#toggleSingleLine').addEventListener('click', () => {
+      // component.singleline = (!component.singleline);
+      component.singleline = (!component.singleline);
+    })
+
+
 
   </script>
 

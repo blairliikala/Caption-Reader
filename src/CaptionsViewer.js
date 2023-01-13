@@ -4,12 +4,12 @@ export class CaptionsViewer extends HTMLElement {
 
   // Params
   #file = ''; // location of a vtt file.
-  #playhead = ''; // current seconds from start.
+  #playhead = 0; // current seconds from start.
   #height = '300px';
   #debounce = 0; // In seconds how long to
   #singleline = false;
   #color = ''; // Base 360 color for text.
-  #disable = {}; // What vtt properties to disable, uses |
+  #disable = ''; // What vtt properties to disable, uses |
   #theme = ''; // blank/light or dark.  Dark shows lighter text.
 
   // Internal
@@ -271,10 +271,9 @@ export class CaptionsViewer extends HTMLElement {
     };
 
     this.#divs.root.addEventListener('click', e => {
-      // Mozilla has explicitOriginalTarget, but not path.
-      const elm = 'explicitOriginalTarget' in e ? e.explicitOriginalTarget : e.path[0];
-      const div = elm.closest('button');
-      if ('localName' in div && div.localName === 'button') {
+      //const div = elm.closest('button');
+      const div = e.composedPath()[0];
+      if (div && 'localName' in div && div.localName === 'button') {
         const index = div.dataset.index;
         const seconds = this.#captions.cues[index].seconds.start;
         this.#event('seek', seconds);
@@ -292,23 +291,21 @@ export class CaptionsViewer extends HTMLElement {
 
   async #create() {
 
-    this.#file     = this.getAttribute('file') || undefined;
-    this.#playhead = this.getAttribute('playhead') || 0;
+    this.#file     = this.getAttribute('file') || '';
+    this.#playhead = parseInt(this.getAttribute('playhead')) || 0;
     this.#height   = this.getAttribute('height') || '400px';
     this.#debounce = parseInt(this.getAttribute('debounce')) || 5000;
     this.#singleline = (this.getAttribute('singleline') == 'true') || false;
-    this.#color    = this.getAttribute('color');
+    this.#color    = this.getAttribute('color') || '';
     this.#disable  = this.getAttribute('disable') || '';
     this.#theme    = this.getAttribute('theme') || '';
     const styles   = this.getAttribute('styles'); // Full replacement of css.
 
     if (!this.#file && !('id' in this.#textTrack)) {
-      //console.warn('The file parameter pointing to a VTT or SRT file is required.');
-      //this.#event('error', 'The file parameter pointing to a VTT or SRT file is required.');
       return;
     }
 
-    this.setTheme();
+    this.setTheme(undefined);
 
     if (this.#height !== '400px') {
       this.#divs.root.style.height = this.#height;
@@ -320,16 +317,28 @@ export class CaptionsViewer extends HTMLElement {
 
     if (styles) {
       const existing = this.shadowRoot?.querySelector('style');
-      existing.innerHTML += `${styles}`;
+      if (existing) existing.innerHTML += `${styles}`;
     }
 
+    // Send file through native parser.
     if (this.#file) {
-      const fileContents = await fetch(this.#file).then(res => res.text()); // TODO more on this.
-      this.#captions = this.#parseVTT(fileContents);
+      this.#textTrack = await this.#renderCaptionFile(this.#file);
     }
 
-    if ('id' in this.#textTrack) {
+    // Track in video element. Pushed after load.
+    if ('id' in this.#textTrack) { 
       this.#captions = this.#parseTextTrack(this.#textTrack);
+    }
+
+    // Both failed, use the fallback file parser.
+    if (!('cues' in this.#captions) || !this.#captions.cues) {
+      const fileContents = await fetch(this.#file).then(res => res.text()); // TODO more on this.
+      if (fileContents) this.#captions = this.#parseVTT(fileContents);
+    }
+
+    if (!('cues' in this.#captions) || !this.#captions.cues) {
+      console.warn('Not able to find captions.');
+      return;
     }
 
     this.#addCueSpaces(this.#captions.cues);
@@ -348,7 +357,6 @@ export class CaptionsViewer extends HTMLElement {
     this.#playhead = playhead;
     this.#setCuesStatus();
     const index = this.#captions.cues?.findIndex(cue => cue.status === 'active');
-    const activeCues = this.#captions.cues?.filter(cue => cue.status === 'active');
 
     // Clear other Progress bar.
     const progressbars = this.#divs.root.querySelectorAll('[data-progress]');
@@ -357,7 +365,7 @@ export class CaptionsViewer extends HTMLElement {
     }
 
     // Update progress bar.
-    this.#captions.cues.forEach((cue,index) => {
+    this.#captions.cues?.forEach((cue,index) => {
       if (cue.type === 'spacer' && cue.status === 'active') {
         let progValue = Math.round(this.#playhead - cue.seconds.start);
         //progValue = progValue > 0 ? progValue : 0; // Keep postive number or 0
@@ -378,7 +386,7 @@ export class CaptionsViewer extends HTMLElement {
     const disabled = this.#disable ? this.#disable.split('|') : [];
     this.#divs.root.innerHTML = '';
     let html = '<ol tabindex="0">';
-    this.#captions.cues.forEach( (cue, index) => {
+    this.#captions.cues?.forEach( (cue, index) => {
       if (cue.timecode) {
         const styleName = cue.status;
         const timecode = `<span class="timecode">${CaptionsViewer.prettyTimecode(cue.timecode.start)}</span>`;
@@ -404,7 +412,7 @@ export class CaptionsViewer extends HTMLElement {
     //this.#divs.cue.innerHTML = '';
     const template = this.querySelector('#cue');
 
-    this.#captions.cues.forEach( (cue, index) => {
+    this.#captions.cues?.forEach( (cue, index) => {
       if (!cue.timecode) return;
 
       const timecode = CaptionsViewer.prettyTimecode(cue.timecode.start);
@@ -442,7 +450,6 @@ export class CaptionsViewer extends HTMLElement {
     });
   }
 
-
   #setCuesStatus() {
     if (!this.#captions) return;
     this.#captions.cues = this.#captions.cues.map(cue => {
@@ -476,32 +483,16 @@ export class CaptionsViewer extends HTMLElement {
   }
 
   #scrollToCue() {
-    if (this.#currentCue < 0) return;
+    if (!this.#currentCue || this.#currentCue < 0) return;
     if (this.#debounceScrolling) return;
     const elms = this.#divs.root.querySelectorAll('li');
     const elm = elms[this.#currentCue];
     // Commenting out as the feel wasn't quite right.
-    //if (this.checkInView(this.#divs.root, elm)) {
+    //if (this.#checkInView(this.#divs.root, elm)) {
       const elmHeight = elm.offsetHeight;
       const elmOffset = elm.offsetTop;
       this.#divs.root.scrollTop = elmOffset - elmHeight; // Scroll cue to top leaving one.
     //}
-  }
-
-  checkInView(container, element, partial) {
-
-    const cTop = container.scrollTop;
-    const cBottom = cTop + container.clientHeight;
-
-    const eTop = element.offsetTop;
-    const eBottom = eTop + element.clientHeight;
-
-    const isTotal = (eTop >= cTop && eBottom <= cBottom);
-    const isPartial = partial && (
-      (eTop < cTop && eBottom > cTop) ||
-      (eBottom > cBottom && eTop < cBottom)
-    );
-    return  (isTotal || isPartial || false);
   }
 
   pause() {
@@ -513,119 +504,31 @@ export class CaptionsViewer extends HTMLElement {
     this.dispatchEvent(new CustomEvent(name, {detail: {"value": value, "full": object}}));
   }
 
+  async #renderCaptionFile(file) {
+    const track = document.createElement('track');
+    track.mode ='showing';
+    track.default = true;
+    track.src = file;
+    const video = document.createElement('video');
+    video.setAttribute('id', 'tempVid');    
+    video.appendChild(track);
+    this.#divs.root.appendChild(video);
+    const insertedVideo = this.#divs.root.querySelector('#tempVid');
 
-  // HH:MM:SS, or HH:MM:SS.FFF
-  static timecodeToSeconds(timecode) {
-    const parts = timecode.split(":");
-    const hours = parseInt(parts[0]);
-    const minutes = parseInt(parts[1]);
-    const seconds = parseInt(parts[2]);
-    // TODO account for srt using , instead of .
-    return (hours * 3600) + (minutes * 60) + seconds;
+    // We have to wait a moment till the cues are ready in some situations.
+    await this.#trackReady(insertedVideo.textTracks[0])
+    return insertedVideo.textTracks[0];
   }
 
-
-  // This is a simple parser, used for now to keep the filesize down.
-  #parseVTT(file, type) {
-    const lines = file.split('\n');
-
-    if (!type) {
-      if (lines[0].startsWith('WEBVTT')) {
-        type = 'vtt';
-      }
-      if (!lines[0].isNaN) {
-        type = 'srt';
-      }
-    }
-
-    const caption = {
-      kind: type,
-      lang: undefined,
-      header: undefined,
-      styles: undefined,
-      cues: []
-    }
-    let currentCue = {
-      text: []
-    };
-    let count = 0;
-    let cueBlock = false;
-    let cueBlockData = '';
-    let cueBlockName = '';
-    for (const line of lines) {
-      if (line.startsWith('WEBVTT')) {
-        let split = line.split(" - ");
-        if (split.length > 0) {
-          caption.header = split[1];
+  #trackReady(textTrack) {
+    return new Promise((resolve, reject) => {
+      const interval = setInterval(() => {
+        if (textTrack.cue !== null) {
+          clearInterval(interval);
+          resolve();
         }
-      }
-      else if (line.startsWith('Kind')) {
-        let split = line.split(":");
-        caption.kind = split[1]?.trim();
-      }
-      else if (line.startsWith('Language')) {
-        let split = line.split(":");
-        caption.lang = split[1]?.trim();
-      }
-      else if (line.startsWith('STYLE')) {
-        cueBlock = true;
-        cueBlockName = 'styles';
-      }
-      else if (line.startsWith('NOTE')) {
-        // Skip notes.
-      }
-
-      else if (cueBlock === true && line !== '') {
-        cueBlockData += line;
-      }
-      else if (cueBlock === true && line === '') {
-        caption.styles = cueBlockData;
-        cueBlock = false;
-        cueBlockData = '';
-      }
-
-      else if (line !== "" && CaptionsViewer.isTimecode(lines[count+1]) ) {
-        currentCue.chapter = line;
-      }
-      else if (CaptionsViewer.isTimecode(line)) {
-        const times = line.split('-->');
-        currentCue.timecode = {
-          start: times[0].trim(),
-          end: times[1].trim()
-        }
-        currentCue.seconds = {
-          start: CaptionsViewer.timecodeToSeconds(times[0]),
-          end: CaptionsViewer.timecodeToSeconds(times[1]),
-        }
-        currentCue.length =  times[0].trim() + times[1].trim();
-        // Check for position after the timecode.
-        const spaces = line.split(" ");
-        if (spaces.length > 2) {
-          currentCue.styles = spaces.splice(3).join(" ");
-        }
-        //currentCue.text.push( (currentCue.text || '') + lines[count + 1] + '\n' );
-        //currentCue.text.push(lines[count + 1]);
-      }
-      else if (line !== '') {
-        currentCue.text.push(line);
-      }
-
-      if (line === '' && currentCue.timecode?.start !== undefined) {
-        if (cueBlock) {
-          cueBlock = false;
-          cueBlockName = '';
-        }
-        currentCue.active = false;
-        caption.cues.push(currentCue);
-        currentCue = {
-          text: []
-        };
-      }
-
-      count++;
-
-    }
-    return caption;
+      }, 250)
+    });
   }
 
   #parseTextTrack(textTrack) {
@@ -636,7 +539,7 @@ export class CaptionsViewer extends HTMLElement {
         status: '',
         text: cue.text.split("\n"),
         seconds: {
-          start: cue.startTime,
+          start: cue.startTime - .5, // comp for css transition.
           end: cue.endTime
         },
         timecode: {
@@ -645,7 +548,6 @@ export class CaptionsViewer extends HTMLElement {
         }
       }
     })
-
     return {
       kind: textTrack.kind,
       lang: textTrack.language,
@@ -654,6 +556,16 @@ export class CaptionsViewer extends HTMLElement {
       styles: undefined,
       cues: cues
     }
+  }
+
+  // HH:MM:SS, or HH:MM:SS.FFF
+  static timecodeToSeconds(timecode) {
+    const parts = timecode.split(":");
+    const hours = parseInt(parts[0]);
+    const minutes = parseInt(parts[1]);
+    const seconds = parseInt(parts[2]);
+    // TODO account for srt using , instead of .
+    return (hours * 3600) + (minutes * 60) + seconds;
   }
 
   // Credit: Chat GPT
@@ -747,6 +659,125 @@ export class CaptionsViewer extends HTMLElement {
       }
     })
 
+  }
+
+  // This is a simple parser, used for now to keep the filesize down.
+  #parseVTT(file, type) {
+    const lines = file.split('\n');
+
+    if (!type) {
+      if (lines[0].startsWith('WEBVTT')) {
+        type = 'vtt';
+      }
+      if (!lines[0].isNaN) {
+        type = 'srt';
+      }
+    }
+
+    const caption = {
+      kind: type,
+      lang: undefined,
+      header: undefined,
+      styles: undefined,
+      cues: []
+    }
+    let currentCue = {
+      text: []
+    };
+    let count = 0;
+    let cueBlock = false;
+    let cueBlockData = '';
+    let cueBlockName = '';
+    for (const line of lines) {
+      if (line.startsWith('WEBVTT')) {
+        let split = line.split(" - ");
+        if (split.length > 0) {
+          caption.header = split[1];
+        }
+      }
+      else if (line.startsWith('Kind')) {
+        let split = line.split(":");
+        caption.kind = split[1]?.trim();
+      }
+      else if (line.startsWith('Language')) {
+        let split = line.split(":");
+        caption.lang = split[1]?.trim();
+      }
+      else if (line.startsWith('STYLE')) {
+        cueBlock = true;
+        cueBlockName = 'styles';
+      }
+      else if (line.startsWith('NOTE')) {
+        // Skip notes.
+      }
+
+      else if (cueBlock === true && line !== '') {
+        cueBlockData += line;
+      }
+      else if (cueBlock === true && line === '') {
+        caption.styles = cueBlockData;
+        cueBlock = false;
+        cueBlockData = '';
+      }
+
+      else if (line !== "" && CaptionsViewer.isTimecode(lines[count+1]) ) {
+        currentCue.chapter = line;
+      }
+      else if (CaptionsViewer.isTimecode(line)) {
+        const times = line.split('-->');
+        currentCue.timecode = {
+          start: times[0].trim(),
+          end: times[1].trim()
+        }
+        currentCue.seconds = {
+          start: CaptionsViewer.timecodeToSeconds(times[0]) - .5,
+          end: CaptionsViewer.timecodeToSeconds(times[1]),
+        }
+        currentCue.length =  times[0].trim() + times[1].trim();
+        // Check for position after the timecode.
+        const spaces = line.split(" ");
+        if (spaces.length > 2) {
+          currentCue.styles = spaces.splice(3).join(" ");
+        }
+        //currentCue.text.push( (currentCue.text || '') + lines[count + 1] + '\n' );
+        //currentCue.text.push(lines[count + 1]);
+      }
+      else if (line !== '') {
+        currentCue.text.push(line);
+      }
+
+      if (line === '' && currentCue.timecode?.start !== undefined) {
+        if (cueBlock) {
+          cueBlock = false;
+          cueBlockName = '';
+        }
+        currentCue.active = false;
+        caption.cues.push(currentCue);
+        currentCue = {
+          text: []
+        };
+      }
+
+      count++;
+
+    }
+    return caption;
+  }
+
+  #checkInView(container, element, partial) {
+
+    const cTop = container.scrollTop;
+    const cBottom = cTop + container.clientHeight;
+
+    const eTop = element.offsetTop;
+    const eBottom = eTop + element.clientHeight;
+
+    const isTotal = (eTop >= cTop && eBottom <= cBottom);
+    const isPartial = partial && (
+      (eTop < cTop && eBottom > cTop) ||
+      (eBottom > cBottom && eTop < cBottom)
+    );
+    return  (isTotal || isPartial || false);
   }
 
 }
