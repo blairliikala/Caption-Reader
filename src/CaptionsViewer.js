@@ -333,13 +333,13 @@ export class CaptionsViewer extends HTMLElement {
     }
 
     // Both failed, use the fallback file parser.
-    if (!('cues' in this.#captions) || !this.#captions.cues) {
+    if (!('cues' in this.#captions) || !this.#captions.cues || this.#captions.cues.length === 0) {
       console.log('Usinb backup parser.')
       const fileContents = await fetch(this.#file).then(res => res.text()); // TODO more on this.
       if (fileContents) this.#captions = this.#parseVTT(fileContents);
     }
 
-    if (!('cues' in this.#captions) || !this.#captions.cues) {
+    if (!('cues' in this.#captions) || !this.#captions.cues || this.#captions.cues.length === 0) {
       console.warn('Not able to find captions.');
       return;
     }
