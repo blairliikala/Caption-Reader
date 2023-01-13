@@ -322,16 +322,19 @@ export class CaptionsViewer extends HTMLElement {
 
     // Send file through native parser.
     if (this.#file) {
+      console.log('Using the File.')
       this.#textTrack = await this.#renderCaptionFile(this.#file);
     }
 
     // Track in video element. Pushed after load.
     if ('id' in this.#textTrack) { 
+      console.log('Parsing through foo parser.')
       this.#captions = this.#parseTextTrack(this.#textTrack);
     }
 
     // Both failed, use the fallback file parser.
     if (!('cues' in this.#captions) || !this.#captions.cues) {
+      console.log('Usinb backup parser.')
       const fileContents = await fetch(this.#file).then(res => res.text()); // TODO more on this.
       if (fileContents) this.#captions = this.#parseVTT(fileContents);
     }
