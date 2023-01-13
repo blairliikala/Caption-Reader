@@ -47,9 +47,9 @@ Using a native `video` element or player, provide the `textTrack` object ([offic
 </script>
 ```
 
-### Option 2: File
+### Option 2: File (`src`)
 
-Provide the path to a caption file the `file` parameter on the element.  This uses a lightweight caption parser and may be a bit more strict to file types.
+Provide the path to a caption file the `src` parameter on the element.  This uses a lightweight caption parser and may be a bit more strict to file types.
 
 ```html
 <video controls>
@@ -100,7 +100,7 @@ player.addEventListener('seeking', () => {
 
 |  Name | Default | Description |
 | - | - | - |
-| `file`       | null   | (required) Location of the vtt/srt file. |
+| `src`       | null   | (required) Location of the vtt/srt file. |
 | `height`     | 300px  | Height of the scrolling box.  Valid CSS unit. |
 | `singleline` | false  | True will show all text for a cue on a single line.  False will obey the line breaks in the caption file. |
 | `playhead`   | 0      | The time the player is at, in seconds.  Used to keep the player and reader in-sync. (see more below) |
@@ -201,21 +201,4 @@ Show captions for a video using the native caption tracy system, with a dynamic 
     component.debounceScrolling = false;
   };
 </script>
-```
-
-
-REMOVE:
-
-## Linting and formatting
-
-To scan the project for linting and formatting errors, run
-
-```bash
-npm run lint
-```
-
-To automatically fix linting and formatting errors, run
-
-```bash
-npm run format
 ```

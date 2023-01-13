@@ -3,7 +3,7 @@ export class CaptionsViewer extends HTMLElement {
   #divs;
 
   // Params
-  #file = ''; // location of a vtt file.
+  #src = ''; // location of a vtt src.
   #playhead = 0; // current seconds from start.
   #height = '300px';
   #debounce = 0; // In seconds how long to
@@ -30,6 +30,9 @@ export class CaptionsViewer extends HTMLElement {
       padding: .5rem;
       --base: 360;
     }
+    .empty {
+      color: hsla(var(--base), 20%, 40%, .9);
+    }
     ol {
       padding: 0;
       margin: 0;
@@ -41,7 +44,7 @@ export class CaptionsViewer extends HTMLElement {
     .cue {
       border: none;
       font: inherit;
-      padding: 0.4rem;
+      padding: 0.4rem 1.5rem .4rem .2rem;
       display: flex;
       gap: 1rem;
       list-style: none;
@@ -70,7 +73,7 @@ export class CaptionsViewer extends HTMLElement {
       transform-origin: left;
     }
     .active {
-      transform: scale(1.15);
+      transform: scale(1.1);
       transform-origin: left;
     }
       .active .timecode, .active .chapter {
@@ -92,6 +95,10 @@ export class CaptionsViewer extends HTMLElement {
     }
 
 
+
+    [data-theme="dark"] .empty {
+      color: hsla(var(--base), 30%, 80%, .9);
+    }
     [data-theme="dark"] .cue {
       color: hsla(var(--base), 10%, 80%, .7);
     }
@@ -163,7 +170,7 @@ export class CaptionsViewer extends HTMLElement {
 
   static get observedAttributes() {
     return [
-      'file',
+      'src',
       'playhead',
       'height',
       'debounce',
@@ -185,8 +192,8 @@ export class CaptionsViewer extends HTMLElement {
     this.#create();
   }
 
-  set file(item) {
-    this.setAttribute('file', item);
+  set src(item) {
+    this.setAttribute('src', item);
   }
   set playhead(item) {
     this.setAttribute('playhead', item);
@@ -216,8 +223,8 @@ export class CaptionsViewer extends HTMLElement {
     this.#create();
   }
 
-  get file() {
-    return this.#file;
+  get src() {
+    return this.#src;
   }
   get playhead() {
     return this.#playhead;
@@ -259,7 +266,7 @@ export class CaptionsViewer extends HTMLElement {
 
     template.innerHTML = `
       ${this.css}
-      <section id="root" data-theme="" ><slot name="cue"></slot></section>
+      <section id="root" data-theme=""></section>
     `;
 
     const html = template.content.cloneNode(true);
@@ -271,8 +278,7 @@ export class CaptionsViewer extends HTMLElement {
     };
 
     this.#divs.root.addEventListener('click', e => {
-      //const div = elm.closest('button');
-      const div = e.composedPath()[0];
+      const div = e.composedPath()[0].closest('button');
       if (div && 'localName' in div && div.localName === 'button') {
         const index = div.dataset.index;
         const seconds = this.#captions.cues[index].seconds.start;
@@ -291,7 +297,7 @@ export class CaptionsViewer extends HTMLElement {
 
   async #create() {
 
-    this.#file     = this.getAttribute('file') || '';
+    this.#src     = this.getAttribute('src') || '';
     this.#playhead = parseInt(this.getAttribute('playhead')) || 0;
     this.#height   = this.getAttribute('height') || '400px';
     this.#debounce = parseInt(this.getAttribute('debounce')) || 5000;
@@ -301,7 +307,7 @@ export class CaptionsViewer extends HTMLElement {
     this.#theme    = this.getAttribute('theme') || '';
     const styles   = this.getAttribute('styles'); // Full replacement of css.
 
-    if (!this.#file && !('id' in this.#textTrack)) {
+    if (!this.#src && !('id' in this.#textTrack)) {
       return;
     }
 
@@ -320,27 +326,28 @@ export class CaptionsViewer extends HTMLElement {
       if (existing) existing.innerHTML += `${styles}`;
     }
 
-    // Send file through native parser.
-    if (this.#file) {
-      console.log('Using the File.')
-      this.#textTrack = await this.#renderCaptionFile(this.#file);
+    // Send src through native parser.
+    if (this.#src) {
+      console.log('Using the src.')
+      this.#textTrack = await this.#renderCaptionSrc(this.#src);
     }
 
     // Track in video element. Pushed after load.
-    if ('id' in this.#textTrack) { 
+    if (this.#textTrack && Array.from(this.#textTrack.cues).length) { 
       console.log('Parsing through foo parser.')
       this.#captions = this.#parseTextTrack(this.#textTrack);
     }
 
-    // Both failed, use the fallback file parser.
-    if (!('cues' in this.#captions) || !this.#captions.cues || this.#captions.cues.length === 0) {
-      console.log('Usinb backup parser.')
-      const fileContents = await fetch(this.#file).then(res => res.text()); // TODO more on this.
-      if (fileContents) this.#captions = this.#parseVTT(fileContents);
+    // Both failed, use the fallback src parser.
+    if (this.#src && !this.#captions) {
+      console.log('Using backup parser.')
+      const srcContents = await fetch(this.#src).then(res => res.text()); // TODO more on this.
+      if (srcContents) this.#captions = this.#parseVTT(srcContents);
     }
 
-    if (!('cues' in this.#captions) || !this.#captions.cues || this.#captions.cues.length === 0) {
-      console.warn('Not able to find captions.');
+    if (!this.#captions || !this.#captions.cues || Array.from(this.#textTrack.cues).length === 0) {
+      console.error('Not able to find and render captions.');
+      this.#divs.root.innerHTML = `<p class="empty">No captions.</p>`;
       return;
     }
 
@@ -394,7 +401,6 @@ export class CaptionsViewer extends HTMLElement {
         const styleName = cue.status;
         const timecode = `<span class="timecode">${CaptionsViewer.prettyTimecode(cue.timecode.start)}</span>`;
         const chapter = cue.chapter ? `<span class="chapter">${cue.chapter}</span>` : '';
-        //const text = `<span class="text">`+cue.text.map(line => `${line}<br />`).join('')+`</span>`;
         const textJoiner = this.#singleline ? " " : "<br />";
 
         let spacerProgress = '';
@@ -507,34 +513,44 @@ export class CaptionsViewer extends HTMLElement {
     this.dispatchEvent(new CustomEvent(name, {detail: {"value": value, "full": object}}));
   }
 
-  async #renderCaptionFile(file) {
+  async #renderCaptionSrc(src) {
     const track = document.createElement('track');
-    track.mode ='showing';
+    track.mode ='hidden';
     track.default = true;
-    track.src = file;
+    track.src = src;
     const video = document.createElement('video');
     video.setAttribute('id', 'tempVid');    
     video.appendChild(track);
     this.#divs.root.appendChild(video);
-    const insertedVideo = this.#divs.root.querySelector('#tempVid');
+    const videodiv = this.#divs.root.querySelector('#tempVid');
 
-    // We have to wait a moment till the cues are ready in some situations.
-    await this.#trackReady(insertedVideo.textTracks[0])
-    return insertedVideo.textTracks[0];
+    // We have to wait till the cues are ready (foo async).
+    await this.#trackReady(videodiv)
+    return videodiv.textTracks[0];
   }
 
-  #trackReady(textTrack) {
-    return new Promise((resolve, reject) => {
+  #trackReady(video) {
+    let count = 0;
+    return new Promise(resolve => {
       const interval = setInterval(() => {
-        if (textTrack.cue !== null) {
+        count++
+        if (count > 50) {
           clearInterval(interval);
           resolve();
         }
-      }, 250)
+        if (Array.from(video.textTracks[0].cues).length) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 1)
     });
   }
 
   #parseTextTrack(textTrack) {
+    if (!textTrack.cues) {
+      console.warn('No cues found in the text track.');
+      return;
+    }
     const cues = Object.entries(textTrack.cues).map(cues => {
       const cue = cues[1];
       return {
@@ -664,9 +680,9 @@ export class CaptionsViewer extends HTMLElement {
 
   }
 
-  // This is a simple parser, used for now to keep the filesize down.
-  #parseVTT(file, type) {
-    const lines = file.split('\n');
+  // This is a simple parser, used for now to keep the srcsize down.
+  #parseVTT(src, type) {
+    const lines = src.split('\n');
 
     if (!type) {
       if (lines[0].startsWith('WEBVTT')) {

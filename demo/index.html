@@ -32,13 +32,13 @@
       <track label="Spanish" kind="subtitles" srclang="es" src="content/dune/dune_fr.es" />
     </video>
 
+<!--src="content/dune/dune_en.vtt"-->
+
     <captions-viewer
-      file="content/dune/dune_en.vtt"
       height="30vw"
       singleline="true"
       color="300"
       theme="dark"
-      disable=""
     >
     </captions-viewer>
 
@@ -85,17 +85,12 @@
     const component = document.querySelector('captions-viewer');
     const player = document.querySelector('video');
 
-/*
-    player.onloadeddata = () => {
-      player.textTracks[0].mode = "hidden";
-      setTimeout(() => {
-        const index = 0;
-        component.textTrack = player.textTracks[index];
-      },100)
-
-    }
-*/
-
+    player.textTracks[0].mode = 'hidden';
+    player.textTracks[0].default = true;
+    console.log(player.textTracks)
+    setTimeout(() => {
+      component.textTrack = player.textTracks[0];
+    }, 10)
 
     /* **** Required **** */
 
@@ -139,7 +134,7 @@
         split.push(prop);
         component.disable = split.join("|");
       }
-    }    
+    }
 
     document.querySelector('#toggleTimecode').addEventListener('click', () => {
       const split = component.disable.split('|');
