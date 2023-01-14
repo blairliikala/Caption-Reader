@@ -339,7 +339,8 @@ export class CaptionsViewer extends HTMLElement {
     }
 
     // Both failed, use the fallback src parser.
-    if (this.#src && !this.#captions) {
+    // eslint-disable-next-line max-len
+    if (this.#src && (!this.#captions || !this.#captions.cues || Array.from(this.#textTrack.cues).length === 0)) {
       console.log('Using backup parser.');
       const srcContents = await fetch(this.#src).then(res => res.text()); // TODO more on this.
       if (srcContents) this.#captions = CaptionsViewer.parseVTT(srcContents);
