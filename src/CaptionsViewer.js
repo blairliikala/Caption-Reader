@@ -536,7 +536,7 @@ export class CaptionsViewer extends HTMLElement {
     return new Promise(resolve => {
       const interval = setInterval(() => {
         count += 1;
-        if (count > 50) {
+        if (count > 1000) {
           clearInterval(interval);
           resolve();
         }
