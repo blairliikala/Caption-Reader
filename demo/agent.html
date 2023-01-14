@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <title>Caption Reader Web Component</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="demo.css" rel="stylesheet" type="text/css">
+  <style>
+    /* Hides the component until it has loaded */
+    captions-viewer:not(:defined) {
+      visibility: hidden
+    }
+    captions-viewer {
+      margin: 1em 0;
+      border: 3px solid hsla(200, 20%, 50%, .5);
+      border-radius: 5px;
+      font-family: arial;
+      display: block;
+      background: rgba(0,0,0,.2);
+      /*background: rgba(255,255,255, .9)*/
+    }
+  </style>
+</head>
+<body>
+
+  <main class="container">
+
+    <video controls width="100%" playsinline autopictureinpicture>
+      <source src="content/agent/agent.mp4" type="video/mp4">
+      <track label="English" kind="subtitles" srclang="en" src="content/agent/agent_en.vtt" />
+      <track label="Spanish" kind="subtitles" srclang="es" src="content/agent/agent_es.vtt" />
+      <track label="French" kind="subtitles" srclang="fr" src="content/agent/agent_fr.vtt" />
+      <track label="German" kind="subtitles" srclang="de" src="content/agent/agent_fr.vtt" />
+
+    </video>
+    
+    <captions-viewer
+      src="content/agent/agent_en.vtt"
+      height="30vw"
+      singleline="true"
+      color="300"
+      singleline="false"
+    >
+    </captions-viewer>
+
+    <button id="pause" type="button" title="Turns the UI updates on/off">Toggle Caption Reading</button>
+
+    <fieldset id="lang_change">
+      <legend>Language</legend>
+        <input type="radio" id="en" name="language" value="content/agent/agent_en.vtt" selected />
+        <label for="en">English</label>
+        <input type="radio" id="es" name="language" value="content/agent/agent_es.vtt" />
+        <label for="es">Spanish</label>
+        <input type="radio" id="fr" name="language" value="content/agent/agent_fr.vtt" />
+        <label for="fr">French</label>
+        <input type="radio" id="de" name="language" value="content/agent/agent_fr.vtt" />
+        <label for="de">German</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Toggle</legend>
+      <button type="button" id="toggleTimecode" title="Turn on/off timecode">Timecode</button>
+      <button type="button" id="toggleChapters" title="Turn on/off chapters (might not be any)">Chapters</button>
+      <button type="button" id="toggleText" title="Toggle the cue text.">Text</button>
+      <button type="button" id="toggleSingleLine" title="Put the cue text on a single line or not, ignoring the caption file.">Single Line</button>
+    </fieldset>
+
+    <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
+  </main>
+
+  <script type="module" src="../../captions-viewer.js"></script>
+  <script type="module">
+    const component = document.querySelector('captions-viewer');
+    const player = document.querySelector('video');
+
+    /* **** Required **** */
+
+    // Updates the captions.
+    player.ontimeupdate = () => {
+      component.playhead = player.currentTime;
+    };
+
+    // On click, Seek's player to caption location.
+    component.addEventListener('seek', e => {
+      player.currentTime = e.detail.value;
+    });
+
+    // (optional) Scroll to the cue when user skips in the player timeline.
+    player.onseeking = () => {
+      component.debounceScrolling = false;
+    };
+
+    /* **** Optional *** */
+
+    document.querySelector('#pause').addEventListener('click', () => {
+      component.pause();
+    });
+
+    /*
+    component.addEventListener('all', event => {
+      // console.log(event.detail)
+    })
+    */
+
+    document.querySelector('#lang_change').addEventListener('click', e => {
+      const filename = e.target.value;
+      if (filename) component.src = `content/agent/${filename}`;
+    });
+
+    function toggleDisabledProp(prop, split) {
+      if (split.indexOf(prop) > 0) {
+        const disable = split.filter(dis => dis !== prop).join('|');
+        component.disable = disable;
+      } else {
+        split.push(prop);
+        component.disable = split.join('|');
+      }
+    }
+
+    document.querySelector('#toggleTimecode').addEventListener('click', () => {
+      const split = component.disable.split('|');
+      toggleDisabledProp('timecode', split);
+    });
+    document.querySelector('#toggleChapters').addEventListener('click', () => {
+      const split = component.disable.split('|');
+      toggleDisabledProp('chapters', split);
+    });
+    document.querySelector('#toggleText').addEventListener('click', () => {
+      const split = component.disable.split('|');
+      toggleDisabledProp('text', split);
+    });
+    document.querySelector('#toggleSingleLine').addEventListener('click', () => {
+      // component.singleline = (!component.singleline);
+      component.singleline = (!component.singleline);
+    });
+  </script>
+
+</body>
+</html>
