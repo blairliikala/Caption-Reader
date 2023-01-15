@@ -293,13 +293,21 @@ export class CaptionsViewer extends HTMLElement {
       }
     });
 
-    this.#divs.root.addEventListener('scroll', () => {
-      this.#debounceScrolling = true;
-      setTimeout(() => { this.#debounceScrolling = false; }, this.#debounce);
-    });
     this.#divs.root.addEventListener('touchmove', () => {
       this.#debounceScrolling = true;
-      // setTimeout(() => { this.#debounceScrolling = false; }, this.#debounce);
+      console.log('touch move...');
+      this.#divs.root.addEventListener('mouseup', () => {
+        setTimeout(() => { this.#debounceScrolling = false; }, this.#debounce);
+      });
+    }, false);
+
+    this.#divs.root.addEventListener('scroll', () => {
+      this.#debounceScrolling = true;
+      console.log('touch move...');
+      this.#divs.root.addEventListener('mouseup', () => {
+        setTimeout(() => { this.#debounceScrolling = false; }, this.#debounce);
+      });
+      setTimeout(() => { this.#debounceScrolling = false; }, this.#debounce * 3);
     }, false);
 
     this.#create();
