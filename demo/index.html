@@ -32,10 +32,9 @@
       <track label="Spanish" kind="subtitles" srclang="es" src="content/dune/dune_fr.es" />
     </video>
 
-    <!--src="content/dune/dune_en.vtt"-->
     <captions-viewer
       src="content/dune/dune_en.vtt"
-      height="30vw"
+      height="25vh"
       singleline="true"
       color="300"
       theme="dark"
@@ -46,11 +45,11 @@
 
     <fieldset id="lang_change">
       <legend>Language</legend>
-        <input type="radio" id="en" name="language" value="dune_en.vtt" selected />
+        <input type="radio" id="en" name="language" value="content/dune/dune_en.vtt" selected />
         <label for="en">English</label>
-        <input type="radio" id="es" name="language" value="dune_es.vtt" />
+        <input type="radio" id="es" name="language" value="content/dune/dune_es.vtt" />
         <label for="es">Spanish</label>
-        <input type="radio" id="fr" name="language" value="dune_fr.vtt" />
+        <input type="radio" id="fr" name="language" value="content/dune/dune_fr.vtt" />
         <label for="fr">French</label>
     </fieldset>
 
@@ -100,8 +99,8 @@
     */
 
     document.querySelector('#lang_change').addEventListener('click', e => {
-      const filename = e.target.value;
-      if (filename) component.src = `content/dune/${filename}`;
+      const file = e.target.value;
+      if (file) component.src = file;
     });
 
     function toggleDisabledProp(prop, split) {

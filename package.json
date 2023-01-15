@@ -11,9 +11,8 @@
     "start": "web-dev-server",
     "lint": "eslint --ext .js,.html . --ignore-path .gitignore && prettier \"**/*.js\" --check --ignore-path .gitignore",
     "format": "eslint --ext .js,.html . --fix --ignore-path .gitignore && prettier \"**/*.js\" --write --ignore-path .gitignore",
-    "production": "npm run version:bump --silent && rm -f scripts.min.js && npm run minifyJS --silent",
     "version:bump": "npm version patch --no-git-tag-version --silent",
-    "buildlater": "yarn esbuild captions-viewer.js --format=esm --bundle --minify --outdir=dist"
+    "production": "npm run version:bump --silent && yarn esbuild captions-viewer.js --format=esm --bundle --minify --outdir=dist"
   },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "^0.6.00",
@@ -32,7 +31,6 @@
     ]
   },
   "prettier": {
-    "singleQuote": true,
-    "arrowParens": "avoid"
+    "singleQuote": false
   }
 }

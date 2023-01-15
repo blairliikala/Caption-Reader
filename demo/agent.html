@@ -37,9 +37,7 @@
     <captions-viewer
       src="content/agent/agent_en.vtt"
       height="30vw"
-      singleline="true"
       color="300"
-      singleline="false"
     >
     </captions-viewer>
 
@@ -73,7 +71,7 @@
     const component = document.querySelector('captions-viewer');
     const player = document.querySelector('video');
 
-    /* **** Required **** */
+    /***** Required *****/
 
     // Updates the captions.
     player.ontimeupdate = () => {
@@ -90,21 +88,15 @@
       component.debounceScrolling = false;
     };
 
-    /* **** Optional *** */
-
+    /****** Optional *****/
     document.querySelector('#pause').addEventListener('click', () => {
       component.pause();
     });
 
-    /*
-    component.addEventListener('all', event => {
-      // console.log(event.detail)
-    })
-    */
-
     document.querySelector('#lang_change').addEventListener('click', e => {
-      const filename = e.target.value;
-      if (filename) component.src = `content/agent/${filename}`;
+      console.log('Changing Languages.')
+      const file = e.target.value;
+      if (file) component.src = file;
     });
 
     function toggleDisabledProp(prop, split) {
@@ -130,7 +122,6 @@
       toggleDisabledProp('text', split);
     });
     document.querySelector('#toggleSingleLine').addEventListener('click', () => {
-      // component.singleline = (!component.singleline);
       component.singleline = (!component.singleline);
     });
   </script>
