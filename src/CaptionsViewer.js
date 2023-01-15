@@ -33,6 +33,9 @@ export class CaptionsViewer extends HTMLElement {
       padding: .5rem;
       --base: 360;
     }
+    #root * {
+      box-sizing: border-box;
+    }
     .empty {
       color: hsla(var(--base), 20%, 40%, .9);
     }
@@ -78,6 +81,7 @@ export class CaptionsViewer extends HTMLElement {
     .active {
       transform: scale(1.1);
       transform-origin: left;
+      padding-right: 10%;
     }
       .active .timecode, .active .chapter {
         color: hsla(var(--base), 50%, 30%, 1);
@@ -96,7 +100,7 @@ export class CaptionsViewer extends HTMLElement {
       letter-spacing: 5px;
       font-weight: bold;
     }
-
+    
     [data-theme="dark"] .empty {
       color: hsla(var(--base), 30%, 80%, .9);
     }
@@ -116,45 +120,45 @@ export class CaptionsViewer extends HTMLElement {
     }
     [data-theme="dark"] .active .timecode,
     [data-theme="dark"] .active .chapter
-      {
-        color: hsla(var(--base), 50%, 80%, 1);
-      }
-      [data-theme="dark"] .active .text,
-      [data-theme="dark"] .active .chapter
-      {
-        color: hsla(var(--base), 0%, 100%, 1);
-      }
-
+    {
+      color: hsla(var(--base), 50%, 80%, 1);
+    }
+    [data-theme="dark"] .active .text,
+    [data-theme="dark"] .active .chapter
+    {
+      color: hsla(var(--base), 0%, 100%, 1);
+    }
+    
     [data-theme="dark"] .previous, .previous:focus-visable {
       color: hsla(var(--base), 20%, 80%, .9);
     }
     [data-theme="dark"] .passed, .passed:focus-visable {
       color: hsla(var(--base), 10%, 80%, .7);
     }
-
+    
     @media (prefers-reduced-motion) {
       .active, .previous {
         font-size: unset;
       }
     }
-
+    
     progress {
-        appearance: none;
-        background: hsla(var(--base), 10%, 10%, .1);
-        border: none;
-        border-radius: 2px;
-        height: 8px;
-        align-self: center;
+      appearance: none;
+      background: hsla(var(--base), 10%, 10%, .1);
+      border: none;
+      border-radius: 2px;
+      height: 8px;
+      align-self: center;
     }
-
+    
     progress[value]::-webkit-progress-bar {
       background: hsla(var(--base), 10%, 10%, .2);
       box-shadow: none;
     }
-
+    
     progress[value]::-moz-progress-bar {
-        background: hsla(var(--base), 10%, 10%, .2);
-        box-shadow: none;
+      background: hsla(var(--base), 10%, 10%, .2);
+      box-shadow: none;
     }
     progress[value]::-webkit-progress-value {
       background: hsla(var(--base), 10%, 10%, .2);
@@ -311,15 +315,16 @@ export class CaptionsViewer extends HTMLElement {
       return;
     }
 
-    this.setTheme(undefined);
+    this.setTheme();
 
+    const customStyles = [];
     if (this.#height !== '400px') {
-      this.#divs.root.style.height = this.#height;
+      customStyles.push(`height: ${this.#height}`);
     }
-
     if (this.#color) {
-      this.#divs.root?.setAttribute('style', `--base: ${this.#color}`);
+      customStyles.push(`--base: ${this.#color}`);
     }
+    this.#divs.root?.setAttribute('style', customStyles.join('; '));
 
     if (styles) {
       const existing = this.shadowRoot?.querySelector('style');
@@ -643,7 +648,7 @@ export class CaptionsViewer extends HTMLElement {
     return 'dark';
   }
 
-  setTheme(userPreference) {
+  setTheme(userPreference = undefined) {
     const theme = CaptionsViewer.getTheme(userPreference || this.#theme || '');
     this.#theme = theme;
     this.#divs.root.dataset.theme = theme;
