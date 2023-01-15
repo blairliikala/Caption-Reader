@@ -284,6 +284,7 @@ export class CaptionsViewer extends HTMLElement {
 
     this.#divs.root.addEventListener('click', e => {
       const div = e.composedPath()[0].closest('button');
+      console.log(div);
       if (div && 'localName' in div && div.localName === 'button') {
         const { index } = div.dataset;
         const seconds = this.#captions.cues[index].seconds.start;
@@ -296,6 +297,10 @@ export class CaptionsViewer extends HTMLElement {
       this.#debounceScrolling = true;
       setTimeout(() => { this.#debounceScrolling = false; }, this.#debounce);
     });
+    this.#divs.root.addEventListener('touchmove', () => {
+      this.#debounceScrolling = true;
+      // setTimeout(() => { this.#debounceScrolling = false; }, this.#debounce);
+    }, false);
 
     this.#create();
   }
