@@ -621,7 +621,7 @@ export class CaptionsViewer extends HTMLElement {
       return {
         chapter: cue.id,
         status: '',
-        text: cue.text.split('\n'),
+        text: cue.text.split('\n').map(split => split.replace(/^\s+/g, '')), // remove starting whitespace
         seconds: {
           start: cue.startTime - nudge,
           end: cue.endTime,
@@ -892,5 +892,8 @@ export class CaptionsViewer extends HTMLElement {
 
     // Remove blank text.
     this.#captions.cues = cues.filter(cue => cue.text.length !== 0);
+
+    // Remove if the cue is a blank space.
+    this.#captions.cues = cues.filter(cue => cue.text[0] && cue.text[0].length !== 0);
   }
 }
