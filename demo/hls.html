@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <title>Caption Reader Web Component - HLS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="demo.css" rel="stylesheet" type="text/css">
+  <style>
+    /* Hides the component until it has loaded */
+    captions-viewer:not(:defined) {
+      visibility: hidden
+    }
+    captions-viewer {
+      margin: 1em 0;
+      border: 3px solid hsla(200, 20%, 50%, .5);
+      border-radius: 5px;
+      font-family: arial;
+      display: block;
+      background: rgba(0,0,0,.2);
+    }
+  </style>
+</head>
+<body>
+
+  <main class="container">
+
+    <video controls width="100%" playsinline></video>
+
+    <captions-viewer
+      height="25vh"
+      theme="dark"
+      disable="chapters"
+      debounce="1000"
+    >
+    </captions-viewer>
+
+    <p>This exmaple shows an HLS stream, using hls.js, with embedded captions in the manifest.</p>
+
+    <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script type="module" src="../../captions-viewer.js"></script>
+  <script type="module">
+    const component = document.querySelector('captions-viewer');
+    const player = document.querySelector('video');
+
+    /****** Required ******/
+
+    // const videoSrc = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'; // Bunny.
+    // const videoSrc = 'http://stream.mux.com/qP5Eb2cj7MrNnoxBGz012pbZkMHqpIcrKMzd7ykGr01gM.m3u8' // Tears
+    const videoSrc = 'https://playertest.longtailvideo.com/adaptive/captions/playlist.m3u8'; // CNN
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(videoSrc);
+      hls.attachMedia(player);  
+      hls.on(Hls.Events.MANIFEST_PARSED, (e) => {
+        player.addEventListener('loadedmetadata', (e) => {
+          const tracks = e.target.textTracks;
+          const track = tracks[0];
+          component.textTrack = track;
+          track.addEventListener('cuechange', (e) => {
+            component.textTrack = e.target;
+          });
+        })        
+    });
+
+    }
+    else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      player.src = videoSrc;
+    }
+
+    // Updates the captions.
+    player.ontimeupdate = () => {
+      component.playhead = player.currentTime;
+    };
+
+    // On click, Seek's player to caption location.
+    component.addEventListener('seek', e => {
+      player.currentTime = e.detail.value;
+    });
+
+    // (optional) Scroll to the cue when user skips in the player timeline.
+    player.onseeking = () => {
+      component.debounceScrolling = false;
+    };
+
+  </script>
+
+</body>
+</html>
