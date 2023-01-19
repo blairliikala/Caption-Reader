@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <title>Caption Reader Web Component - Back to the Future Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="/demo/demo.css" rel="stylesheet" type="text/css">
+  <style>
+    /* Hides the component until it has loaded */
+    captions-viewer:not(:defined) {
+      visibility: hidden
+    }
+    captions-viewer {
+      margin: 1em 0;
+      border: 3px solid hsla(200, 20%, 50%, .5);
+      border-radius: 5px;
+      font-family: arial;
+      display: block;
+      background: rgba(0,0,0,.2);
+    }
+  </style>
+</head>
+<body>
+
+  <main class="container">    
+
+    <video controls width="100%" playsinline preload="auto" muted>
+      <source src="me.mp4" type="video/mp4">
+      <track label="English" kind="subtitles" srclang="en" src="me.vtt" />
+    </video>
+
+    <captions-viewer
+      src="me.vtt"
+      theme="dark"
+      disable="chapters"
+      debounce="1000"
+      youtube="true"
+    >
+    </captions-viewer>
+
+    <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
+  </main>
+
+  <script type="module" src="../../../captions-viewer.js"></script>
+  <script type="module">
+    const component = document.querySelector('captions-viewer');
+    const player = document.querySelector('video');
+
+    let inv;
+
+    player.addEventListener('pause', () => {
+      clearInterval(inv);
+    })
+    player.addEventListener('play', () => {
+      inv = setInterval(() => {
+        component.playhead = player.currentTime;
+      }, 150)
+    })
+
+    // On click, Seek's player to caption location.
+    component.addEventListener('seek', e => {
+      player.currentTime = e.detail.value;
+    });
+
+    // (optional) Scroll to the cue when user skips in the player timeline.
+    player.onseeking = () => {
+      component.debounceScrolling = false;
+    };
+
+  </script>
+
+</body>
+</html>

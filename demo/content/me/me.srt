@@ -1,0 +1,324 @@
+1
+00:00:00,719 --> 00:00:05,040
+so i'm going to go through the process
+
+2
+00:00:02,000 --> 00:00:06,640
+of importing videos from outside of mux
+
+3
+00:00:05,040 --> 00:00:08,880
+and expression engine
+
+4
+00:00:06,640 --> 00:00:10,559
+and get them into
+
+5
+00:00:08,880 --> 00:00:12,400
+both mugs and express engine as new
+
+6
+00:00:10,559 --> 00:00:14,080
+entries and new videos so to do that
+
+7
+00:00:12,400 --> 00:00:14,960
+we're going to use a add-on called data
+
+8
+00:00:14,080 --> 00:00:16,800
+grab
+
+9
+00:00:14,960 --> 00:00:18,720
+it's a third party add-on you can buy
+
+10
+00:00:16,800 --> 00:00:21,920
+from the expression engine store
+
+11
+00:00:18,720 --> 00:00:24,640
+it allows csvs json wordpress and other
+
+12
+00:00:21,920 --> 00:00:27,359
+things to be imported as entries
+
+13
+00:00:24,640 --> 00:00:29,920
+and i've got a test csv file i've
+
+14
+00:00:27,359 --> 00:00:31,439
+created it has the columns that we're
+
+15
+00:00:29,920 --> 00:00:34,480
+going to match up to the custom fields
+
+16
+00:00:31,439 --> 00:00:37,040
+like title the status uh description and
+
+17
+00:00:34,480 --> 00:00:40,079
+then the important one is urls and these
+
+18
+00:00:37,040 --> 00:00:42,800
+are both urls from multiple uh locations
+
+19
+00:00:40,079 --> 00:00:45,440
+like s3 and like my private server as
+
+20
+00:00:42,800 --> 00:00:46,559
+well as a mux id that already exists in
+
+21
+00:00:45,440 --> 00:00:48,480
+mux
+
+22
+00:00:46,559 --> 00:00:50,960
+so let's go ahead and map those i've put
+
+23
+00:00:48,480 --> 00:00:53,520
+the csv file on my server already to
+
+24
+00:00:50,960 --> 00:00:55,600
+import i'm going to hit create new csv
+
+25
+00:00:53,520 --> 00:00:57,760
+and i'm going to tell it that this is a
+
+26
+00:00:55,600 --> 00:00:59,039
+test.csv
+
+27
+00:00:57,760 --> 00:01:01,840
+and everything else is the same we're
+
+28
+00:00:59,039 --> 00:01:03,840
+going to put this in the events channel
+
+29
+00:01:01,840 --> 00:01:06,240
+it's going to read that csv sees the
+
+30
+00:01:03,840 --> 00:01:08,640
+columns so we're good so far
+
+31
+00:01:06,240 --> 00:01:10,799
+now we need to map the columns to
+
+32
+00:01:08,640 --> 00:01:13,520
+the fields in our expression engine
+
+33
+00:01:10,799 --> 00:01:14,960
+channel so title should be title
+
+34
+00:01:13,520 --> 00:01:17,119
+uh page content is going to be
+
+35
+00:01:14,960 --> 00:01:20,640
+description the important one here is
+
+36
+00:01:17,119 --> 00:01:23,520
+the mux assets is our url column
+
+37
+00:01:20,640 --> 00:01:25,360
+and then actually for status let's just
+
+38
+00:01:23,520 --> 00:01:27,520
+let's do status is
+
+39
+00:01:25,360 --> 00:01:29,360
+closed we're just that way we can find
+
+40
+00:01:27,520 --> 00:01:31,840
+them a lot easier so i'm going to hit
+
+41
+00:01:29,360 --> 00:01:34,720
+save this will create that we need to
+
+42
+00:01:31,840 --> 00:01:35,920
+test import
+
+43
+00:01:34,720 --> 00:01:37,439
+save
+
+44
+00:01:35,920 --> 00:01:39,680
+and now we've got that now the first
+
+45
+00:01:37,439 --> 00:01:42,320
+thing we need to do is run it and this
+
+46
+00:01:39,680 --> 00:01:44,720
+will create the entries and also push
+
+47
+00:01:42,320 --> 00:01:46,560
+the videos to mux and we'll get web
+
+48
+00:01:44,720 --> 00:01:50,920
+hooks and we'll see all of this
+
+49
+00:01:46,560 --> 00:01:50,920
+happening so i'm going to hit go
+
+50
+00:01:57,600 --> 00:02:01,759
+cool now it's complete i'm gonna go to
+
+51
+00:01:59,600 --> 00:02:03,520
+my channels hit refresh
+
+52
+00:02:01,759 --> 00:02:05,600
+and we should now see these closed
+
+53
+00:02:03,520 --> 00:02:07,759
+entries are all the new entries so if i
+
+54
+00:02:05,600 --> 00:02:08,879
+go to like a big clip which was a really
+
+55
+00:02:07,759 --> 00:02:10,560
+big clip that's going to take a little
+
+56
+00:02:08,879 --> 00:02:11,840
+while to import
+
+57
+00:02:10,560 --> 00:02:14,720
+we're going to see that it's in the
+
+58
+00:02:11,840 --> 00:02:17,599
+preparing status now if i go over to the
+
+59
+00:02:14,720 --> 00:02:19,520
+mux console we have nine new events that
+
+60
+00:02:17,599 --> 00:02:21,840
+were just triggered this was the
+
+61
+00:02:19,520 --> 00:02:23,280
+importing of those video files as new
+
+62
+00:02:21,840 --> 00:02:25,680
+assets
+
+63
+00:02:23,280 --> 00:02:27,440
+as they import i go to some of the other
+
+64
+00:02:25,680 --> 00:02:28,560
+ones like one might be really quick this
+
+65
+00:02:27,440 --> 00:02:31,200
+one should already be done because it's
+
+66
+00:02:28,560 --> 00:02:33,200
+already in mux we can see that it is
+
+67
+00:02:31,200 --> 00:02:35,120
+we can also see like music should be
+
+68
+00:02:33,200 --> 00:02:36,640
+done
+
+69
+00:02:35,120 --> 00:02:38,239
+and
+
+70
+00:02:36,640 --> 00:02:40,640
+uh there it is we're just waiting on the
+
+71
+00:02:38,239 --> 00:02:42,879
+files to upload and if we go to that big
+
+72
+00:02:40,640 --> 00:02:45,840
+clip we're really just waiting for
+
+73
+00:02:42,879 --> 00:02:48,000
+the video to finish importing and then
+
+74
+00:02:45,840 --> 00:02:51,200
+it will show up there so that's how you
+
+75
+00:02:48,000 --> 00:02:52,879
+can import a large number of videos into
+
+76
+00:02:51,200 --> 00:02:54,400
+mux and expression engine at the same
+
+77
+00:02:52,879 --> 00:02:55,840
+time whether that those videos are
+
+78
+00:02:54,400 --> 00:02:58,000
+already in mux
+
+79
+00:02:55,840 --> 00:03:00,159
+as ids or as
+
+80
+00:02:58,000 --> 00:03:03,159
+urls on a another
+
+81
+00:03:00,159 --> 00:03:03,159
+service
+
