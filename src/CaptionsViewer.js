@@ -1,7 +1,10 @@
 /* eslint-disable no-param-reassign */ // TODO
-/* eslint-disable no-plusplus */ // TODO
 /* eslint-disable grouped-accessor-pairs */
 /* eslint-disable lines-between-class-members */
+
+import Utilities from './utilities.js';
+import { parseVTT, parseSubTextCues, parseTextTrack } from './parsers.js';
+
 export class CaptionsViewer extends HTMLElement {
   #isInit = false;
   #divs;
@@ -387,22 +390,22 @@ export class CaptionsViewer extends HTMLElement {
     }
 
     // Send src through native parser.
-    if (this.#src && CaptionsViewer.getFileType(this.#src) === 'vtt') {
+    if (this.#src && Utilities.getFileType(this.#src) === 'vtt') {
       this.#textTrack = await this.#renderCaptionSrc(this.#src);
     }
 
     // Track in video element. Pushed after load.
     if (this.#textTrack && 'cues' in this.#textTrack) {
       console.log('Trying foo parser.');
-      this.#captions = CaptionsViewer.parseTextTrack(this.#textTrack, this.#nudge);
+      this.#captions = parseTextTrack(this.#textTrack, this.#nudge);
     }
 
     // Both failed, use the fallback src parser.
     if (this.#src && (!this.#captions || !this.#captions.cues)) {
       console.log('Trying backup parser.');
       const srcContents = await fetch(this.#src).then(res => res.text()); // TODO more on this.
-      const type = CaptionsViewer.getFileType(this.#src);
-      if (srcContents) this.#captions = CaptionsViewer.parseVTT(srcContents, type);
+      const type = Utilities.getFileType(this.#src);
+      if (srcContents) this.#captions = parseVTT(srcContents, type);
     }
 
     // || Array.from(this.#textTrack.cues).length === 0
@@ -411,9 +414,8 @@ export class CaptionsViewer extends HTMLElement {
       this.#divs.root.innerHTML = '<p class="empty">No captions.</p>';
       return;
     }
-    // CaptionsViewer.removeExtraTimecode(this.#captions.cues); // Removes all timecode in text
-    this.#parseSubTextCues(this.#captions.cues);
-    if (this.#youtube) this.#youtubeAdjustments(this.#captions.cues);
+    this.#captions.cues = parseSubTextCues(this.#captions.cues);
+    if (this.#youtube) this.#captions.cues = this.#youtubeAdjustments(this.#captions.cues);
     this.#addCueSpaces(this.#captions.cues);
     this.#setCuesStatus();
     console.log('Final Captions.', this.#captions); // TODO remove.
@@ -471,7 +473,7 @@ export class CaptionsViewer extends HTMLElement {
     this.#captions.cues?.forEach((cue, index) => {
       if (cue.timecode) {
         const styleName = cue.status;
-        const timecode = `<span class="timecode">${CaptionsViewer.prettyTimecode(cue.timecode.start)}</span>`;
+        const timecode = `<span class="timecode">${Utilities.prettyTimecode(cue.timecode.start)}</span>`;
         const chapter = cue.chapter ? `<span class="chapter">${cue.chapter}</span>` : '';
         const textJoiner = this.#singleline ? ' ' : '<br />';
 
@@ -572,6 +574,12 @@ export class CaptionsViewer extends HTMLElement {
     this.#paused = !this.#paused;
   }
 
+  setTheme(userPreference = undefined) {
+    const theme = Utilities.getTheme(userPreference || this.#theme || '');
+    this.#theme = theme;
+    this.#divs.root.dataset.theme = theme;
+  }
+
   #event(name, value, object) {
     this.dispatchEvent(new CustomEvent('all', { detail: { name, value, full: object } }));
     this.dispatchEvent(new CustomEvent(name, { detail: { value, full: object } }));
@@ -612,107 +620,6 @@ export class CaptionsViewer extends HTMLElement {
     });
   }
 
-  static parseTextTrack(textTrack, nudge) {
-    if (!textTrack.cues) {
-      return undefined;
-    }
-    const cues = Object.entries(textTrack.cues).map(cuesArray => {
-      const cue = cuesArray[1];
-      return {
-        chapter: cue.id,
-        status: '',
-        text: cue.text.split('\n').map(split => split.replace(/^\s+/g, '')), // remove starting whitespace
-        seconds: {
-          start: cue.startTime - nudge,
-          end: cue.endTime,
-        },
-        timecode: {
-          start: CaptionsViewer.secondsToTimecode(cue.startTime),
-          end: CaptionsViewer.secondsToTimecode(cue.endTime),
-        },
-      };
-    });
-
-    const track = {
-      kind: textTrack.kind,
-      lang: textTrack.language,
-      label: textTrack.label,
-      header: textTrack.id,
-      styles: undefined,
-      cues,
-    };
-
-    return track;
-  }
-
-  // HH:MM:SS, or HH:MM:SS.FFF
-  static timecodeToSeconds(timecode) {
-    const parts = timecode.split(':');
-    const hours = parseInt(parts[0], 10);
-    const minutes = parseInt(parts[1], 10);
-    const seconds = parseInt(parts[2], 10);
-    const mili = timecode.split('.');
-    // TODO account for srt using , instead of .
-    return (hours * 3600) + (minutes * 60) + seconds + (mili[1] / 1000);
-  }
-
-  // Credit: Chat GPT
-  static isValidJSON(input) {
-    return /^[\],:{}\s]*$/.test(input.replace(/\\["\\/bfnrtu]/g, '@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?/g, ']').replace(/(?:^|:|,)(?:\s*\[)+/g, ''));
-  }
-
-  static isTimecode(input) {
-    const regex = /^[0-9][0-9]/;
-    return regex.test(input);
-  }
-
-  static prettyTimecode(timecode) {
-    const split = timecode.split(':');
-    if (split.length === 0) return [];
-
-    if (split.length - 1 === 2) {
-      if (split[0] === '00') {
-        split.splice(0, 1);
-      }
-    }
-
-    // Round miliseconds, and handle srt/vtt differences.
-    let seconds = split[split.length - 1];
-    seconds = seconds.replace(',', '.');
-    seconds = Math.round(seconds);
-    if (seconds < 10) {
-      seconds = `0${seconds}`;
-    }
-    split[split.length - 1] = seconds;
-    return split.join(':');
-  }
-
-  static secondsToTimecode(seconds) {
-    if (seconds === undefined || seconds === null) return '';
-    if (seconds < 0) return '00:00:00';
-    return new Date(seconds * 1000).toISOString().substring(11, 11 + 8);
-  }
-
-  static getTheme(userPreference) {
-    if (userPreference === 'light') {
-      return 'light';
-    }
-    if (userPreference === 'dark') {
-      return 'dark';
-    }
-    // system
-    if (matchMedia('(prefers-color-scheme: light)').matches) {
-      return 'light';
-    }
-    return 'dark';
-  }
-
-  setTheme(userPreference = undefined) {
-    const theme = CaptionsViewer.getTheme(userPreference || this.#theme || '');
-    this.#theme = theme;
-    this.#divs.root.dataset.theme = theme;
-  }
-
   #addCueSpaces(cues) {
     const distance = this.#spacer; // 10 seconds.
     // When blank is added to array, it messes with next loop.
@@ -734,8 +641,8 @@ export class CaptionsViewer extends HTMLElement {
           status: '',
           type: 'spacer',
           timecode: {
-            start: CaptionsViewer.secondsToTimecode(start),
-            end: CaptionsViewer.secondsToTimecode(start),
+            start: Utilities.secondsToTimecode(start),
+            end: Utilities.secondsToTimecode(start),
           },
           seconds: {
             start,
@@ -748,142 +655,13 @@ export class CaptionsViewer extends HTMLElement {
     });
   }
 
-  // Remove: my text as<00:02:56.080><c> ids</c><00:02:56.640><c> or</c>
-  /*
-  static removeExtraTimecode(cues) {
-    if (!cues) return cues;
-    return cues.map(cue => {
-      cue.text.forEach((line, index) => {
-        cue.text[index] = line.replace(/<.*?>/g, '');
-      });
-      return cue;
-    });
-  }
-  */
-
-  static getFileType(file) {
-    const split = file.split('.');
-    const extension = split[split.length - 1];
-    const supported = ['vtt', 'srt'];
-    return supported.find(ext => ext === extension);
-  }
-
-  #parseSubTextCues(cues) {
-    this.#captions.cues = cues.map(cue => {
-      const texts = cue.text.join(' ');
-      cue.subCues = undefined;
-      if (texts.includes('<')) {
-        cue.subCues = CaptionsViewer.parseSubTextCue(texts);
-      }
-      return cue;
-    });
-  }
-
-  static parseSubTextCue(text) {
-    const timecodeRegex = /<(\d\d:\d\d:\d\d\.\d\d\d)>/;
-    const timecodeText = text.split(timecodeRegex);
-    const result = [];
-    for (let i = 1; i < timecodeText.length; i++) {
-      result.push({
-        seconds: CaptionsViewer.timecodeToSeconds(timecodeText[i]),
-        text: timecodeText[i + 1],
-        status: '',
-      });
-      i += 1;
-    }
-    return result;
-  }
-
-  // This is a simple parser to keep the size down.
-  static parseVTT(contents, type) {
-    const lines = contents.split('\n');
-
-    const caption = {
-      kind: type || lines[0].startsWith('WEBVTT'),
-      lang: undefined,
-      header: undefined,
-      styles: undefined,
-      cues: [],
-    };
-    let currentCue = {
-      text: [],
-    };
-    let count = 0;
-    let cueBlock = false;
-    let cueBlockData = '';
-    let cueBlockName = '';
-    for (const line of lines) {
-      if (line.startsWith('WEBVTT')) {
-        const split = line.split(' - ');
-        if (split.length > 0) {
-          const index = 1;
-          caption.header = split[index];
-        }
-      } else if (line.startsWith('Kind')) {
-        const split = line.split(':');
-        caption.kind = split[1]?.trim();
-      } else if (line.startsWith('Language')) {
-        const split = line.split(':');
-        caption.lang = split[1]?.trim();
-      } else if (line.startsWith('STYLE')) {
-        cueBlock = true;
-        cueBlockName = 'styles';
-      } else if (line.startsWith('NOTE')) {
-        // Skip notes.
-      } else if (cueBlock === true && line !== '') {
-        cueBlockData += line;
-      } else if (cueBlock === true && line === '') {
-        caption.styles = cueBlockData;
-        cueBlock = false;
-        cueBlockData = '';
-      } else if (line !== '' && CaptionsViewer.isTimecode(lines[count + 1])) {
-        currentCue.chapter = line;
-      } else if (CaptionsViewer.isTimecode(line)) {
-        const times = line.split('-->');
-
-        // 00:00:08.880 --> 00:00:10.549 align:start position:0%
-        const endSplit = times[1] ? times[1]?.split(' ') : undefined;
-        const end = endSplit ? endSplit[1]?.trim() : '';
-
-        currentCue.timecode = {
-          start: times[0].trim(),
-          end,
-        };
-        currentCue.seconds = {
-          start: CaptionsViewer.timecodeToSeconds(times[0]),
-          end: CaptionsViewer.timecodeToSeconds(end),
-        };
-        currentCue.length = currentCue.seconds.start + currentCue.seconds.end;
-        // Check for position after the timecode.
-        const spaces = line.split(' ');
-        if (spaces.length > 2) {
-          currentCue.styles = spaces.splice(3).join(' ');
-        }
-      } else if (line !== '') {
-        currentCue.text.push(line);
-      }
-
-      if (line === '' && currentCue.timecode?.start !== undefined) {
-        if (cueBlock) {
-          cueBlock = false;
-          // eslint-disable-next-line no-unused-vars
-          cueBlockName = '';
-        }
-        currentCue.active = false;
-        caption.cues.push(currentCue);
-        currentCue = {
-          text: [],
-        };
-      }
-
-      count += 1;
-    }
-    return caption;
-  }
-
   #youtubeAdjustments(cues) {
+    // Remove the second cue since it duplicates.
+    this.#captions.cues.splice(1, 1);
+
     // Remove single lines.
-    this.#captions.cues = cues.map((cue, index) => {
+    let newCues;
+    newCues = cues.map((cue, index) => {
       if (cue.text.length > 0 && index !== 1) {
         cue.text.shift();
       }
@@ -891,9 +669,11 @@ export class CaptionsViewer extends HTMLElement {
     });
 
     // Remove blank text.
-    this.#captions.cues = cues.filter(cue => cue.text.length !== 0);
+    newCues = cues.filter(cue => cue.text.length !== 0);
 
     // Remove if the cue is a blank space.
-    this.#captions.cues = cues.filter(cue => cue.text[0] && cue.text[0].length !== 0);
+    newCues = cues.filter(cue => cue.text[0] && cue.text[0].length !== 0);
+
+    return newCues;
   }
 }
