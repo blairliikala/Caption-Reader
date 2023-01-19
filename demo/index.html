@@ -26,6 +26,7 @@
   <main class="container">
 
     <video controls width="100%" playsinline autopictureinpicture preload="auto">
+      <source src="content/dune/dune-av1-1080.mp4" type="video/mp4; codecs=av01.0.05M.08"">
       <source src="content/dune/dune.mp4" type="video/mp4">
       <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" />
       <track label="French" kind="subtitles" srclang="fr" src="content/dune/dune_fr.vtt" />
@@ -60,6 +61,16 @@
       <button type="button" id="toggleText" title="Toggle the cue text.">Text</button>
       <button type="button" id="toggleSingleLine" title="Put the cue text on a single line or not, ignoring the caption file.">Single Line</button>
     </fieldset>
+
+    <h2>Examples</h2>
+    <nav>
+      <ul>
+        <li><a href="agent.html">Short Clip</a></li>
+        <li><a href="content/bttf/index.html">Lots of captions.</a></li>
+        <li><a href="hls.html">HLS with embedded captions.</a></li>
+        <li><a href="youtube.html">YouTube</a></li>
+      </ul>      
+    </nav>
 
     <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
   </main>
