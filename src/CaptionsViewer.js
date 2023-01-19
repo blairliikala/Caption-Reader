@@ -1,3 +1,5 @@
+/* eslint-disable no-param-reassign */ // TODO
+/* eslint-disable no-plusplus */ // TODO
 /* eslint-disable grouped-accessor-pairs */
 /* eslint-disable lines-between-class-members */
 export class CaptionsViewer extends HTMLElement {
@@ -7,21 +9,22 @@ export class CaptionsViewer extends HTMLElement {
   // Params
   #src = ''; // location of a vtt src.
   #playhead = 0; // current seconds from start.
-  #height = '300px';
+  #height = '300px'; // Hight of container, applied as inline style.
   #debounce = 0; // In seconds how long to
   #singleline = false;
   #color = ''; // Base 360 color for text.
   #disable = ''; // What vtt properties to disable, uses |
   #theme = ''; // blank/light or dark.  Dark shows lighter text.
-  #youtube = false;
+  #youtube = false; // Makes vtt cue adjustments specific to YouTube.
 
   // Internal
-  #captions = {}; // Array of the vtt cues.
+  #captions = {}; // Master array of the cues.
   #currentCue = undefined; // for parser.
   #debounceScrolling = false; // for throttling scrolling.
   #paused = false; // toggle scrolling and highlighting.
   #textTrack = {}; // Native textTrack from video element.
   #spacer = 5; // Time in sec between cues where the progres bar cue will be shown.
+  #nudge = 0.5; // Time in sec to start the cue early. comp for css transition.
 
   css = `<style>
     #root {
@@ -217,7 +220,8 @@ export class CaptionsViewer extends HTMLElement {
   }
   set singleline(item) {
     if (typeof item !== 'boolean') {
-      console.warn('debounceScrolling must be a boolean.');
+      console.warn('singleline must be a boolean.', item);
+      this.#event('error', 'singleline must be a boolean.');
       return;
     }
     this.setAttribute('singleline', item);
@@ -227,7 +231,8 @@ export class CaptionsViewer extends HTMLElement {
   }
   set debounceScrolling(item) {
     if (typeof item !== 'boolean') {
-      console.warn('debounceScrolling must be a boolean.');
+      console.warn('debounceScrolling must be a boolean.', item);
+      this.#event('error', 'debounceScrolling must be a boolean.');
       return;
     }
     this.#debounceScrolling = item;
@@ -241,7 +246,8 @@ export class CaptionsViewer extends HTMLElement {
   }
   set youtube(item) {
     if (typeof item !== 'boolean') {
-      console.warn('youtube must be a boolean.');
+      console.warn('youtube must be a boolean.', item);
+      this.#event('error', 'youtube must be a boolean.');
       return;
     }
     this.#youtube = item;
@@ -303,7 +309,7 @@ export class CaptionsViewer extends HTMLElement {
     `;
 
     const html = template.content.cloneNode(true);
-    /*
+    /* Apply using shadow DOM instead of made-up unknown element hack.
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.appendChild(html);
 
@@ -329,7 +335,7 @@ export class CaptionsViewer extends HTMLElement {
 
     this.#divs.root.addEventListener('touchmove', () => {
       this.#debounceScrolling = true;
-      console.log('touch move...');
+      console.log('[touchmove] touch move...');
       this.#divs.root.addEventListener('mouseup', () => {
         setTimeout(() => { this.#debounceScrolling = false; }, this.#debounce);
       });
@@ -337,7 +343,7 @@ export class CaptionsViewer extends HTMLElement {
 
     this.#divs.root.addEventListener('scroll', () => {
       this.#debounceScrolling = true;
-      console.log('touch move...');
+      console.log('[scroll] touch move...');
       this.#divs.root.addEventListener('mouseup', () => {
         setTimeout(() => { this.#debounceScrolling = false; }, this.#debounce);
       });
@@ -387,13 +393,13 @@ export class CaptionsViewer extends HTMLElement {
 
     // Track in video element. Pushed after load.
     if (this.#textTrack && 'cues' in this.#textTrack) {
-      console.log('Using foo parser.');
-      this.#captions = CaptionsViewer.parseTextTrack(this.#textTrack);
+      console.log('Trying foo parser.');
+      this.#captions = CaptionsViewer.parseTextTrack(this.#textTrack, this.#nudge);
     }
 
     // Both failed, use the fallback src parser.
     if (this.#src && (!this.#captions || !this.#captions.cues)) {
-      console.log('Using backup parser.');
+      console.log('Trying backup parser.');
       const srcContents = await fetch(this.#src).then(res => res.text()); // TODO more on this.
       const type = CaptionsViewer.getFileType(this.#src);
       if (srcContents) this.#captions = CaptionsViewer.parseVTT(srcContents, type);
@@ -408,7 +414,6 @@ export class CaptionsViewer extends HTMLElement {
     // CaptionsViewer.removeExtraTimecode(this.#captions.cues); // Removes all timecode in text
     this.#parseSubTextCues(this.#captions.cues);
     if (this.#youtube) this.#youtubeAdjustments(this.#captions.cues);
-    // this.#captions.cues = this.#removeDuplicateLines(this.#captions.cues);
     this.#addCueSpaces(this.#captions.cues);
     this.#setCuesStatus();
     console.log('Final Captions.', this.#captions); // TODO remove.
@@ -607,7 +612,7 @@ export class CaptionsViewer extends HTMLElement {
     });
   }
 
-  static parseTextTrack(textTrack) {
+  static parseTextTrack(textTrack, nudge) {
     if (!textTrack.cues) {
       return undefined;
     }
@@ -618,7 +623,7 @@ export class CaptionsViewer extends HTMLElement {
         status: '',
         text: cue.text.split('\n'),
         seconds: {
-          start: cue.startTime - 0.5, // comp for css transition.
+          start: cue.startTime - nudge,
           end: cue.endTime,
         },
         timecode: {
@@ -744,6 +749,7 @@ export class CaptionsViewer extends HTMLElement {
   }
 
   // Remove: my text as<00:02:56.080><c> ids</c><00:02:56.640><c> or</c>
+  /*
   static removeExtraTimecode(cues) {
     if (!cues) return cues;
     return cues.map(cue => {
@@ -753,6 +759,7 @@ export class CaptionsViewer extends HTMLElement {
       return cue;
     });
   }
+  */
 
   static getFileType(file) {
     const split = file.split('.');
