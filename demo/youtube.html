@@ -41,7 +41,7 @@
 
   <script type="module" src="../../captions-viewer.js"></script>
   <script defer src="https://www.youtube.com/iframe_api"></script>
-  <script defer>
+  <script>
     const component = document.querySelector('captions-viewer');
 
     let player;
@@ -62,13 +62,15 @@
     // While playing, update the component with the current time.
     // The faster 50ms is to make sure the sub cues are showing on time.
     let pingInterval;
+    let playheadUpdate = 100;
     function onPlayerStateChange(event) {
       if (event.data == YT.PlayerState.PLAYING) {
         pingInterval = setInterval(() => {
           component.playhead = player.getCurrentTime()
-        }, 50)
+        }, playheadUpdate)
+      } else {
+        clearInterval(pingInterval);
       }
-      clearInterval(pingInterval);
     }
 
     // On click, Seek's player to caption location.
