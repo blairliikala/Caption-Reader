@@ -5,6 +5,8 @@
   <title>Caption Reader Web Component - HLS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="demo.css" rel="stylesheet" type="text/css">
+  <script type="module" src="../../captions-viewer.js"></script>
+
   <style>
     /* Hides the component until it has loaded */
     captions-viewer:not(:defined) {
@@ -41,7 +43,6 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script type="module" src="../../captions-viewer.js"></script>
   <script type="module">
     const component = document.querySelector('captions-viewer');
     const player = document.querySelector('video');
