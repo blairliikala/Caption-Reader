@@ -1,5 +1,4 @@
 /* eslint-disable brace-style */ // I think its more readable for this here.
-/* eslint-disable no-plusplus */ // TODO
 
 import util from './utilities.js';
 
@@ -7,7 +6,7 @@ function parseSubTextCue(text, startSec) {
   const timecodeRegex = /<(\d\d:\d\d:\d\d\.\d\d\d)>/;
   const timecodeText = text.split(timecodeRegex);
   const result = [];
-  for (let i = 1; i < timecodeText.length; i++) {
+  for (let i = 1; i < timecodeText.length; i += 1) {
     if (i === 1) {
       result.push({
         seconds: startSec,
