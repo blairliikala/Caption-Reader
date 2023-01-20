@@ -12,7 +12,7 @@ export class CaptionsViewer extends HTMLElement {
   // Params
   #src = ''; // location of a vtt src.
   #playhead = 0; // current seconds from start.
-  #height = '300px'; // Hight of container, applied as inline style.
+  #height = '400px'; // Hight of container, applied as inline style.
   #debounce = 0; // In seconds how long to
   #singleline = false;
   #color = ''; // Base 360 color for text.
@@ -70,12 +70,20 @@ export class CaptionsViewer extends HTMLElement {
       width: 100%;
       text-align: start;
     }
-    .cue:hover, .cue:active, .cue:focus-visible {
+    @media(hover: hover) and (pointer: fine) {
+      .cue:hover, .cue:active {
+        cursor: pointer;
+        background: hsla(var(--base), 60%, 70%, .1);
+        outline: 1px solid hsla(var(--base), 60%, 50%, .1);
+        color: hsla(var(--base), 10%, 20%, 1);
+      }
+    }
+    .cue:focus-visible {
       cursor: pointer;
       background: hsla(var(--base), 60%, 70%, .1);
       outline: 1px solid hsla(var(--base), 60%, 50%, .1);
       color: hsla(var(--base), 10%, 20%, 1);
-    }
+    }    
     .upcoming, .upcoming:focus-visable {
       color: hsla(var(--base), 20%, 60%, .7);
       transform: scale(1);
@@ -115,7 +123,16 @@ export class CaptionsViewer extends HTMLElement {
     [data-theme="dark"] .cue {
       color: hsla(var(--base), 10%, 80%, .7);
     }
-    [data-theme="dark"] .cue:hover, .cue:active, .cue:focus, .cue:focus-visible {
+    @media(hover: hover) and (pointer: fine) {
+      [data-theme="dark"] .cue:hover,
+      [data-theme="dark"] .cue:active,
+      [data-theme="dark"] .cue:focus {
+        background: hsla(var(--base), 60%, 70%, .1);
+        outline: 1px solid hsla(var(--base), 60%, 50%, .1);
+        color: hsla(var(--base), 0%, 100%, 1);
+      }
+    }
+    [data-theme="dark"] .cue:focus-visible {
       background: hsla(var(--base), 60%, 70%, .1);
       outline: 1px solid hsla(var(--base), 60%, 50%, .1);
       color: hsla(var(--base), 0%, 100%, 1);
