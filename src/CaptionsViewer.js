@@ -659,8 +659,9 @@ export class CaptionsViewer extends HTMLElement {
     // Remove the second cue since it duplicates.
     this.#captions.cues.splice(1, 1);
 
-    // Remove single lines.
     let newCues;
+
+    // Remove single lines.
     newCues = cues.map((cue, index) => {
       if (cue.text.length > 0 && index !== 1) {
         cue.text.shift();
