@@ -11,13 +11,13 @@ function parseSubTextCue(text, startSec) {
       result.push({
         seconds: startSec,
         text: timecodeText[0],
-        status: '',
+        status: undefined,
       });
     }
     result.push({
       seconds: util.timecodeToSeconds(timecodeText[i]),
       text: timecodeText[i + 1],
-      status: '',
+      status: undefined,
     });
     i += 1;
   }
@@ -70,6 +70,40 @@ export function parseSubTextCues(cues) {
     }
     return cue;
   });
+}
+
+export function addCueSpaces(cues, distance) {
+  // When blank is added to array, it messes with next loop.
+  let isBlank = false;
+  cues.forEach((cue, index) => {
+    const next = cues[index + 1];
+    if (isBlank) {
+      isBlank = false;
+      return;
+    }
+    if (!next) return;
+    const diff = next.seconds.start - cue.seconds.end;
+    if (diff > distance) {
+      const start = cue.seconds.end;
+      const end = next.seconds.start;
+      const newCue = {
+        chapter: '',
+        text: [],
+        type: 'spacer',
+        timecode: {
+          start: util.secondsToTimecode(start),
+          end: util.secondsToTimecode(start),
+        },
+        seconds: {
+          start,
+          end,
+        },
+      };
+      cues.splice(index + 1, 0, newCue);
+      isBlank = true;
+    }
+  });
+  return cues;
 }
 
 // This is a simple parser to keep the size down.
