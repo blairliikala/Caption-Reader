@@ -1,7 +1,12 @@
 export default class Utilities {
   // HH:MM:SS, or HH:MM:SS.FFF
-  static timecodeToSeconds(timecode) {
+  static timecodeToSeconds(timecode = '') {
+    const regex = /^[0-9][0-9]/;
+    if (!regex.test(timecode) || typeof (timecode) !== 'string') {
+      return undefined;
+    }
     let parts = timecode.split(':'); // vtt
+    if (!parts || parts.length === 1) return timecode;
     if (parts.lenght === 1) parts = timecode.split(','); // srt
     const hours = parseInt(parts[0], 10);
     const minutes = parseInt(parts[1], 10);
@@ -21,6 +26,10 @@ export default class Utilities {
   }
 
   static prettyTimecode(timecode) {
+    const regex = /^[0-9][0-9]/;
+    if (!regex.test(timecode) || typeof (timecode) !== 'string') {
+      return undefined;
+    }
     const split = timecode.split(':');
     if (split.length === 0) return [];
 
@@ -41,8 +50,8 @@ export default class Utilities {
     return split.join(':');
   }
 
-  static secondsToTimecode(seconds) {
-    if (seconds === undefined || seconds === null) return '';
+  static secondsToTimecode(seconds = 0) {
+    if (typeof (seconds) !== 'number') return '';
     if (seconds < 0) return '00:00:00';
     return new Date(seconds * 1000).toISOString().substring(11, 11 + 8);
   }
@@ -61,7 +70,7 @@ export default class Utilities {
     return 'dark';
   }
 
-  static getFileType(file) {
+  static getSupportedFileType(file) {
     const split = file.split('.');
     const extension = split[split.length - 1];
     const supported = ['vtt', 'srt'];
