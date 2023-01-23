@@ -10,58 +10,21 @@ A web component to display captions as a video plays. Includes automatic scrolli
 npm i captions-viewer
 ```
 
-Add video and the component to a web page.
-
-```html
-<video controls>
-   <source src="video.mp4" type="video/mp4">
-</video>
-
-<captions-viewer></caption-viewer>
-
-<script type="module" src="../../captions-viewer.js"></script>
-```
-
 ## Add Captions
 
-### Option 1: TextTrack Method (recomended)
-
-Using a native `video` element or player, provide the `textTrack` object ([offical docs](https://developer.mozilla.org/en-US/docs/Web/API/TextTrack)).  First include the text track html in the video element, then push the object to the component.  This has the major advantage of allowing captions in the video player, and using the browser's more robust caption decoder.
-
-```html
-<video controls>
-   <source src="video.mp4" type="video/mp4">
-   <!-- Add text tracks -->
-   <track label="English" kind="subtitles" srclang="en" src="en.vtt" default />
-   <track label="French" kind="subtitles" srclang="fr" src="fr.vtt" />
-   <track label="Spanish" kind="subtitles" srclang="es" src="es.es" />
-</video>
-
-<captions-viewer></caption-viewer>
-
-<script>
-    const component = document.querySelector('captions-viewer');
-    const player = document.querySelector('video');
-    const track = 0; // index of the caption you want to use.
-    component.textTrack = player.textTracks[track];
-</script>
-```
-
-### Option 2: File (`src`)
-
-Provide the path to a caption file the `src` parameter on the element.  This uses a lightweight caption parser and may be a bit more strict to file types.
+Provide the path to a caption file the `src` parameter on the element.  The caption file procesesd by the browser-native caption parser for vtt with a backup lightweight parser for srt or if there is a problem.
 
 ```html
 <video controls>
    <source src="video.mp4" type="video/mp4">
 </video>
 
-<captions-viewer file="caption.vtt"></caption-viewer>
+<captions-viewer src="caption.vtt"></caption-viewer>
 ```
 
 ## Link Elements
 
-For the captions to update when the player is playing, the player's current position (playhead) must be sent to the captions component on a regular basis.  Luckily this is easy to do with the native video element, and most video players provide a time update event to listen for.
+To make the captions to update when the video is playing, the player's current position (playhead) must be regularly sent to the captions component.  Luckily this is easy to do by using the native video element, and most video players provide a time update event to listen for.
 
 Example connecting a native video tag to the component;
 
@@ -71,11 +34,11 @@ Example connecting a native video tag to the component;
 <captions-viewer file="caption.vtt"></caption-viewer>
 
 <script>
-const component = document.querySelector('captions-viewer');
+const captions = document.querySelector('captions-viewer');
 const player = document.querySelector('video');
 
 player.addEventListener('timeupdate', (e) => {
-  component.playhead = player.currentTime;
+  captions.playhead = player.currentTime;
 })
 </script>
 ```
@@ -83,7 +46,7 @@ player.addEventListener('timeupdate', (e) => {
 The component can also jump the player when a cue is clicked.  To do this, setup a listener on the component `seek` event and then seek the video player:
 
 ```javascript
-component.addEventListener('seek', e => {
+captions.addEventListener('seek', e => {
   player.currentTime = e.detail.value;
 });
 ```
@@ -92,7 +55,7 @@ When the viewer skips around in the video timeline the captions may not update a
 
 ```javascript
 player.addEventListener('seeking', () => {
-  component.debounceScrolling = false;
+  captions.debounceScrolling = false;
 });
 ```
 
@@ -101,12 +64,14 @@ player.addEventListener('seeking', () => {
 |  Name | Default | Description |
 | - | - | - |
 | `src`       | null   | (required) Location of the vtt/srt file. |
-| `height`     | 300px  | Height of the scrolling box.  Valid CSS unit. |
-| `singleline` | false  | True will show all text for a cue on a single line.  False will obey the line breaks in the caption file. |
 | `playhead`   | 0      | The time the player is at, in seconds.  Used to keep the player and reader in-sync. (see more below) |
+| `height`     | 300px  | Height of the scrolling box.  Valid CSS unit. |
 | `debounce`   | 5000   | Control the time between scrolling. Time in ms between the last scroll (user or automatic) |
-| `disable`    | empty  | Turn off displaying `timecode` `chapters` or `text`. Use a `|` between each option, such as `timecode|chapters` |
+| `singleline` | false  | True will show all text for a cue on a single line.  False will obey the line breaks in the caption file. |
 | `color` | 360 | The Hue (0-360) of the base color to use.  This is put into an hsla color. |
+| `disable`    | empty  | Turn off displaying `timecode` `chapters` or `text`. Use a pipe `\|` between each option, such as `timecode\|chapters` |
+| `theme` | light, dark | Light theme shades the text darker for a whiter background.  Dark will lighten text for a darker background. |
+| `youtube` | false | Enable `true` if the caption vtt track came from YouTube for some special handling. |
 
 ## Methods
 
@@ -118,10 +83,8 @@ Calling this method will toggle pausing the automatic reading.
 <button>Toggle Caption Reading</button>
 <script>
 ...
-const component = document.querySelector('captions-viewer');
-const button document.querySelector('button')
 button.addEventListener('click', () => {
-  component.pause();
+  captions.pause();
 })
 </script>
 ```
@@ -131,7 +94,7 @@ button.addEventListener('click', () => {
 Calling this method with the name of the theme will immediately change the color scheme.  Options are currently only `dark` for making the text lighter for dark backgrounds, `light` for dark text on ligher backgrounds, and blank/empty for user's system theme.
 
 ```javascript
-component.setTheme('dark');
+captions.setTheme('dark');
 ```
 
 ## Events
@@ -179,26 +142,101 @@ Show captions for a video using the native caption tracy system, with a dynamic 
 <script type="module" src="../../captions-viewer.js"></script>
 <script type="module">
 
-  const component = document.querySelector('captions-viewer');
+  const captions = document.querySelector('captions-viewer');
   const player = document.querySelector('video');
 
   player.onloadeddata = () => {
-    component.textTrack = player.textTracks[0];
+    captions.textTrack = player.textTracks[0];
   }  
 
   // Updates the captions.
   player.ontimeupdate = () => {
-    component.playhead = player.currentTime;
+    captions.playhead = player.currentTime;
   }
 
   // On click, Seek's player to caption location.
-  component.addEventListener('seek', e => {
+  captions.addEventListener('seek', e => {
     player.currentTime = e.detail.value;
   });
 
   // (optional) Scroll to the cue when user skips in the player timeline.
   player.onseeking = () => {
-    component.debounceScrolling = false;
+    captions.debounceScrolling = false;
   };
+</script>
+```
+
+### YouTube
+
+Download the vtt option from YouTube in the Creator Studio and make it available online.
+
+**Note** when using the vtt file, one edit needs to be made to the first cue.  Normally there is a blank line between the timecode and cue code.  Due to an issue with Firefox, add text in this blank line.  Any text will do, and will be removed by the parser.
+
+```text
+WEBVTT
+Kind: captions
+Language: en
+
+00:00:00.000 --> 00:00:02.810 align:start position:0%
+[add any text here]
+hello<00:00:00.539><c> boys</c><00:00:00.719><c> and</c><00:00:00.750><c> girls</c>
+
+...etc
+```
+
+```html
+<div id="player"></div>
+
+<captions-viewer
+  src="caption.vtt"
+  disable="chapters"
+  debounce="1000"
+  youtube="true"
+>
+</captions-viewer>
+
+<script type="module" src="captions-viewer.js"></script>
+<script defer src="https://www.youtube.com/iframe_api"></script>
+<script>
+  const captions = document.querySelector('captions-viewer');
+
+  // From YouTube documentation
+  // https://developers.google.com/youtube/iframe_api_reference
+  let player;
+  function onYouTubeIframeAPIReady() {
+    player = new YT.Player('player', {
+      height: '390',
+      width: '100%',
+      videoId: 'abcdefg', // Add YouTube video ID.
+      playerVars: {
+        'playsinline': 1
+      },
+      events: {
+        'onStateChange': onPlayerStateChange
+      }
+    });
+  }
+
+  // While playing, update the component with the current time.
+  // YouTube does not have an event for when time is updating, so we have to poll with an interval.
+  // The faster 200ms is to make sure the sub cues are showing on time.  Keep this above 200ms to not tax the client's CPU.
+  let pingInterval;
+  let playheadUpdate = 200;
+  function onPlayerStateChange(event) {
+    if (event.data == YT.PlayerState.PLAYING) {
+      pingInterval = setInterval(() => {
+        captions.playhead = player.getCurrentTime()
+      }, playheadUpdate)
+    } else {
+       // Stop when paused.
+      clearInterval(pingInterval);
+    }
+  }
+
+  // On click, Seek's player to caption location.
+  // seekTo is YouTube's method to seek the player.
+  component.addEventListener('seek', e => {
+    player.seekTo(e.detail.value);
+  });
 </script>
 ```
