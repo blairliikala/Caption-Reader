@@ -252,8 +252,7 @@ function parseVTT(contents, type) {
 
 // src/defautStylesheet.js
 function defaultStyles() {
-  return `<style>
-
+  return `<style id="theme_a">
   #root {
     display: block;
     scroll-behavior: smooth;
@@ -264,7 +263,7 @@ function defaultStyles() {
     position: relative;
     padding: .5rem;
     --base: 360;
-    
+
     --gray-10-sat: 10%;
     --gray-10-light: 10%;
     --gray-10-opacity: 0.1;
@@ -274,13 +273,9 @@ function defaultStyles() {
     --gray-70-opacity: 0.7;
     --inactive: hsla(var(--base), 20%, 40%, 0.9);
     --active-primary: hsla(var(--base), 0%, 30%, 1);
-    --active-secondary: hsla(var(--base), 20%, 80%, 1);
+    --active-secondary: hsla(var(--base), 40%, 70%, 1);
     --highlight: hsla(var(--base), 50%, 50%, 0.9);
   }
-  #root * {
-    box-sizing: border-box;
-  }
-  
   [data-theme="dark"]#root {
     --gray-10-sat: 10%;
     --gray-10-light: 10%;
@@ -289,12 +284,14 @@ function defaultStyles() {
     --gray-20-light: 10%;
     --gray-20-opacity: 0.2;
     --gray-70-opacity: 0.7;
-    --inactive: hsla(var(--base), 10%, 80%, 0.7); 
+    --inactive: hsla(var(--base), 10%, 80%, 0.7);
     --active-primary: hsla(var(--base), 0%, 100%, 1);
     --active-secondary: hsla(var(--base), 20%, 80%, 1);
     --highlight: hsla(var(--base), 50%, 60%, 0.9);
   }
-  
+  #root * {
+    box-sizing: border-box;
+  }
   .empty {
     color: hsla(var(--base), var(--gray-10-sat), var(--gray-10-light), var(--gray-70-opacity));
   }
@@ -321,23 +318,40 @@ function defaultStyles() {
     text-align: start;
     border-left: 2px solid hsla(var(--base), 60%, 70%, 0.1);
     border-radius: 0;
+    font-weight: bold;
+
+    color: transparent;
+    text-shadow: 0 0 1.2px var(--inactive);
   }
-  @media(hover: hover) and (pointer: fine) {
-    .cue:hover, .cue:active, .cue:focus {
-      cursor: pointer;
-      color: var(--active-secondary);
-      background: none;
-      border-left-color: var(--highlight);
-      outline: 1px solid var(--highlight);
+  .cue:focus {
+    background: none;
+    border: none;
+    outline: none;
+  }
+  .cue:hover, .cue:active {
+    cursor: pointer;
+    color: var(--active-secondary);
+    background: none;
+    border-left-color: var(--highlight);
+    outline: 1px solid var(--highlight);
+    text-shadow: none;
+  }
+  @supports (-webkit-touch-callout: none) {
+    .cue:hover {
+      outline: none;
     }
   }
-  .cue:focus-visible {
+  .cue:focus-visible, .cue:focus {
     cursor: pointer;
     border-left-color: var(--highlight);
     outline: 1px solid var(--highlight);
-    color: var(--highlight);
+    color: var(--secondary);
     background: none;
-  }    
+    text-shadow: none;
+  }
+  .cue:hover {
+    background :none;
+  }
   .upcoming {
     transform: scale(1);
     transform-origin: left;
@@ -345,34 +359,37 @@ function defaultStyles() {
   .next {
     transform: scale(1);
     transform-origin: left;
+    text-shadow: none;
+    color: var(--inactive);
   }
   .active {
     transform: scale(1.05);
     transform-origin: left;
     padding-right: 10%;
     border-color: var(--highlight);
-    font-weight: bold;
+    text-shadow: none;
   }
   .active .timecode {
-    color: var(--active-secondary); 
+    color: var(--active-secondary);
   }
   .active .chapter {
-    color: var(--active-secondary);  
+    color: var(--active-secondary);
   }
   .active .text  {
     color: var(--active-primary);
+  }
+  .active .sub_active {
+    text-decoration: underline;
   }
   .passed  {
     transform: scale(1);
     transform-origin: left;
   }
-  
   @media (prefers-reduced-motion) {
-    .active, .previous {
-      font-size: unset;
+    .active {
+      transform: scale(1);
     }
   }
-  
   progress {
     appearance: none;
     background: hsla(var(--base), var(--gray-10-sat), var(--gray-10-light), var(--gray-10-opacity));
@@ -381,12 +398,10 @@ function defaultStyles() {
     height: 8px;
     align-self: center;
   }
-  
   progress[value]::-webkit-progress-bar {
     background: hsla(var(--base), var(--gray-20-sat), var(--gray-20-light), var(--gray-20-opacity));
     box-shadow: none;
   }
-  
   progress[value]::-moz-progress-bar {
     background: hsla(var(--base), var(--gray-20-sat), var(--gray-20-light), var(--gray-20-opacity));
     box-shadow: none;
@@ -395,11 +410,6 @@ function defaultStyles() {
     background: hsla(var(--base), var(--gray-20-sat), var(--gray-20-light), var(--gray-20-opacity));
     box-shadow: none;
   }
-  
-  .active .sub_active {
-    text-decoration: underline;
-  }
-  
   </style>`;
 }
 
@@ -425,6 +435,7 @@ var CaptionsViewer = class extends HTMLElement {
   // blank/light or dark.  Dark shows lighter text.
   #youtube = false;
   // Makes vtt cue adjustments specific to YouTube.
+  #enableCSS = true;
   // Internal
   #captions = {};
   // Master array of the cues.
@@ -471,13 +482,21 @@ var CaptionsViewer = class extends HTMLElement {
     this.#create({ changes: { name, oldValue, newValue } });
   }
   set src(item) {
-    this.setAttribute("src", item);
+    if (item) {
+      this.setAttribute("src", item);
+    } else {
+      this.removeAttribute("src");
+    }
   }
   set playhead(item) {
     this.setAttribute("playhead", item);
   }
   set debounce(item) {
-    this.setAttribute("debounce", item);
+    if (item) {
+      this.setAttribute("debounce", item);
+    } else {
+      this.removeAttribute("debounce");
+    }
   }
   set singleline(item) {
     if (typeof item !== "boolean") {
@@ -489,6 +508,11 @@ var CaptionsViewer = class extends HTMLElement {
   }
   set disable(item) {
     this.setAttribute("disable", item);
+    if (item) {
+      this.setAttribute("disable", item);
+    } else {
+      this.removeAttribute("disabled");
+    }
   }
   set debounceScrolling(item) {
     if (typeof item !== "boolean") {
@@ -552,6 +576,8 @@ var CaptionsViewer = class extends HTMLElement {
   connectedCallback() {
     this.#init();
   }
+  disconnectedCallback() {
+  }
   #init() {
     if (this.#isInit) {
       this.#create();
@@ -592,18 +618,23 @@ var CaptionsViewer = class extends HTMLElement {
     this.#create();
   }
   async #create(params) {
-    this.#src = this.getAttribute("src") || "";
-    this.#playhead = parseInt(this.getAttribute("playhead"), 10) || 0;
-    this.#height = this.getAttribute("height") || "400px";
-    this.#debounce = parseInt(this.getAttribute("debounce"), 10) || 5e3;
-    this.#singleline = this.getAttribute("singleline") === "true" || this.getAttribute("singleline") === true || false;
-    this.#color = this.getAttribute("color") || "";
-    this.#disable = this.getAttribute("disable") || "";
-    this.#theme = this.getAttribute("theme") || "";
-    this.#youtube = this.getAttribute("youtube") === "true" || this.getAttribute("youtube") === true || false;
+    this.#src = this.getAttribute("src") || this.#src;
+    this.#playhead = parseInt(this.getAttribute("playhead"), 10) || this.#playhead;
+    this.#height = this.getAttribute("height") || this.#height;
+    this.#debounce = parseInt(this.getAttribute("debounce"), 10) || this.#debounce;
+    this.#singleline = this.getAttribute("singleline") === "true" || this.getAttribute("singleline") === true || this.#singleline;
+    this.#color = this.getAttribute("color") || this.#color;
+    this.#disable = this.getAttribute("disable") || this.#disable;
+    this.#theme = this.getAttribute("theme") || this.#theme;
+    this.#youtube = this.getAttribute("youtube") === "true" || this.getAttribute("youtube") === true || this.#youtube;
+    this.#enableCSS = this.getAttribute("css") === "true" || this.getAttribute("css") === true || this.#enableCSS;
     if (!this.#src && !(this.#textTrack && "id" in this.#textTrack)) {
       console.debug("No text track");
       return;
+    }
+    if (!this.#enableCSS) {
+      const stylesheet = this.querySelector("#theme_a");
+      stylesheet.innerHTML = "";
     }
     this.setTheme();
     const customStyles = [];
@@ -616,6 +647,8 @@ var CaptionsViewer = class extends HTMLElement {
     this.#divs.root?.setAttribute("style", customStyles.join("; "));
     if (params?.changes.name === "src") {
       this.#captions = await this.#parse();
+      if (this.#youtube)
+        this.#captions.cues = this.#youtubeAdjustments(this.#captions.cues);
     }
     this.#showCaptions();
   }
@@ -641,8 +674,6 @@ var CaptionsViewer = class extends HTMLElement {
       return void 0;
     }
     captions.cues = parseSubTextCues(captions.cues);
-    if (this.#youtube)
-      captions.cues = this.#youtubeAdjustments(captions.cues);
     captions.cues = addCueSpaces(captions.cues, this.#spacer);
     this.#setCuesStatus();
     console.log("Final Captions.", captions);
