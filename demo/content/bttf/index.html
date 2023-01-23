@@ -5,6 +5,8 @@
   <title>Caption Reader Web Component - Back to the Future Clip</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="/demo/demo.css" rel="stylesheet" type="text/css">
+  <script type="module" src="../../../captions-viewer.js"></script>
+
   <style>
     /* Hides the component until it has loaded */
     captions-viewer:not(:defined) {
@@ -33,6 +35,8 @@
       src="bttf_clip5.vtt"
       theme="dark"
       disable="chapters|timecode"
+      height="400px"
+      debounce="2000"
     >
     </captions-viewer>
 
@@ -49,7 +53,6 @@
     <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
   </main>
 
-  <script type="module" src="../../../captions-viewer.js"></script>
   <script type="module">
     const component = document.querySelector('captions-viewer');
     const player = document.querySelector('video');
