@@ -11,15 +11,8 @@
   },
   "rules": {
     "arrow-parens": ["error", "as-needed"],
-    "lines-between-class-members": [
-      "error",
-      "always",
-      { "exceptAfterSingleLine": true }
-    ],
-    "no-param-reassign": [
-      "error",
-      { "props": true, "ignorePropertyModificationsFor": ["cue"] }
-    ],
+    "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
+    "no-param-reassign": ["error", { "props": true, "ignorePropertyModificationsFor": ["cue"] }],
     "grouped-accessor-pairs": ["error", "anyOrder"],
     "quotes": ["error", "single"]
   },
