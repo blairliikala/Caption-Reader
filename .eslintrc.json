@@ -1,20 +1,27 @@
 {
   "env": {
     "browser": true,
-    "node": false,
+    "node": true,
     "mocha": false,
     "es6": true
-  }, 
+  },
   "parserOptions": {
-      "ecmaVersion": "latest",
-      "sourceType": "module"
+    "ecmaVersion": "latest",
+    "sourceType": "module"
   },
   "rules": {
     "arrow-parens": ["error", "as-needed"],
-    "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
-    "no-param-reassign": ["error", {"props": true, "ignorePropertyModificationsFor": ["cue"]}],
-    "grouped-accessor-pairs": ["error", "anyOrder"]
+    "lines-between-class-members": [
+      "error",
+      "always",
+      { "exceptAfterSingleLine": true }
+    ],
+    "no-param-reassign": [
+      "error",
+      { "props": true, "ignorePropertyModificationsFor": ["cue"] }
+    ],
+    "grouped-accessor-pairs": ["error", "anyOrder"],
+    "quotes": ["error", "single"]
   },
   "extends": ["eslint:recommended", "@open-wc/eslint-config"]
 }
- 
