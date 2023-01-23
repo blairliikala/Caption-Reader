@@ -1,19 +1,25 @@
 {
   "name": "captions-viewer",
-  "description": "Webcomponent captions-viewer following open-wc recommendations",
+  "description": "Captions that follow along to the video.",
   "license": "MIT",
-  "author": "captions-viewer",
-  "version": "0.0.3",
-  "main": "index.js",
+  "author": "Blair Liikala",
+  "homepage": "https://github.com/blairliikala/Caption-Reader",
+  "repository": "github:blairliikala/Caption-Reader",
+  "version": "0.0.2",
+  "type": "module",
+  "browser": "index.js",
   "module": "index.js",
+  "unpkg": "./dist/captions-viewer.js",
+  "jsdelivr": "./dist/captions-viewer.js",  
   "scripts": {
     "analyze": "cem analyze --litelement",
     "start": "web-dev-server",
     "lint": "eslint --ext .js,.html . --ignore-path .gitignore && prettier \"**/*.js\" --check --ignore-path .gitignore",
     "format": "eslint --ext .js,.html . --fix --ignore-path .gitignore && prettier \"**/*.js\" --write --ignore-path .gitignore",
     "version:bump": "npm version patch --no-git-tag-version --silent",
-    "prod": "npm run version:bump --silent && yarn esbuild captions-viewer.js --format=esm --bundle --minify --outdir=dist",
-    "build:normal": "yarn esbuild captions-viewer.js --format=esm --bundle --minify  --outdir=dist --loader:.js=file --asset-names=[name]-min"
+    "prod": "yarn esbuild captions-viewer.js --format=esm --bundle --outdir=dist",
+    "prod:min": "yarn esbuild captions-viewer.js --format=esm --bundle --minify --outfile=./dist/captions-viewer.min.js",
+    "build": "npm run version:bump && npm run prod && npm run prod:min"
   },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "^0.6.00",

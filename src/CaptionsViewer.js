@@ -23,6 +23,7 @@ export class CaptionsViewer extends HTMLElement {
   #disable = ''; // What vtt properties to disable, uses |
   #theme = ''; // blank/light or dark.  Dark shows lighter text.
   #youtube = false; // Makes vtt cue adjustments specific to YouTube.
+  #enableCSS = true;
 
   // Internal
   #captions = {}; // Master array of the cues.
@@ -68,13 +69,21 @@ export class CaptionsViewer extends HTMLElement {
   }
 
   set src(item) {
-    this.setAttribute('src', item);
+    if (item) {
+      this.setAttribute('src', item);
+    } else {
+      this.removeAttribute('src');
+    }
   }
   set playhead(item) {
     this.setAttribute('playhead', item);
   }
   set debounce(item) {
-    this.setAttribute('debounce', item);
+    if (item) {
+      this.setAttribute('debounce', item);
+    } else {
+      this.removeAttribute('debounce');
+    }
   }
   set singleline(item) {
     if (typeof item !== 'boolean') {
@@ -86,6 +95,11 @@ export class CaptionsViewer extends HTMLElement {
   }
   set disable(item) {
     this.setAttribute('disable', item);
+    if (item) {
+      this.setAttribute('disable', item);
+    } else {
+      this.removeAttribute('disabled');
+    }
   }
   set debounceScrolling(item) {
     if (typeof item !== 'boolean') {
@@ -152,6 +166,10 @@ export class CaptionsViewer extends HTMLElement {
     this.#init();
   }
 
+  disconnectedCallback() {
+
+  }
+
   #init() {
     if (this.#isInit) {
       this.#create();
@@ -214,19 +232,25 @@ export class CaptionsViewer extends HTMLElement {
   }
 
   async #create(params) {
-    this.#src = this.getAttribute('src') || '';
-    this.#playhead = parseInt(this.getAttribute('playhead'), 10) || 0;
-    this.#height = this.getAttribute('height') || '400px';
-    this.#debounce = parseInt(this.getAttribute('debounce'), 10) || 5000;
-    this.#singleline = (this.getAttribute('singleline') === 'true' || this.getAttribute('singleline') === true) || false;
-    this.#color = this.getAttribute('color') || '';
-    this.#disable = this.getAttribute('disable') || '';
-    this.#theme = this.getAttribute('theme') || '';
-    this.#youtube = (this.getAttribute('youtube') === 'true' || this.getAttribute('youtube') === true) || false;
+    this.#src = this.getAttribute('src') || this.#src;
+    this.#playhead = parseInt(this.getAttribute('playhead'), 10) || this.#playhead;
+    this.#height = this.getAttribute('height') || this.#height;
+    this.#debounce = parseInt(this.getAttribute('debounce'), 10) || this.#debounce;
+    this.#singleline = (this.getAttribute('singleline') === 'true' || this.getAttribute('singleline') === true) || this.#singleline;
+    this.#color = this.getAttribute('color') || this.#color;
+    this.#disable = this.getAttribute('disable') || this.#disable;
+    this.#theme = this.getAttribute('theme') || this.#theme;
+    this.#youtube = (this.getAttribute('youtube') === 'true' || this.getAttribute('youtube') === true) || this.#youtube;
+    this.#enableCSS = (this.getAttribute('css') === 'true' || this.getAttribute('css') === true) || this.#enableCSS;
 
     if (!this.#src && !(this.#textTrack && 'id' in this.#textTrack)) {
       console.debug('No text track');
       return;
+    }
+
+    if (!this.#enableCSS) {
+      const stylesheet = this.querySelector('#theme_a');
+      stylesheet.innerHTML = '';
     }
 
     this.setTheme();
@@ -242,6 +266,7 @@ export class CaptionsViewer extends HTMLElement {
 
     if (params?.changes.name === 'src') {
       this.#captions = await this.#parse();
+      if (this.#youtube) this.#captions.cues = this.#youtubeAdjustments(this.#captions.cues);
     }
 
     this.#showCaptions();
@@ -276,7 +301,6 @@ export class CaptionsViewer extends HTMLElement {
       return undefined;
     }
     captions.cues = parseSubTextCues(captions.cues);
-    if (this.#youtube) captions.cues = this.#youtubeAdjustments(captions.cues);
     captions.cues = addCueSpaces(captions.cues, this.#spacer);
 
     this.#setCuesStatus();
@@ -444,7 +468,6 @@ export class CaptionsViewer extends HTMLElement {
     if (this.#debounceScrolling) return;
     const elms = this.#divs.root.querySelectorAll('li');
     const elm = elms[this.#currentCue];
-    // Commenting out as the feel wasn't quite right.
     const elmHeight = elm.offsetHeight;
     const elmOffset = elm.offsetTop;
     this.#divs.root.scrollTop = elmOffset - elmHeight; // Scroll cue to top leaving one.
