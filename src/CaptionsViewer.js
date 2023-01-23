@@ -1,8 +1,12 @@
 /* eslint-disable grouped-accessor-pairs */
 /* eslint-disable lines-between-class-members */
-
 import Utilities from './utilities.js';
-import { parseVTT, parseSubTextCues, parseTextTrack, addCueSpaces } from './parsers.js';
+import {
+  parseVTT,
+  parseSubTextCues,
+  parseTextTrack,
+  addCueSpaces,
+} from './parsers.js';
 import { defaultStyles } from './defautStylesheet.js';
 
 export class CaptionsViewer extends HTMLElement {
@@ -60,7 +64,7 @@ export class CaptionsViewer extends HTMLElement {
       this.#debounce = newValue;
       return;
     }
-    this.#create();
+    this.#create({ changes: { name, oldValue, newValue } });
   }
 
   set src(item) {
@@ -187,6 +191,7 @@ export class CaptionsViewer extends HTMLElement {
       }
     });
 
+    /*
     this.#divs.root.addEventListener('touchmove', () => {
       this.#debounceScrolling = true;
       console.log('[touchmove] touch move...');
@@ -194,6 +199,7 @@ export class CaptionsViewer extends HTMLElement {
         setTimeout(() => { this.#debounceScrolling = false; }, this.#debounce);
       });
     }, false);
+    */
 
     this.#divs.root.addEventListener('scroll', () => {
       this.#debounceScrolling = true;
@@ -207,7 +213,7 @@ export class CaptionsViewer extends HTMLElement {
     this.#create();
   }
 
-  async #create() {
+  async #create(params) {
     this.#src = this.getAttribute('src') || '';
     this.#playhead = parseInt(this.getAttribute('playhead'), 10) || 0;
     this.#height = this.getAttribute('height') || '400px';
@@ -217,7 +223,6 @@ export class CaptionsViewer extends HTMLElement {
     this.#disable = this.getAttribute('disable') || '';
     this.#theme = this.getAttribute('theme') || '';
     this.#youtube = (this.getAttribute('youtube') === 'true' || this.getAttribute('youtube') === true) || false;
-    const styles = this.getAttribute('styles'); // Full replacement of css.
 
     if (!this.#src && !(this.#textTrack && 'id' in this.#textTrack)) {
       console.debug('No text track');
@@ -235,10 +240,15 @@ export class CaptionsViewer extends HTMLElement {
     }
     this.#divs.root?.setAttribute('style', customStyles.join('; '));
 
-    if (styles) {
-      const existing = this.shadowRoot?.querySelector('style');
-      if (existing) existing.innerHTML += `${styles}`;
+    if (params?.changes.name === 'src') {
+      this.#captions = await this.#parse();
     }
+
+    this.#showCaptions();
+  }
+
+  async #parse() {
+    let captions;
 
     // Send src through native parser.
     if (this.#src && Utilities.getFileType(this.#src) === 'vtt') {
@@ -248,30 +258,30 @@ export class CaptionsViewer extends HTMLElement {
     // Track in video element. Pushed after load.
     if (this.#textTrack && 'cues' in this.#textTrack) {
       console.log('Trying foo parser.');
-      this.#captions = parseTextTrack(this.#textTrack, this.#nudge);
+      captions = parseTextTrack(this.#textTrack, this.#nudge);
     }
 
     // Both failed, use the fallback src parser.
-    if (this.#src && (!this.#captions || !this.#captions.cues)) {
+    if (this.#src && (!captions || !captions.cues)) {
       console.log('Trying backup parser.');
       const srcContents = await fetch(this.#src).then(res => res.text()); // TODO more on this.
       const type = Utilities.getFileType(this.#src);
-      if (srcContents) this.#captions = parseVTT(srcContents, type);
+      if (srcContents) captions = parseVTT(srcContents, type);
     }
 
     // || Array.from(this.#textTrack.cues).length === 0
-    if (!this.#captions || !this.#captions.cues) {
-      console.error('Not able to find and render captions.', this.#captions);
+    if (!captions || !captions.cues) {
+      console.error('Not able to find and render captions.', captions);
       this.#divs.root.innerHTML = '<p class="empty">No captions.</p>';
-      return;
+      return undefined;
     }
-    this.#captions.cues = parseSubTextCues(this.#captions.cues);
-    if (this.#youtube) this.#captions.cues = this.#youtubeAdjustments(this.#captions.cues);
-    this.#captions.cues = addCueSpaces(this.#captions.cues, this.#spacer);
-    this.#setCuesStatus();
-    console.log('Final Captions.', this.#captions); // TODO remove.
+    captions.cues = parseSubTextCues(captions.cues);
+    if (this.#youtube) captions.cues = this.#youtubeAdjustments(captions.cues);
+    captions.cues = addCueSpaces(captions.cues, this.#spacer);
 
-    this.#showCaptions();
+    this.#setCuesStatus();
+    console.log('Final Captions.', captions); // TODO remove.
+    return captions;
   }
 
   #updateCaptionStatus(playhead) {
@@ -279,15 +289,6 @@ export class CaptionsViewer extends HTMLElement {
     this.#playhead = playhead;
     this.#setCuesStatus();
     const activeIndex = this.#captions.cues?.findIndex(cue => cue.status === 'active');
-
-    // Clear other Progress bar.
-    const progressbars = this.#divs.root.querySelectorAll('[data-progress]');
-    if (progressbars) {
-      [...progressbars].forEach(bar => {
-        const newBar = bar;
-        newBar.value = 0;
-      });
-    }
 
     // Update progress bar.
     this.#captions.cues?.forEach((cue, index) => {
@@ -299,8 +300,7 @@ export class CaptionsViewer extends HTMLElement {
     });
 
     // Update HTML for sub cues.
-    const activeDivs = this.#divs.root.querySelectorAll('.active');
-    activeDivs.forEach(item => {
+    this.#divs.root.querySelectorAll('.active')?.forEach(item => {
       const { index } = item.dataset;
       const cue = this.#captions.cues[index];
       if (cue.subCues) {
@@ -310,18 +310,46 @@ export class CaptionsViewer extends HTMLElement {
     });
 
     // Only update if the cue changes to save CPU.
-    if (activeIndex !== this.#currentCue) {
-      this.#currentCue = activeIndex;
-      this.#updateCaption();
-      this.#scrollToCue();
+    if (activeIndex === this.#currentCue) {
+      return;
     }
+
+    this.#currentCue = activeIndex;
+
+    // Clear other Progress bar.
+    const progressbars = this.#divs.root.querySelectorAll('[data-progress]');
+    if (progressbars) {
+      [...progressbars].forEach(bar => {
+        const newBar = bar;
+        newBar.value = 0;
+      });
+    }
+
+    // If the cue is outside the view, scroll immediately.
+    if (this.#debounceScrolling) {
+      const elms = this.#divs.root.querySelectorAll('[data-index]');
+      const elm = elms[this.#currentCue];
+      if (elm) {
+        if (!CaptionsViewer.isElementInViewport(elm, 'captionselement')) this.#debounceScrolling = false;
+      }
+    }
+
+    this.#updateCaption();
+    this.#scrollToCue();
+  }
+
+  static isElementInViewport(el, container) {
+    const rect = el.getBoundingClientRect();
+    const parent = el.closest(container);
+    const parentRect = parent.getBoundingClientRect();
+    return (rect.bottom <= parentRect.bottom);
   }
 
   #showCaptions() {
     if (!this.#captions) return;
     const disabled = this.#disable ? this.#disable.split('|') : [];
     this.#divs.root.innerHTML = '';
-    let html = '<ol tabindex="0">';
+    let html = '<ol>';
     this.#captions.cues?.forEach((cue, index) => {
       if (cue.timecode) {
         const styleName = cue.status;
@@ -342,7 +370,7 @@ export class CaptionsViewer extends HTMLElement {
           text += '</span>';
         }
 
-        html += `<li>
+        html += `<li tabindex="0">
           <button
             type="button"
             tabindex="${index + 1}"
@@ -417,11 +445,9 @@ export class CaptionsViewer extends HTMLElement {
     const elms = this.#divs.root.querySelectorAll('li');
     const elm = elms[this.#currentCue];
     // Commenting out as the feel wasn't quite right.
-    // if (this.#checkInView(this.#divs.root, elm)) {
     const elmHeight = elm.offsetHeight;
     const elmOffset = elm.offsetTop;
     this.#divs.root.scrollTop = elmOffset - elmHeight; // Scroll cue to top leaving one.
-    // }
   }
 
   pause() {
@@ -475,7 +501,7 @@ export class CaptionsViewer extends HTMLElement {
   }
 
   #youtubeAdjustments(cues) {
-    // FYI, Firefox textTracks will remove blank text lines differently than others.
+    // FYI, Firefox textTracks will remove blank (1 space) text lines differently than others.
 
     // Remove the second cue since it duplicates.
     this.#captions.cues.splice(1, 1);
