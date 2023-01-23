@@ -276,7 +276,7 @@ export class CaptionsViewer extends HTMLElement {
     let captions;
 
     // Send src through native parser.
-    if (this.#src && Utilities.getFileType(this.#src) === 'vtt') {
+    if (this.#src && Utilities.getSupportedFileType(this.#src) === 'vtt') {
       this.#textTrack = await this.#renderCaptionSrc(this.#src);
     }
 
@@ -290,7 +290,7 @@ export class CaptionsViewer extends HTMLElement {
     if (this.#src && (!captions || !captions.cues)) {
       console.log('Trying backup parser.');
       const srcContents = await fetch(this.#src).then(res => res.text()); // TODO more on this.
-      const type = Utilities.getFileType(this.#src);
+      const type = Utilities.getSupportedFileType(this.#src);
       if (srcContents) captions = parseVTT(srcContents, type);
     }
 
