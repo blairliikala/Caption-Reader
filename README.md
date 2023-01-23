@@ -68,10 +68,11 @@ player.addEventListener('seeking', () => {
 | `height`     | 300px  | Height of the scrolling box.  Valid CSS unit. |
 | `debounce`   | 5000   | Control the time between scrolling. Time in ms between the last scroll (user or automatic) |
 | `singleline` | false  | True will show all text for a cue on a single line.  False will obey the line breaks in the caption file. |
-| `color` | 360 | The Hue (0-360) of the base color to use.  This is put into an hsla color. |
 | `disable`    | empty  | Turn off displaying `timecode` `chapters` or `text`. Use a pipe `\|` between each option, such as `timecode\|chapters` |
-| `theme` | light, dark | Light theme shades the text darker for a whiter background.  Dark will lighten text for a darker background. |
 | `youtube` | false | Enable `true` if the caption vtt track came from YouTube for some special handling. |
+| `color` | 360 | The Hue (0-360) of the base color to use.  This is put into an hsla color. |
+| `theme` | light, dark | Light theme shades the text darker for a whiter background.  Dark will lighten text for a darker background. |
+| `css` | True/False to enable the default stylesheet.  False will remove all styling, default is True. See the guide below. |
 
 ## Methods
 
@@ -170,7 +171,7 @@ Show captions for a video using the native caption tracy system, with a dynamic 
 
 Download the vtt option from YouTube in the Creator Studio and make it available online.
 
-**Note** when using the vtt file, one edit needs to be made to the first cue.  Normally there is a blank line between the timecode and cue code.  Due to an issue with Firefox, add text in this blank line.  Any text will do, and will be removed by the parser.
+**Note** when using the YouTube vtt file, one edit may be needed to the first cue.  Normally there is a blank line between the timecode and cue code. Each browser handles this slightly differently, so to provide browser parity simply add text in this blank line.  Any text will do, and will be removed by the parser.
 
 ```text
 WEBVTT
