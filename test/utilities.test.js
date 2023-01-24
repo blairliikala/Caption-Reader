@@ -1,6 +1,5 @@
 /* eslint-disable import/no-unresolved */
 /* eslint-disable no-undef */
-
 import { expect } from '@esm-bundle/chai';
 import util from '../src/utilities.js';
 

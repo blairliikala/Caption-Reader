@@ -17,7 +17,7 @@ export class CaptionsViewer extends HTMLElement {
   #src = ''; // location of a vtt src.
   #playhead = 0; // current seconds from start.
   #height = '400px'; // Hight of container, applied as inline style.
-  #debounce = 0; // In seconds how long to
+  #debounce = 4000; // In seconds how long to
   #singleline = false;
   #color = ''; // Base 360 color for text.
   #disable = ''; // What vtt properties to disable, uses |
@@ -33,6 +33,7 @@ export class CaptionsViewer extends HTMLElement {
   #textTrack = {}; // Native textTrack from video element.
   #spacer = 5; // Time in sec between cues where the progres bar cue will be shown.
   #nudge = 0.5; // Time in sec to start the cue early. comp for css transition.
+  #isAutoScroll = false;
 
   css = defaultStyles();
 
@@ -161,6 +162,9 @@ export class CaptionsViewer extends HTMLElement {
   get youtube() {
     return this.#youtube;
   }
+  get enableCSS() {
+    return this.#enableCSS;
+  }
 
   connectedCallback() {
     this.#init();
@@ -209,25 +213,7 @@ export class CaptionsViewer extends HTMLElement {
       }
     });
 
-    /*
-    this.#divs.root.addEventListener('touchmove', () => {
-      this.#debounceScrolling = true;
-      console.log('[touchmove] touch move...');
-      this.#divs.root.addEventListener('mouseup', () => {
-        setTimeout(() => { this.#debounceScrolling = false; }, this.#debounce);
-      });
-    }, false);
-    */
-
-    this.#divs.root.addEventListener('scroll', () => {
-      this.#debounceScrolling = true;
-      console.log('[scroll] touch move...');
-      this.#divs.root.addEventListener('mouseup', () => {
-        setTimeout(() => { this.#debounceScrolling = false; }, this.#debounce);
-      });
-      setTimeout(() => { this.#debounceScrolling = false; }, this.#debounce * 3);
-    }, false);
-
+    this.#iniScrollingEvents();
     this.#create();
   }
 
@@ -306,6 +292,60 @@ export class CaptionsViewer extends HTMLElement {
     this.#setCuesStatus();
     console.log('Final Captions.', captions); // TODO remove.
     return captions;
+  }
+
+  #iniScrollingEvents() {
+    let isTouch = false;
+    let timeout;
+    const addScrollStyle = () => {
+      this.#divs.root.classList.add('scrolling');
+    };
+    const removeScrollStyle = () => {
+      this.#divs.root.classList.remove('scrolling');
+    };
+
+    // Touch Devices
+    this.#divs.root.addEventListener('touchstart', () => {
+      console.log('touchstart');
+      isTouch = true;
+      this.#debounceScrolling = true;
+      clearTimeout(timeout);
+      addScrollStyle();
+    });
+    this.#divs.root.addEventListener('touchmove', () => {
+      console.log('touchmove');
+    });
+    this.#divs.root.addEventListener('touchend', () => {
+      console.log('touchend');
+      isTouch = false;
+      timeout = setTimeout(() => {
+        isTouch = false;
+        this.#debounceScrolling = false;
+        removeScrollStyle();
+      }, this.#debounce);
+    });
+
+    // Browsers
+    // Timeout to avoid the initial scroll when box is first sized.
+    setTimeout(() => {
+      this.#divs.root.addEventListener('scroll', () => {
+        if (isTouch) return;
+        if (this.#isAutoScroll) {
+          // removeScrollStyle();
+          return;
+        }
+        if (this.#debounceScrolling === true) {
+          clearTimeout(timeout);
+        }
+        this.#debounceScrolling = true;
+        addScrollStyle();
+        console.log('scroll');
+        timeout = setTimeout(() => {
+          this.#debounceScrolling = false;
+          removeScrollStyle();
+        }, this.#debounce);
+      }, false);
+    }, 1000);
   }
 
   #updateCaptionStatus(playhead) {
@@ -471,6 +511,8 @@ export class CaptionsViewer extends HTMLElement {
     const elmHeight = elm.offsetHeight;
     const elmOffset = elm.offsetTop;
     this.#divs.root.scrollTop = elmOffset - elmHeight; // Scroll cue to top leaving one.
+    this.#isAutoScroll = true;
+    setTimeout(() => { this.#isAutoScroll = false; }, 1000);
   }
 
   pause() {

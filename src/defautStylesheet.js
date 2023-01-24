@@ -9,6 +9,8 @@ export function defaultStyles() {
     scroll-snap-stop: always;
     position: relative;
     padding: .5rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     --base: 360;
 
     --gray-10-sat: 10%;
@@ -19,6 +21,7 @@ export function defaultStyles() {
     --gray-20-opacity: 0.2;
     --gray-70-opacity: 0.7;
     --inactive: hsla(var(--base), 20%, 40%, 0.9);
+    --inactive-90: hsla(var(--base), 20%, 40%, 0.5);
     --active-primary: hsla(var(--base), 0%, 30%, 1);
     --active-secondary: hsla(var(--base), 40%, 70%, 1);
     --highlight: hsla(var(--base), 50%, 50%, 0.9);
@@ -32,6 +35,7 @@ export function defaultStyles() {
     --gray-20-opacity: 0.2;
     --gray-70-opacity: 0.7;
     --inactive: hsla(var(--base), 10%, 80%, 0.7);
+    --inactive-90: hsla(var(--base), 10%, 80%, 0.5);
     --active-primary: hsla(var(--base), 0%, 100%, 1);
     --active-secondary: hsla(var(--base), 20%, 80%, 1);
     --highlight: hsla(var(--base), 50%, 60%, 0.9);
@@ -53,7 +57,7 @@ export function defaultStyles() {
   .cue {
     border: none;
     font: inherit;
-    padding: 0.3rem 1.5rem 0.3rem .4rem;
+    padding: 0.3rem 10% 0.3rem .4rem;
     display: flex;
     gap: 1rem;
     transform: scale(1);
@@ -65,10 +69,9 @@ export function defaultStyles() {
     text-align: start;
     border-left: 2px solid hsla(var(--base), 60%, 70%, 0.1);
     border-radius: 0;
-    font-weight: bold;
-
     color: transparent;
-    text-shadow: 0 0 1.2px var(--inactive);
+    text-shadow: 0 0 2px var(--inactive-90);
+    font-weight: bold;
   }
   .cue:focus {
     background: none;
@@ -112,9 +115,9 @@ export function defaultStyles() {
   .active {
     transform: scale(1.05);
     transform-origin: left;
-    padding-right: 10%;
     border-color: var(--highlight);
     text-shadow: none;
+    font-weight: bold;
   }
   .active .timecode {
     color: var(--active-secondary);
@@ -131,6 +134,10 @@ export function defaultStyles() {
   .passed  {
     transform: scale(1);
     transform-origin: left;
+  }
+  .scrolling .cue {
+    text-shadow: none;
+    color: var(--inactive);
   }
   @media (prefers-reduced-motion) {
     .active {
