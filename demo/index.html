@@ -28,9 +28,9 @@
 
   <main class="container">
 
-    <video controls width="100%" playsinline autopictureinpicture preload="auto" muted>
-      <source src="content/dune/dune-av1-1080.mp4" type="video/mp4; codecs=av01.0.05M.08"">
-      <source src="content/dune/dune.mp4" type="video/mp4">
+    <video controls width="100%" playsinline muted>
+      <source src="https://blairliikala.com/testvids/captionreader/dune-av1-1080.mp4" type="video/mp4; codecs=av01.0.05M.08"">
+      <source src="https://blairliikala.com/testvids/captionreader/dune.mp4" type="video/mp4">
       <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" />
       <track label="French" kind="subtitles" srclang="fr" src="content/dune/dune_fr.vtt" />
       <track label="Spanish" kind="subtitles" srclang="es" src="content/dune/dune_fr.es" />
@@ -82,7 +82,7 @@
     const component = document.querySelector('captions-viewer');
     const player = document.querySelector('video');
 
-    // iOS needs the video to have played before seeking.
+    // iOS needs the video to have played before seeking.  Because... Safari.
     let hasPlayed = false;
     player.addEventListener('play', () => {
       hasPlayed = true;
@@ -123,30 +123,28 @@
       if (file) component.src = file;
     });
 
-    function toggleDisabledProp(prop, split) {
+    function toggleDisabledProp(prop, disabled) {
+      const split = disabled.split('|');
+      let newDisabled = '';
       if (split.indexOf(prop) > 0) {
-        const disable = split.filter(dis => dis !== prop).join('|');
-        component.disable = disable;
+        newDisabled = split.filter(dis => dis !== prop);
       } else {
         split.push(prop);
-        component.disable = split.join('|');
+        newDisabled = split;
       }
+      return newDisabled?.join('|');
     }
 
     document.querySelector('#toggleTimecode').addEventListener('click', () => {
-      const split = component.disable.split('|');
-      toggleDisabledProp('timecode', split);
+      component.disable = toggleDisabledProp('timecode', component.disable);
     });
     document.querySelector('#toggleChapters').addEventListener('click', () => {
-      const split = component.disable.split('|');
-      toggleDisabledProp('chapters', split);
+      component.disable = toggleDisabledProp('chapters', component.disable);
     });
     document.querySelector('#toggleText').addEventListener('click', () => {
-      const split = component.disable.split('|');
-      toggleDisabledProp('text', split);
+      component.disable = toggleDisabledProp('text', component.disable);
     });
     document.querySelector('#toggleSingleLine').addEventListener('click', () => {
-      // component.singleline = (!component.singleline);
       component.singleline = (!component.singleline);
     });
   </script>

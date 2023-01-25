@@ -8,7 +8,7 @@ function timeout(ms) {
 
 describe('<captions-viewer>', () => {
   it('has correct properties', async () => {
-    await timeout(500);
+    await timeout(1000);
 
     const component = await fixture(`<captions-viewer
         src="test/dune_en.vtt"
@@ -27,31 +27,19 @@ describe('<captions-viewer>', () => {
   });
 
   it('parsed the dune vtt correctly', async () => {
-    await timeout(500);
+    await timeout(1000);
 
     const component = await fixture(`<captions-viewer
         src="test/dune_en.vtt"
       ></captions-viewer>`);
 
     const { captions } = component;
-    expect(captions.cues.length).to.equal(63);
+    expect(captions.cues?.length).to.equal(63);
     expect(captions.cues[0].seconds.start).to.equal(8.342);
   });
 
-  it('parsed the dune vtt correctly', async () => {
-    timeout(1000);
-
-    const component = await fixture(`<captions-viewer
-        src="test/dune_en.vtt"
-      ></captions-viewer>`);
-
-    const { captions } = component;
-    expect(captions.cues.length).to.equal(63);
-    expect(captions.cues[0].seconds.start).to.equal(8.342);
-  });
-
-  it('Advances cues', async () => {
-    timeout(5000);
+  it('Advances cues when the playhead parameter is updated', async () => {
+    await timeout(1000);
 
     const component = await fixture(`<captions-viewer
         src="test/dune_en.vtt"
@@ -60,11 +48,10 @@ describe('<captions-viewer>', () => {
     // Test difference note:
     // In the browser, time will snap to nearest keyframe based on video.
     component.playhead = 20; // 20 seconds in.
-    const { captions } = component;
-    expect(captions.cues[2].status).to.equal('passed');
-    expect(captions.cues[3].status).to.equal('previous');
-    expect(captions.cues[4].status).to.equal('active');
-    expect(captions.cues[5].status).to.equal('next');
-    expect(captions.cues[6].status).to.equal('upcoming');
+    expect(component.captions.cues[2].status).to.equal('passed');
+    expect(component.captions.cues[3].status).to.equal('previous');
+    expect(component.captions.cues[4].status).to.equal('active');
+    expect(component.captions.cues[5].status).to.equal('next');
+    expect(component.captions.cues[6].status).to.equal('upcoming');
   });
 });

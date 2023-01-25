@@ -224,17 +224,17 @@ export class CaptionsViewer extends HTMLElement {
     this.#debounce = parseInt(this.getAttribute('debounce'), 10) || this.#debounce;
     this.#singleline = (this.getAttribute('singleline') === 'true' || this.getAttribute('singleline') === true) || this.#singleline;
     this.#color = this.getAttribute('color') || this.#color;
-    this.#disable = this.getAttribute('disable') || this.#disable;
+    this.#disable = this.getAttribute('disable') || '';
     this.#theme = this.getAttribute('theme') || this.#theme;
     this.#youtube = (this.getAttribute('youtube') === 'true' || this.getAttribute('youtube') === true) || this.#youtube;
-    this.#enableCSS = (this.getAttribute('css') === 'true' || this.getAttribute('css') === true) || this.#enableCSS;
+    this.#enableCSS = this.getAttribute('stylesheet') || this.#enableCSS;
 
     if (!this.#src && !(this.#textTrack && 'id' in this.#textTrack)) {
       console.debug('No text track');
       return;
     }
 
-    if (!this.#enableCSS) {
+    if (this.#enableCSS === 'false' || this.#enableCSS === false) {
       const stylesheet = this.querySelector('#theme_a');
       stylesheet.innerHTML = '';
     }
@@ -290,7 +290,7 @@ export class CaptionsViewer extends HTMLElement {
     captions.cues = addCueSpaces(captions.cues, this.#spacer);
 
     this.#setCuesStatus();
-    console.log('Final Captions.', captions); // TODO remove.
+    // console.log('Final Captions.', captions); // TODO remove.
     return captions;
   }
 

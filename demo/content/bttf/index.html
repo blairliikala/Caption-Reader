@@ -79,30 +79,28 @@
       component.pause();
     });
 
-    function toggleDisabledProp(prop, split) {
+    function toggleDisabledProp(prop, disabled) {
+      const split = disabled.split('|');
+      let newDisabled = '';
       if (split.indexOf(prop) > 0) {
-        const disable = split.filter(dis => dis !== prop).join('|');
-        component.disable = disable;
+        newDisabled = split.filter(dis => dis !== prop);
       } else {
         split.push(prop);
-        component.disable = split.join('|');
+        newDisabled = split;
       }
+      return newDisabled?.join('|');
     }
 
     document.querySelector('#toggleTimecode').addEventListener('click', () => {
-      const split = component.disable.split('|');
-      toggleDisabledProp('timecode', split);
+      component.disable = toggleDisabledProp('timecode', component.disable);
     });
     document.querySelector('#toggleChapters').addEventListener('click', () => {
-      const split = component.disable.split('|');
-      toggleDisabledProp('chapters', split);
+      component.disable = toggleDisabledProp('chapters', component.disable);
     });
     document.querySelector('#toggleText').addEventListener('click', () => {
-      const split = component.disable.split('|');
-      toggleDisabledProp('text', split);
+      component.disable = toggleDisabledProp('text', component.disable);
     });
     document.querySelector('#toggleSingleLine').addEventListener('click', () => {
-      // component.singleline = (!component.singleline);
       component.singleline = (!component.singleline);
     });
   </script>
