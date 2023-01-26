@@ -60,7 +60,6 @@
         player.addEventListener('loadedmetadata', (e) => {
           const tracks = e.target.textTracks;
           const track = tracks[0];
-          component.textTrack = track;
           track.addEventListener('cuechange', (e) => {
             component.textTrack = e.target;
           });
