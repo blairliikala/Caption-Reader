@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <title>Caption Reader Web Component - HLS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
   <link href="demo.css" rel="stylesheet" type="text/css">
   <script type="module" src="../../captions-viewer.js"></script>
 
@@ -26,6 +27,10 @@
 
   <main class="container">
 
+    <section class="info">
+      <p>Example showing an HLS feed, using hls.js, with embedded captions that update as chunks are added.</p>
+    </section>
+
     <video controls width="100%" playsinline></video>
 
     <captions-viewer
@@ -35,9 +40,6 @@
       debounce="1000"
     >
     </captions-viewer>
-
-    <p>This exmaple shows an HLS stream, using hls.js, with embedded captions in the manifest.</p>
-    <p><strong>The captions come late and may seem off.</strong></p>
 
     <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
   </main>
@@ -52,6 +54,8 @@
     // const videoSrc = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'; // Bunny.
     // const videoSrc = 'http://stream.mux.com/qP5Eb2cj7MrNnoxBGz012pbZkMHqpIcrKMzd7ykGr01gM.m3u8' // Tears
     const videoSrc = 'https://playertest.longtailvideo.com/adaptive/captions/playlist.m3u8'; // CNN
+    // const videoSrc = 'http://cdnbakmi.kaltura.com/p/243342/sp/24334200/playManifest/entryId/0_uka1msg4/flavorIds/1_vqhfu6uy,1_80sohj7p/format/applehttp/protocol/http/a.m3u8';
+    // const videoSrc = 'https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_adv_example_hevc/master.m3u8'; // beep boop.
     if (Hls.isSupported()) {
       const hls = new Hls();
       hls.loadSource(videoSrc);
@@ -60,6 +64,7 @@
         player.addEventListener('loadedmetadata', (e) => {
           const tracks = e.target.textTracks;
           const track = tracks[0];
+          component.textTrack = track;
           track.addEventListener('cuechange', (e) => {
             component.textTrack = e.target;
           });
@@ -71,11 +76,18 @@
       player.src = videoSrc;
     }
 
-    // Updates the captions.
-    player.ontimeupdate = () => {
+    let pingInterval;
+    const update = 100;
+    player.addEventListener('play', () => {
       component.playhead = player.currentTime;
-    };
-
+      pingInterval = setInterval(() => {
+        component.playhead = player.currentTime;
+      })
+    }, update);
+    player.addEventListener('pause', () => {
+      clearInterval(pingInterval);
+    })
+  
     // On click, Seek's player to caption location.
     component.addEventListener('seek', e => {
       player.currentTime = e.detail.value;
@@ -85,6 +97,10 @@
     player.onseeking = () => {
       component.debounceScrolling = false;
     };
+
+    component.addEventListener('all', (e) => {
+      console.log(e.detail);
+    })
 
   </script>
 
