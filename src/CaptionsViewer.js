@@ -23,7 +23,7 @@ export class CaptionsViewer extends HTMLElement {
   #disable = ''; // What vtt properties to disable, uses |
   #theme = ''; // blank/light or dark.  Dark shows lighter text.
   #youtube = false; // Makes vtt cue adjustments specific to YouTube.
-  #enableCSS = true;
+  #enableCSS = true; // Removal of default styles.
 
   // Internal
   #captions = {}; // Master array of the cues.
