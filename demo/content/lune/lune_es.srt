@@ -1,0 +1,151 @@
+1
+00:01:08,650 --> 00:01:15,500
+<font color="#ffffff">La nieve cae ahora, como en diciembre</font>
+
+2
+00:01:15,500 --> 00:01:20,883
+<font color="#ffffff">Ardiendo en los rayos de verano</font>
+
+3
+00:01:20,883 --> 00:01:27,783
+<font color="#ffffff">Pero no estoy tropezando, como un pretendiente</font>
+
+4
+00:01:27,783 --> 00:01:33,066
+<font color="#ffffff">Medicina fluyendo por mis venas</font>
+
+5
+00:01:34,066 --> 00:01:37,583
+<font color="#ffffff">Ojos pesados, pero la lengua no tartamudea</font>
+
+6
+00:01:37,583 --> 00:01:41,433
+<font color="#ffffff">Las bocas se mueven y este corazón sigue latiendo</font>
+
+7
+00:01:41,433 --> 00:01:45,450
+<font color="#ffffff">Estoy solo</font>
+
+8
+00:01:46,683 --> 00:01:48,549
+<font color="#ffffff">Me encontraste en el frío</font>
+
+9
+00:01:48,549 --> 00:01:53,799
+<font color="#ffffff">Ahora, estoy envuelto en la calidez de tu toque</font>
+
+10
+00:01:53,799 --> 00:02:00,549
+<font color="#ffffff">No hay un momento que deje escapar en tus ojos</font>
+
+11
+00:02:00,549 --> 00:02:07,950
+<font color="#ffffff">¿Estamos envejeciendo y me estoy derritiendo en los rayos de este amor?</font>
+
+12
+00:02:07,950 --> 00:02:12,733
+<font color="#ffffff">Nunca te dejaré ir</font>
+
+13
+00:02:13,133 --> 00:02:20,233
+<font color="#ffffff">No te sueltes</font>
+
+14
+00:02:21,183 --> 00:02:25,433
+<font color="#ffffff">Nunca te dejaré ir</font>
+
+15
+00:02:26,316 --> 00:02:30,083
+<font color="#ffffff">Disminuya la velocidad ahora</font>
+
+dieciséis
+00:02:30,283 --> 00:02:37,800
+<font color="#ffffff">No puedo recordar por qué dejé que masticaran mi cerebro</font>
+
+17
+00:02:38,066 --> 00:02:44,900
+<font color="#ffffff">Han venido y dejado este pueblo en brasas ardientes</font>
+
+18
+00:02:44,900 --> 00:02:51,516
+<font color="#ffffff">Pero querida, moriré bajo tu lluvia</font>
+
+19
+00:03:16,516 --> 00:03:19,816
+<font color="#ffffff">Ojos pesados, pero la lengua no tartamudea</font>
+
+20
+00:03:19,816 --> 00:03:23,800
+<font color="#ffffff">Las bocas se mueven y este corazón sigue latiendo</font>
+
+21
+00:03:23,800 --> 00:03:29,066
+<font color="#ffffff">Estoy solo</font>
+
+22
+00:03:29,066 --> 00:03:30,650
+<font color="#ffffff">Me encontraste en el frío</font>
+
+23
+00:03:30,650 --> 00:03:36,199
+<font color="#ffffff">Ahora, estoy envuelto en la calidez de tu toque</font>
+
+24
+00:03:36,199 --> 00:03:43,000
+<font color="#ffffff">No hay un momento que deje escapar en tus ojos</font>
+
+25
+00:03:43,000 --> 00:03:50,333
+<font color="#ffffff">¿Estamos envejeciendo y me estoy derritiendo en los rayos de este amor?</font>
+
+26
+00:03:50,333 --> 00:03:55,166
+<font color="#ffffff">Nunca te dejaré ir</font>
+
+27
+00:03:55,166 --> 00:04:09,866
+<font color="#ffffff">No te sueltes</font>
+
+28
+00:04:23,566 --> 00:04:25,183
+<font color="#ffffff">Siente el amor</font>
+
+29
+00:04:25,183 --> 00:04:26,816
+<font color="#ffffff">Sí, siento el amor</font>
+
+30
+00:04:26,816 --> 00:04:30,149
+<font color="#ffffff">Persíguelo, sosténlo, siéntelo, nunca lo dejes ir</font>
+
+31
+00:04:30,149 --> 00:04:31,883
+<font color="#ffffff">¿Sientes el amor?</font>
+
+32
+00:04:31,883 --> 00:04:36,566
+<font color="#ffffff">Sí, siento el amor</font>
+
+33
+00:04:36,566 --> 00:04:38,183
+<font color="#ffffff">Siente el amor</font>
+
+34
+00:04:38,183 --> 00:04:39,816
+<font color="#ffffff">Sí, siento el amor</font>
+
+35
+00:04:39,816 --> 00:04:43,149
+<font color="#ffffff">Persíguelo, sosténlo, siéntelo, nunca lo dejes ir</font>
+
+36
+00:04:43,149 --> 00:04:44,883
+<font color="#ffffff">¿Sientes el amor?</font>
+
+37
+00:04:44,883 --> 00:04:48,850
+<font color="#ffffff">Sí, siento el amor</font>
+
+38
+00:04:48,850 --> 00:04:52,449
+<font color="#ffffff">No lo sueltes</font>
