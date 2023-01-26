@@ -25,7 +25,7 @@ function parseSubTextCue(text, startSec) {
 }
 
 // Create internal object from the HTML textTrack interface.
-export function parseTextTrack(textTrack, nudge = 0) {
+export function parseTextTrack(textTrack) {
   if (!textTrack.cues) {
     return undefined;
   }
@@ -37,7 +37,7 @@ export function parseTextTrack(textTrack, nudge = 0) {
       text: cue.text.split('\n').map(split => split.replace(/^\s+/g, '')), // remove starting whitespace
       subCues: undefined,
       seconds: {
-        start: cue.startTime - nudge,
+        start: cue.startTime,
         end: cue.endTime,
       },
       timecode: {
@@ -75,6 +75,26 @@ export function parseSubTextCues(cues) {
 export function addCueSpaces(cues, distance) {
   // When blank is added to array, it messes with next loop.
   let isBlank = false;
+
+  // start to first cue.
+  const first = cues[0];
+  if (first.seconds.start > distance) {
+    const newCue = {
+      chapter: '',
+      text: [],
+      type: 'spacer',
+      timecode: {
+        start: util.secondsToTimecode(0),
+        end: util.secondsToTimecode(first.seconds.start),
+      },
+      seconds: {
+        start: 0,
+        end: first.seconds.start,
+      },
+    };
+    cues.unshift(newCue);
+  }
+
   cues.forEach((cue, index) => {
     const next = cues[index + 1];
     if (isBlank) {
@@ -181,7 +201,12 @@ export function parseVTT(contents, type) {
       }
     }
     else if (line !== '') {
-      currentCue.text.push(line);
+      if (type === 'srt') {
+        // remove html tags in srt.
+        currentCue.text.push(line.replace(/(<([^>]+)>)/gi, ''));
+      } else {
+        currentCue.text.push(line);
+      }
     }
 
     if (line === '' && currentCue.timecode?.start !== undefined) {
