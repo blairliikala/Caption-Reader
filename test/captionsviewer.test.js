@@ -1,14 +1,17 @@
+/* eslint-disable no-undef */
 import { fixture, html, assert, aTimeout, waitUntil, oneEvent } from '@open-wc/testing';
 import { expect } from '@esm-bundle/chai';
 import '../captions-viewer.js';
 
+/*
 function timeout(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+*/
 
 describe('<captions-viewer>', () => {
   it('has correct properties', async () => {
-    await timeout(1000);
+    aTimeout(500);
 
     const component = await fixture(`<captions-viewer
         src="test/dune_en.vtt"
@@ -27,31 +30,47 @@ describe('<captions-viewer>', () => {
   });
 
   it('parsed the dune vtt correctly', async () => {
-    await timeout(1000);
-
     const component = await fixture(`<captions-viewer
         src="test/dune_en.vtt"
       ></captions-viewer>`);
+
+    await waitUntil(() => ('cues' in component.captions), 'Captions parsed');
 
     const { captions } = component;
-    expect(captions.cues?.length).to.equal(63);
-    expect(captions.cues[0].seconds.start).to.equal(8.342);
+    expect(captions.cues?.length).to.equal(65);
+    expect(captions.cues[1].seconds.start).to.equal(8.842);
   });
 
-  it('Advances cues when the playhead parameter is updated', async () => {
-    await timeout(1000);
-
+  it('Advances cues and updates statuses when the playhead parameter is updated', async () => {
     const component = await fixture(`<captions-viewer
         src="test/dune_en.vtt"
       ></captions-viewer>`);
+
+    await waitUntil(() => ('cues' in component.captions), 'Captions parsed');
 
     // Test difference note:
     // In the browser, time will snap to nearest keyframe based on video.
     component.playhead = 20; // 20 seconds in.
-    expect(component.captions.cues[2].status).to.equal('passed');
-    expect(component.captions.cues[3].status).to.equal('previous');
-    expect(component.captions.cues[4].status).to.equal('active');
-    expect(component.captions.cues[5].status).to.equal('next');
-    expect(component.captions.cues[6].status).to.equal('upcoming');
+    expect(component.captions.cues[3].status).to.equal('passed');
+    expect(component.captions.cues[4].status).to.equal('previous');
+    expect(component.captions.cues[5].status).to.equal('active');
+    expect(component.captions.cues[6].status).to.equal('next');
+    expect(component.captions.cues[7].status).to.equal('upcoming');
+  });
+
+  it('fires an event when parsed', async () => {
+    const component = await fixture('<captions-viewer></captions-viewer>');
+    const listener = oneEvent(component, 'parsed');
+    component.src = 'test/dune_en.vtt';
+    const { detail } = await listener;
+    expect(detail.value).to.equal('Caption file has been parsed.');
+  });
+
+  it('adds cue to tracklist and shows progress bar in html', async () => {
+    const component = await fixture('<captions-viewer src="test/dune_en.vtt"></captions-viewer>');
+    await waitUntil(() => ('cues' in component.captions), 'Captions parsed');
+    expect(component.captions.cues[62].type).to.equal('spacer');
+    const htmlCues = document.querySelectorAll('progress');
+    expect(htmlCues.length).to.equal(3);
   });
 });
