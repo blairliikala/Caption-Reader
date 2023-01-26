@@ -102,6 +102,7 @@ captions.setTheme('dark');
 
 |  Name | Description |
 | - | - |
+| `parsed` | When the caption file has been parsed. |
 | `error` | Fired when an error occurs. Returns the text description of the error. |
 | `seek` | Fired when a click/select is made on a caption cue. Returns the start of that cue in seconds. |
 
