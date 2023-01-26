@@ -112,7 +112,7 @@ export class CaptionsViewer extends HTMLElement {
   }
   set textTrack(item) {
     this.#textTrack = item;
-    this.#create();
+    this.#create({ changes: { name: 'textTrack' } });
   }
   set spacer(item) {
     this.#spacer = item;
@@ -124,6 +124,17 @@ export class CaptionsViewer extends HTMLElement {
       return;
     }
     this.#youtube = item;
+  }
+  set height(item) {
+    if (typeof item !== 'string') {
+      console.warn('height must be a string with a unit value.', item);
+      this.#event('error', 'height must be a string with a unit value.');
+      return;
+    }
+    this.setAttribute('height', item);
+  }
+  set nudge(item) {
+    this.#nudge = item;
   }
 
   get src() {
@@ -164,6 +175,9 @@ export class CaptionsViewer extends HTMLElement {
   }
   get enableCSS() {
     return this.#enableCSS;
+  }
+  get nudge() {
+    return this.#nudge;
   }
 
   connectedCallback() {
@@ -222,7 +236,7 @@ export class CaptionsViewer extends HTMLElement {
     this.#playhead = parseInt(this.getAttribute('playhead'), 10) || this.#playhead;
     this.#height = this.getAttribute('height') || this.#height;
     this.#debounce = parseInt(this.getAttribute('debounce'), 10) || this.#debounce;
-    this.#singleline = (this.getAttribute('singleline') === 'true' || this.getAttribute('singleline') === true) || this.#singleline;
+    this.#singleline = (this.getAttribute('singleline') === 'true' || this.getAttribute('singleline') === true) || false;
     this.#color = this.getAttribute('color') || this.#color;
     this.#disable = this.getAttribute('disable') || '';
     this.#theme = this.getAttribute('theme') || this.#theme;
@@ -250,8 +264,9 @@ export class CaptionsViewer extends HTMLElement {
     }
     this.#divs.root?.setAttribute('style', customStyles.join('; '));
 
-    if (params?.changes.name === 'src') {
+    if (params?.changes.name === 'src' || params?.changes.name === 'textTrack') {
       this.#captions = await this.#parse();
+      if (this.#captions) this.#event('parsed', 'Caption file has been parsed.');
       if (this.#youtube) this.#captions.cues = this.#youtubeAdjustments(this.#captions.cues);
     }
 
@@ -268,14 +283,12 @@ export class CaptionsViewer extends HTMLElement {
 
     // Track in video element. Pushed after load.
     if (this.#textTrack && 'cues' in this.#textTrack) {
-      console.log('Trying foo parser.');
-      captions = parseTextTrack(this.#textTrack, this.#nudge);
+      captions = parseTextTrack(this.#textTrack);
     }
 
     // Both failed, use the fallback src parser.
     if (this.#src && (!captions || !captions.cues)) {
-      console.log('Trying backup parser.');
-      const srcContents = await fetch(this.#src).then(res => res.text()); // TODO more on this.
+      const srcContents = await fetch(this.#src).then(res => res.text());
       const type = Utilities.getSupportedFileType(this.#src);
       if (srcContents) captions = parseVTT(srcContents, type);
     }
@@ -306,17 +319,12 @@ export class CaptionsViewer extends HTMLElement {
 
     // Touch Devices
     this.#divs.root.addEventListener('touchstart', () => {
-      console.log('touchstart');
       isTouch = true;
       this.#debounceScrolling = true;
       clearTimeout(timeout);
       addScrollStyle();
     });
-    this.#divs.root.addEventListener('touchmove', () => {
-      console.log('touchmove');
-    });
     this.#divs.root.addEventListener('touchend', () => {
-      console.log('touchend');
       isTouch = false;
       timeout = setTimeout(() => {
         isTouch = false;
@@ -339,7 +347,6 @@ export class CaptionsViewer extends HTMLElement {
         }
         this.#debounceScrolling = true;
         addScrollStyle();
-        console.log('scroll');
         timeout = setTimeout(() => {
           this.#debounceScrolling = false;
           removeScrollStyle();
@@ -416,7 +423,7 @@ export class CaptionsViewer extends HTMLElement {
     let html = '<ol>';
     this.#captions.cues?.forEach((cue, index) => {
       if (cue.timecode) {
-        const styleName = cue.status;
+        const styleName = cue.status || '';
         const timecode = `<span class="timecode">${Utilities.prettyTimecode(cue.timecode.start)}</span>`;
         const chapter = cue.chapter ? `<span class="chapter">${cue.chapter}</span>` : '';
         const textJoiner = this.#singleline ? ' ' : '<br />';
@@ -434,10 +441,10 @@ export class CaptionsViewer extends HTMLElement {
           text += '</span>';
         }
 
-        html += `<li tabindex="0">
+        html += `<li>
           <button
             type="button"
-            tabindex="${index + 1}"
+            tabindex="0"
             class="cue ${styleName} ${cue.type || ''}"
             data-index="${index}"
           >${!disabled.includes('timecode') && cue.type !== 'spacer' ? timecode : ''} ${!disabled.includes('chapters') ? chapter : ''} ${!disabled.includes('text') ? text : ''} ${spacerProgress}
@@ -461,15 +468,16 @@ export class CaptionsViewer extends HTMLElement {
   #setCuesStatus() {
     if (!('cues' in this.#captions)) return;
     this.#captions.cues = this.#captions.cues.map(cue => {
-      if (cue.seconds.end < this.#playhead) {
+      if (cue.seconds.end - this.#nudge < this.#playhead) {
         cue.active = false;
         cue.status = 'passed';
       }
-      if (cue.seconds.start > this.#playhead) {
+      if (cue.seconds.start - this.#nudge > this.#playhead) {
         cue.active = false;
         cue.status = 'upcoming';
       }
-      if (cue.seconds.start < this.#playhead && cue.seconds.end > this.#playhead) {
+      if (cue.seconds.start - this.#nudge < this.#playhead
+            && cue.seconds.end - this.#nudge > this.#playhead) {
         cue.active = true;
         cue.status = 'active';
       }
