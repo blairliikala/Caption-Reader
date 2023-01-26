@@ -57,7 +57,7 @@ export function defaultStyles() {
   .cue {
     border: none;
     font: inherit;
-    padding: 0.3rem 10% 0.3rem .4rem;
+    padding: 0.4rem 10% 0.4rem .4rem;
     display: flex;
     gap: 1rem;
     transform: scale(1);
@@ -118,6 +118,7 @@ export function defaultStyles() {
     border-color: var(--highlight);
     text-shadow: none;
     font-weight: bold;
+    color: var(--active-secondary);
   }
   .active .timecode {
     color: var(--active-secondary);
@@ -130,6 +131,9 @@ export function defaultStyles() {
   }
   .active .sub_active {
     text-decoration: underline;
+  }
+  .previous {
+    color: var(--inactive);
   }
   .passed  {
     transform: scale(1);
