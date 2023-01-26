@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <title>Caption Reader Web Component</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
+  <link href="/demo/demo.css" rel="stylesheet" type="text/css">
+  <script type="module" src="../../captions-viewer.js"></script>
+
+  <style>
+    /* Hides the component until it has loaded */
+    captions-viewer:not(:defined) {
+      visibility: hidden
+    }
+    captions-viewer {
+      margin: 1em 0;
+      border: 3px solid hsla(200, 20%, 50%, .5);
+      border-radius: 5px;
+      font-family: arial;
+      display: block;
+      background: rgba(0,0,0,.2);
+      /*background: rgba(255,255,255, .9)*/
+    }
+    captions-viewer .cue {
+      font-size: 1.5rem;
+      padding-top: .8rem;
+      padding-bottom: .8rem;
+      border: 0;
+    }
+    captions-viewer .cue:hover, 
+    captions-viewer .cue:active {
+      border: 0;
+      outline: 0;
+    }
+    captions-viewer .cue:focus-within {
+      border: 0;
+      outline: 1px solid rgba(255,255,255, .1);
+      border-radius: 4px;
+    }    
+  </style>
+</head>
+<body>
+
+  <main class="container">
+
+    <audio controls width="100%" playsinline style="width: 100%">
+      <source src="lune/lune.mp4" type="video/mp4">
+      <track label="English" kind="subtitles" srclang="en" src="lune/lune.srt" />
+    </audio>
+
+    <captions-viewer
+      src="lune/lune.srt"
+      height="70vh"
+      color="300"
+      disable="timecode|chapters"
+      theme="dark"
+    >
+    </captions-viewer>
+
+    <fieldset>
+      <legend>Toggle</legend>
+      <button type="button" id="toggleTimecode" title="Turn on/off timecode">Timecode</button>
+      <button type="button" id="toggleChapters" title="Turn on/off chapters (might not be any)">Chapters</button>
+      <button type="button" id="toggleText" title="Toggle the cue text.">Text</button>
+      <button type="button" id="toggleSingleLine" title="Put the cue text on a single line or not, ignoring the caption file.">Single Line</button>
+    </fieldset>
+
+    <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
+  </main>
+
+  <script type="module">
+    const component = document.querySelector('captions-viewer');
+    const player = document.querySelector('audio');
+
+    // iOS needs the video to have played before seeking.  Because... Safari.
+    let hasPlayed = false;
+    player.addEventListener('play', () => {
+      hasPlayed = true;
+    })
+
+    /* **** Required **** */
+
+    // Updates the captions.
+    player.ontimeupdate = () => {
+      component.playhead = player.currentTime;
+    };
+
+    // On click, Seek's player to caption location.
+    component.addEventListener('seek', e => {
+      if (!hasPlayed) player.play();
+      console.log(e.detail.value)
+      player.currentTime = e.detail.value;
+    });
+
+    // (optional) Scroll to the cue when user skips in the player timeline.
+    player.onseeking = () => {
+      component.debounceScrolling = false;
+    };
+
+    /* **** Optional *** */
+
+    function toggleDisabledProp(prop, disabled) {
+      const split = disabled.split('|');
+      let newDisabled = '';
+      console.log(split.indexOf(prop))
+      if (split.indexOf(prop) >= 0) {
+        newDisabled = split.filter(dis => dis !== prop);
+      } else {
+        split.push(prop);
+        newDisabled = split;
+      }
+      return newDisabled?.join('|');
+    }
+
+    document.querySelector('#toggleTimecode').addEventListener('click', () => {
+      component.disable = toggleDisabledProp('timecode', component.disable);
+    });
+    document.querySelector('#toggleChapters').addEventListener('click', () => {
+      component.disable = toggleDisabledProp('chapters', component.disable);
+    });
+    document.querySelector('#toggleText').addEventListener('click', () => {
+      component.disable = toggleDisabledProp('text', component.disable);
+    });
+    document.querySelector('#toggleSingleLine').addEventListener('click', () => {
+      component.singleline = (!component.singleline);
+    }); 
+  </script>
+
+</body>
+</html>

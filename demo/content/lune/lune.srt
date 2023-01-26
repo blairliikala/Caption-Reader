@@ -1,0 +1,151 @@
+1
+00:01:08,650 --> 00:01:15,500
+<font color="#ffffff">Snow coming' down now, like December</font>
+
+2
+00:01:15,500 --> 00:01:20,883
+<font color="#ffffff">Burning up in the summer rays</font>
+
+3
+00:01:20,883 --> 00:01:27,783
+<font color="#ffffff">But I'm not stumbling, like a pretender</font>
+
+4
+00:01:27,783 --> 00:01:33,066
+<font color="#ffffff">Medicine flowing through my veins</font>
+
+5
+00:01:34,066 --> 00:01:37,583
+<font color="#ffffff">Heavy eyes, but the tongue won't stutter</font>
+
+6
+00:01:37,583 --> 00:01:41,433
+<font color="#ffffff">Mouths are moving and this heart's still fluttering</font>
+
+7
+00:01:41,433 --> 00:01:45,450
+<font color="#ffffff">I'm on my own</font>
+
+8
+00:01:46,683 --> 00:01:48,549
+<font color="#ffffff">You found me in the cold</font>
+
+9
+00:01:48,549 --> 00:01:53,799
+<font color="#ffffff">Now, I am wrapped within the warmth of your touch</font>
+
+10
+00:01:53,799 --> 00:02:00,549
+<font color="#ffffff">There's never a moment that I let slip by in your eyes</font>
+
+11
+00:02:00,549 --> 00:02:07,950
+<font color="#ffffff">Are we growing old, and am I melting in the rays of this love</font>
+
+12
+00:02:07,950 --> 00:02:12,733
+<font color="#ffffff">Never ever gonna let you go</font>
+
+13
+00:02:13,133 --> 00:02:20,233
+<font color="#ffffff"> Don't let go</font>
+
+14
+00:02:21,183 --> 00:02:25,433
+<font color="#ffffff">Never gonna let you go</font>
+
+15
+00:02:26,316 --> 00:02:30,083
+<font color="#ffffff">Slow it down now</font>
+
+16
+00:02:30,283 --> 00:02:37,800
+<font color="#ffffff"> I cannot remember why I let them chew on my brain</font>
+
+17
+00:02:38,066 --> 00:02:44,900
+<font color="#ffffff">They've come and left this town in smoldering embers</font>
+
+18
+00:02:44,900 --> 00:02:51,516
+<font color="#ffffff">But my dear, I'll die in your rain</font>
+
+19
+00:03:16,516 --> 00:03:19,816
+<font color="#ffffff">Heavy eyes, but the tongue won't stutter</font>
+
+20
+00:03:19,816 --> 00:03:23,800
+<font color="#ffffff">Mouths are moving and this heart's still fluttering</font>
+
+21
+00:03:23,800 --> 00:03:29,066
+<font color="#ffffff">I'm on my own</font>
+
+22
+00:03:29,066 --> 00:03:30,650
+<font color="#ffffff">You found me in the cold</font>
+
+23
+00:03:30,650 --> 00:03:36,199
+<font color="#ffffff">Now, I am wrapped within the warmth of your touch</font>
+
+24
+00:03:36,199 --> 00:03:43,000
+<font color="#ffffff">There's never a moment that I let slip by in your eyes</font>
+
+25
+00:03:43,000 --> 00:03:50,333
+<font color="#ffffff">Are we growing old, and am I melting in the rays of this love</font>
+
+26
+00:03:50,333 --> 00:03:55,166
+<font color="#ffffff">Never ever gonna let you go</font>
+
+27
+00:03:55,166 --> 00:04:09,866
+<font color="#ffffff"> Don't let go</font>
+
+28
+00:04:23,566 --> 00:04:25,183
+<font color="#ffffff">Do feel the love</font>
+
+29
+00:04:25,183 --> 00:04:26,816
+<font color="#ffffff">Yes, I feel the love</font>
+
+30
+00:04:26,816 --> 00:04:30,149
+<font color="#ffffff">Chase it, hold it, feel it, never let it go</font>
+
+31
+00:04:30,149 --> 00:04:31,883
+<font color="#ffffff">Do you feel the love</font>
+
+32
+00:04:31,883 --> 00:04:36,566
+<font color="#ffffff">Yes, I feel the love</font>
+
+33
+00:04:36,566 --> 00:04:38,183
+<font color="#ffffff">Do feel the love</font>
+
+34
+00:04:38,183 --> 00:04:39,816
+<font color="#ffffff">Yes, I feel the love</font>
+
+35
+00:04:39,816 --> 00:04:43,149
+<font color="#ffffff">Chase it, hold it, feel it, never let it go</font>
+
+36
+00:04:43,149 --> 00:04:44,883
+<font color="#ffffff">Do you feel the love</font>
+
+37
+00:04:44,883 --> 00:04:48,850
+<font color="#ffffff">Yes, I feel the love</font>
+
+38
+00:04:48,850 --> 00:04:52,449
+<font color="#ffffff">Don't let go</font>
