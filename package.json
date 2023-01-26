@@ -5,7 +5,7 @@
   "author": "Blair Liikala",
   "homepage": "https://github.com/blairliikala/Caption-Reader",
   "repository": "github:blairliikala/Caption-Reader",
-  "version": "0.0.3",
+  "version": "0.0.2",
   "type": "module",
   "module": "index.js",
   "browser": "index.js",
