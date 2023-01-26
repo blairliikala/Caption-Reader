@@ -1,14 +1,21 @@
 // src/utilities.js
 var Utilities = class {
   // HH:MM:SS, or HH:MM:SS.FFF
-  static timecodeToSeconds(timecode) {
-    let parts = timecode.split(":");
-    if (parts.lenght === 1)
-      parts = timecode.split(",");
+  static timecodeToSeconds(timecode = "") {
+    const regex = /^[0-9][0-9]/;
+    if (!regex.test(timecode) || typeof timecode !== "string") {
+      return void 0;
+    }
+    const parts = timecode.split(":");
+    if (!parts || parts.length === 1)
+      return timecode;
     const hours = parseInt(parts[0], 10);
     const minutes = parseInt(parts[1], 10);
     const seconds = parseInt(parts[2], 10);
-    const mili = timecode.split(".");
+    let mili = timecode.split(".");
+    if (mili.length === 1) {
+      mili = timecode.split(",");
+    }
     return hours * 3600 + minutes * 60 + seconds + mili[1] / 1e3;
   }
   // Credit: Chat GPT
@@ -20,6 +27,10 @@ var Utilities = class {
     return regex.test(input);
   }
   static prettyTimecode(timecode) {
+    const regex = /^[0-9][0-9]/;
+    if (!regex.test(timecode) || typeof timecode !== "string") {
+      return void 0;
+    }
     const split = timecode.split(":");
     if (split.length === 0)
       return [];
@@ -37,8 +48,8 @@ var Utilities = class {
     split[split.length - 1] = seconds;
     return split.join(":");
   }
-  static secondsToTimecode(seconds) {
-    if (seconds === void 0 || seconds === null)
+  static secondsToTimecode(seconds = 0) {
+    if (typeof seconds !== "number")
       return "";
     if (seconds < 0)
       return "00:00:00";
@@ -56,7 +67,7 @@ var Utilities = class {
     }
     return "dark";
   }
-  static getFileType(file) {
+  static getSupportedFileType(file) {
     const split = file.split(".");
     const extension = split[split.length - 1];
     const supported = ["vtt", "srt"];
@@ -98,7 +109,7 @@ function parseSubTextCue(text, startSec) {
   }
   return result;
 }
-function parseTextTrack(textTrack, nudge = 0) {
+function parseTextTrack(textTrack) {
   if (!textTrack.cues) {
     return void 0;
   }
@@ -111,7 +122,7 @@ function parseTextTrack(textTrack, nudge = 0) {
       // remove starting whitespace
       subCues: void 0,
       seconds: {
-        start: cue.startTime - nudge,
+        start: cue.startTime,
         end: cue.endTime
       },
       timecode: {
@@ -142,6 +153,23 @@ function parseSubTextCues(cues) {
 }
 function addCueSpaces(cues, distance) {
   let isBlank = false;
+  const first = cues[0];
+  if (first.seconds.start > distance) {
+    const newCue = {
+      chapter: "",
+      text: [],
+      type: "spacer",
+      timecode: {
+        start: Utilities.secondsToTimecode(0),
+        end: Utilities.secondsToTimecode(first.seconds.start)
+      },
+      seconds: {
+        start: 0,
+        end: first.seconds.start
+      }
+    };
+    cues.unshift(newCue);
+  }
   cues.forEach((cue, index) => {
     const next = cues[index + 1];
     if (isBlank) {
@@ -232,7 +260,11 @@ function parseVTT(contents, type) {
         currentCue.styles = spaces.splice(3).join(" ");
       }
     } else if (line !== "") {
-      currentCue.text.push(line);
+      if (type === "srt") {
+        currentCue.text.push(line.replace(/(<([^>]+)>)/gi, ""));
+      } else {
+        currentCue.text.push(line);
+      }
     }
     if (line === "" && currentCue.timecode?.start !== void 0) {
       if (cueBlock) {
@@ -262,6 +294,8 @@ function defaultStyles() {
     scroll-snap-stop: always;
     position: relative;
     padding: .5rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     --base: 360;
 
     --gray-10-sat: 10%;
@@ -272,6 +306,7 @@ function defaultStyles() {
     --gray-20-opacity: 0.2;
     --gray-70-opacity: 0.7;
     --inactive: hsla(var(--base), 20%, 40%, 0.9);
+    --inactive-90: hsla(var(--base), 20%, 40%, 0.5);
     --active-primary: hsla(var(--base), 0%, 30%, 1);
     --active-secondary: hsla(var(--base), 40%, 70%, 1);
     --highlight: hsla(var(--base), 50%, 50%, 0.9);
@@ -285,6 +320,7 @@ function defaultStyles() {
     --gray-20-opacity: 0.2;
     --gray-70-opacity: 0.7;
     --inactive: hsla(var(--base), 10%, 80%, 0.7);
+    --inactive-90: hsla(var(--base), 10%, 80%, 0.5);
     --active-primary: hsla(var(--base), 0%, 100%, 1);
     --active-secondary: hsla(var(--base), 20%, 80%, 1);
     --highlight: hsla(var(--base), 50%, 60%, 0.9);
@@ -306,7 +342,7 @@ function defaultStyles() {
   .cue {
     border: none;
     font: inherit;
-    padding: 0.3rem 1.5rem 0.3rem .4rem;
+    padding: 0.4rem 10% 0.4rem .4rem;
     display: flex;
     gap: 1rem;
     transform: scale(1);
@@ -318,10 +354,9 @@ function defaultStyles() {
     text-align: start;
     border-left: 2px solid hsla(var(--base), 60%, 70%, 0.1);
     border-radius: 0;
-    font-weight: bold;
-
     color: transparent;
-    text-shadow: 0 0 1.2px var(--inactive);
+    text-shadow: 0 0 2px var(--inactive-90);
+    font-weight: bold;
   }
   .cue:focus {
     background: none;
@@ -365,9 +400,10 @@ function defaultStyles() {
   .active {
     transform: scale(1.05);
     transform-origin: left;
-    padding-right: 10%;
     border-color: var(--highlight);
     text-shadow: none;
+    font-weight: bold;
+    color: var(--active-secondary);
   }
   .active .timecode {
     color: var(--active-secondary);
@@ -381,9 +417,16 @@ function defaultStyles() {
   .active .sub_active {
     text-decoration: underline;
   }
+  .previous {
+    color: var(--inactive);
+  }
   .passed  {
     transform: scale(1);
     transform-origin: left;
+  }
+  .scrolling .cue {
+    text-shadow: none;
+    color: var(--inactive);
   }
   @media (prefers-reduced-motion) {
     .active {
@@ -424,7 +467,7 @@ var CaptionsViewer = class extends HTMLElement {
   // current seconds from start.
   #height = "400px";
   // Hight of container, applied as inline style.
-  #debounce = 0;
+  #debounce = 4e3;
   // In seconds how long to
   #singleline = false;
   #color = "";
@@ -451,6 +494,7 @@ var CaptionsViewer = class extends HTMLElement {
   // Time in sec between cues where the progres bar cue will be shown.
   #nudge = 0.5;
   // Time in sec to start the cue early. comp for css transition.
+  #isAutoScroll = false;
   css = defaultStyles();
   constructor() {
     super();
@@ -524,7 +568,7 @@ var CaptionsViewer = class extends HTMLElement {
   }
   set textTrack(item) {
     this.#textTrack = item;
-    this.#create();
+    this.#create({ changes: { name: "textTrack" } });
   }
   set spacer(item) {
     this.#spacer = item;
@@ -536,6 +580,17 @@ var CaptionsViewer = class extends HTMLElement {
       return;
     }
     this.#youtube = item;
+  }
+  set height(item) {
+    if (typeof item !== "string") {
+      console.warn("height must be a string with a unit value.", item);
+      this.#event("error", "height must be a string with a unit value.");
+      return;
+    }
+    this.setAttribute("height", item);
+  }
+  set nudge(item) {
+    this.#nudge = item;
   }
   get src() {
     return this.#src;
@@ -573,6 +628,12 @@ var CaptionsViewer = class extends HTMLElement {
   get youtube() {
     return this.#youtube;
   }
+  get enableCSS() {
+    return this.#enableCSS;
+  }
+  get nudge() {
+    return this.#nudge;
+  }
   connectedCallback() {
     this.#init();
   }
@@ -603,18 +664,7 @@ var CaptionsViewer = class extends HTMLElement {
         this.#updateCaptionStatus(seconds + 0.2);
       }
     });
-    this.#divs.root.addEventListener("scroll", () => {
-      this.#debounceScrolling = true;
-      console.log("[scroll] touch move...");
-      this.#divs.root.addEventListener("mouseup", () => {
-        setTimeout(() => {
-          this.#debounceScrolling = false;
-        }, this.#debounce);
-      });
-      setTimeout(() => {
-        this.#debounceScrolling = false;
-      }, this.#debounce * 3);
-    }, false);
+    this.#iniScrollingEvents();
     this.#create();
   }
   async #create(params) {
@@ -622,17 +672,17 @@ var CaptionsViewer = class extends HTMLElement {
     this.#playhead = parseInt(this.getAttribute("playhead"), 10) || this.#playhead;
     this.#height = this.getAttribute("height") || this.#height;
     this.#debounce = parseInt(this.getAttribute("debounce"), 10) || this.#debounce;
-    this.#singleline = this.getAttribute("singleline") === "true" || this.getAttribute("singleline") === true || this.#singleline;
+    this.#singleline = this.getAttribute("singleline") === "true" || this.getAttribute("singleline") === true || false;
     this.#color = this.getAttribute("color") || this.#color;
-    this.#disable = this.getAttribute("disable") || this.#disable;
+    this.#disable = this.getAttribute("disable") || "";
     this.#theme = this.getAttribute("theme") || this.#theme;
     this.#youtube = this.getAttribute("youtube") === "true" || this.getAttribute("youtube") === true || this.#youtube;
-    this.#enableCSS = this.getAttribute("css") === "true" || this.getAttribute("css") === true || this.#enableCSS;
+    this.#enableCSS = this.getAttribute("stylesheet") || this.#enableCSS;
     if (!this.#src && !(this.#textTrack && "id" in this.#textTrack)) {
       console.debug("No text track");
       return;
     }
-    if (!this.#enableCSS) {
+    if (this.#enableCSS === "false" || this.#enableCSS === false) {
       const stylesheet = this.querySelector("#theme_a");
       stylesheet.innerHTML = "";
     }
@@ -645,8 +695,10 @@ var CaptionsViewer = class extends HTMLElement {
       customStyles.push(`--base: ${this.#color}`);
     }
     this.#divs.root?.setAttribute("style", customStyles.join("; "));
-    if (params?.changes.name === "src") {
+    if (params?.changes.name === "src" || params?.changes.name === "textTrack") {
       this.#captions = await this.#parse();
+      if (this.#captions)
+        this.#event("parsed", "Caption file has been parsed.");
       if (this.#youtube)
         this.#captions.cues = this.#youtubeAdjustments(this.#captions.cues);
     }
@@ -654,17 +706,15 @@ var CaptionsViewer = class extends HTMLElement {
   }
   async #parse() {
     let captions;
-    if (this.#src && Utilities.getFileType(this.#src) === "vtt") {
+    if (this.#src && Utilities.getSupportedFileType(this.#src) === "vtt") {
       this.#textTrack = await this.#renderCaptionSrc(this.#src);
     }
     if (this.#textTrack && "cues" in this.#textTrack) {
-      console.log("Trying foo parser.");
-      captions = parseTextTrack(this.#textTrack, this.#nudge);
+      captions = parseTextTrack(this.#textTrack);
     }
     if (this.#src && (!captions || !captions.cues)) {
-      console.log("Trying backup parser.");
       const srcContents = await fetch(this.#src).then((res) => res.text());
-      const type = Utilities.getFileType(this.#src);
+      const type = Utilities.getSupportedFileType(this.#src);
       if (srcContents)
         captions = parseVTT(srcContents, type);
     }
@@ -676,8 +726,49 @@ var CaptionsViewer = class extends HTMLElement {
     captions.cues = parseSubTextCues(captions.cues);
     captions.cues = addCueSpaces(captions.cues, this.#spacer);
     this.#setCuesStatus();
-    console.log("Final Captions.", captions);
     return captions;
+  }
+  #iniScrollingEvents() {
+    let isTouch = false;
+    let timeout;
+    const addScrollStyle = () => {
+      this.#divs.root.classList.add("scrolling");
+    };
+    const removeScrollStyle = () => {
+      this.#divs.root.classList.remove("scrolling");
+    };
+    this.#divs.root.addEventListener("touchstart", () => {
+      isTouch = true;
+      this.#debounceScrolling = true;
+      clearTimeout(timeout);
+      addScrollStyle();
+    });
+    this.#divs.root.addEventListener("touchend", () => {
+      isTouch = false;
+      timeout = setTimeout(() => {
+        isTouch = false;
+        this.#debounceScrolling = false;
+        removeScrollStyle();
+      }, this.#debounce);
+    });
+    setTimeout(() => {
+      this.#divs.root.addEventListener("scroll", () => {
+        if (isTouch)
+          return;
+        if (this.#isAutoScroll) {
+          return;
+        }
+        if (this.#debounceScrolling === true) {
+          clearTimeout(timeout);
+        }
+        this.#debounceScrolling = true;
+        addScrollStyle();
+        timeout = setTimeout(() => {
+          this.#debounceScrolling = false;
+          removeScrollStyle();
+        }, this.#debounce);
+      }, false);
+    }, 1e3);
   }
   #updateCaptionStatus(playhead) {
     if (this.#paused)
@@ -737,7 +828,7 @@ var CaptionsViewer = class extends HTMLElement {
     let html = "<ol>";
     this.#captions.cues?.forEach((cue, index) => {
       if (cue.timecode) {
-        const styleName = cue.status;
+        const styleName = cue.status || "";
         const timecode = `<span class="timecode">${Utilities.prettyTimecode(cue.timecode.start)}</span>`;
         const chapter = cue.chapter ? `<span class="chapter">${cue.chapter}</span>` : "";
         const textJoiner = this.#singleline ? " " : "<br />";
@@ -752,10 +843,10 @@ var CaptionsViewer = class extends HTMLElement {
           text += cue.subCues.map((sub) => `<span class="${sub.status}">${sub.text}</span>`).join("");
           text += "</span>";
         }
-        html += `<li tabindex="0">
+        html += `<li>
           <button
             type="button"
-            tabindex="${index + 1}"
+            tabindex="0"
             class="cue ${styleName} ${cue.type || ""}"
             data-index="${index}"
           >${!disabled.includes("timecode") && cue.type !== "spacer" ? timecode : ""} ${!disabled.includes("chapters") ? chapter : ""} ${!disabled.includes("text") ? text : ""} ${spacerProgress}
@@ -778,15 +869,15 @@ var CaptionsViewer = class extends HTMLElement {
     if (!("cues" in this.#captions))
       return;
     this.#captions.cues = this.#captions.cues.map((cue) => {
-      if (cue.seconds.end < this.#playhead) {
+      if (cue.seconds.end - this.#nudge < this.#playhead) {
         cue.active = false;
         cue.status = "passed";
       }
-      if (cue.seconds.start > this.#playhead) {
+      if (cue.seconds.start - this.#nudge > this.#playhead) {
         cue.active = false;
         cue.status = "upcoming";
       }
-      if (cue.seconds.start < this.#playhead && cue.seconds.end > this.#playhead) {
+      if (cue.seconds.start - this.#nudge < this.#playhead && cue.seconds.end - this.#nudge > this.#playhead) {
         cue.active = true;
         cue.status = "active";
       }
@@ -820,6 +911,10 @@ var CaptionsViewer = class extends HTMLElement {
     const elmHeight = elm.offsetHeight;
     const elmOffset = elm.offsetTop;
     this.#divs.root.scrollTop = elmOffset - elmHeight;
+    this.#isAutoScroll = true;
+    setTimeout(() => {
+      this.#isAutoScroll = false;
+    }, 1e3);
   }
   pause() {
     this.#paused = !this.#paused;
