@@ -126,7 +126,7 @@
     function toggleDisabledProp(prop, disabled) {
       const split = disabled.split('|');
       let newDisabled = '';
-      if (split.indexOf(prop) > 0) {
+      if (split.indexOf(prop) >= 0) {
         newDisabled = split.filter(dis => dis !== prop);
       } else {
         split.push(prop);
@@ -147,6 +147,10 @@
     document.querySelector('#toggleSingleLine').addEventListener('click', () => {
       component.singleline = (!component.singleline);
     });
+
+    component.addEventListener('all', (e) => {
+      console.log(e.detail);
+    })
   </script>
 
 </body>
