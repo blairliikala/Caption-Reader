@@ -2,11 +2,11 @@
 <html lang="en-GB">
 <head>
   <meta charset="utf-8">
-  <title>Caption Reader Web Component</title>
+  <title>Caption Reader Web Component - Agent 327</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark light">
   <link href="/demo/demo.css" rel="stylesheet" type="text/css">
-  <script type="module" src="../../captions-viewer.js"></script>
+  <script type="module" src="../../../captions-viewer.js"></script>
   
   <style>
     /* Hides the component until it has loaded */
@@ -15,12 +15,10 @@
     }
     captions-viewer {
       margin: 1em 0;
-      border: 3px solid hsla(200, 20%, 50%, .5);
       border-radius: 5px;
       font-family: arial;
       display: block;
       background: rgba(0,0,0,.2);
-      /*background: rgba(255,255,255, .9)*/
     }
   </style>
 </head>
@@ -28,18 +26,21 @@
 
   <main class="container">
 
+    <section class="info">
+      <p>Example shows a longer video with captions.</p>
+    </section>
+
     <video controls width="100%" playsinline autopictureinpicture>
-      <source src="content/agent/agent-av1.mp4" type="video/mp4; codecs=av01.0.05M.08" />
-      <source src="content/agent/agent-720.mp4" type="video/mp4" />
+      <source src="/demo/content/agent/agent-av1.mp4" type="video/mp4; codecs=av01.0.05M.08" />
+      <source src="/demo/content/agent/agent-720.mp4" type="video/mp4" />
       <track label="English" kind="subtitles" srclang="en" src="content/agent/agent_en.vtt" />
       <track label="Spanish" kind="subtitles" srclang="es" src="content/agent/agent_es.vtt" />
       <track label="French" kind="subtitles" srclang="fr" src="content/agent/agent_fr.vtt" />
       <track label="German" kind="subtitles" srclang="de" src="content/agent/agent_fr.vtt" />
-
     </video>
     
     <captions-viewer
-      src="content/agent/agent_en.vtt"
+      src="/demo/content/agent/agent_en.vtt"
       height="30vw"
       color="300"
     >
