@@ -5,13 +5,15 @@ export default class Utilities {
     if (!regex.test(timecode) || typeof (timecode) !== 'string') {
       return undefined;
     }
-    let parts = timecode.split(':'); // vtt
+    const parts = timecode.split(':'); // vtt
     if (!parts || parts.length === 1) return timecode;
-    if (parts.lenght === 1) parts = timecode.split(','); // srt
     const hours = parseInt(parts[0], 10);
     const minutes = parseInt(parts[1], 10);
     const seconds = parseInt(parts[2], 10);
-    const mili = timecode.split('.');
+    let mili = timecode.split('.');
+    if (mili.length === 1) {
+      mili = timecode.split(',');
+    }
     return (hours * 3600) + (minutes * 60) + seconds + (mili[1] / 1000);
   }
 
