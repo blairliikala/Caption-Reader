@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <title>Caption Reader Web Component Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
+  <link href="demo.css" rel="stylesheet" type="text/css">
+  <script type="module" src="../../captions-viewer.js"></script>
+
+  <style>
+    .dark {
+      --caption-background: rgba(0,0,0,.2);
+    }
+    /* Hides the component until it has loaded */
+    captions-viewer:not(:defined) {
+      visibility: hidden
+    }
+    captions-viewer {
+      margin: 1em 0;
+      border-radius: 5px;
+      font-family: arial;
+      display: block;
+      background: rgba(0,0,0,.2);
+      background: var(--caption-background, rgba(255,255,255, .9));
+    }
+    .sidebyside {
+      display: flex;
+      gap: 0.5em;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="container dark">
+
+    <article class="info">
+      <p>Example shows how to sync multiple captions and display them side-by-side.</p>
+    </article>   
+
+    <video controls width="100%" playsinline muted>
+      <source src="content/dune/dune-av1-1080.mp4" type="video/mp4; codecs=av01.0.05M.08"">
+      <source src="content/dune/dune.mp4" type="video/mp4">
+      <!--
+      <source src="https://blairliikala.com/testvids/captionreader/dune-av1-1080.mp4" type="video/mp4; codecs=av01.0.05M.08"">
+      <source src="https://blairliikala.com/testvids/captionreader/dune.mp4" type="video/mp4">
+      -->
+      <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" />
+      <track label="French" kind="subtitles" srclang="fr" src="content/dune/dune_fr.vtt" />
+      <track label="Spanish" kind="subtitles" srclang="es" src="content/dune/dune_es.vtt" />
+    </video>
+
+    <section class="sidebyside">
+      <div>
+        <captions-viewer
+          src="content/dune/dune_en.vtt"
+          height="25vh"
+          singleline="true"
+          color="300"
+          theme="dark"
+          disable="chapters|timecode"
+        >
+        </captions-viewer>
+        <p>English</p>
+      </div>
+
+      <div>
+        <captions-viewer
+          src="content/dune/dune_fr.vtt"
+          height="25vh"
+          singleline="true"
+          color="300"
+          theme="dark"
+          disable="chapters|timecode"
+        >
+        </captions-viewer>
+        <p>French (Google translated)</p>
+      </div>
+
+      <div>
+        <captions-viewer
+          src="content/dune/dune_es.vtt"
+          height="25vh"
+          singleline="true"
+          color="300"
+          theme="dark"
+          disable="chapters|timecode"
+        >
+        </captions-viewer>
+        <p>Spanish (Google translated)</p>
+      </div>
+    </section> 
+
+    <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
+  </main>
+
+  <script type="module">
+    const components = document.querySelectorAll('captions-viewer');
+    const player = document.querySelector('video');
+
+    // iOS needs the video to have played before seeking.  Because... Safari.
+    let hasPlayed = false;
+    player.addEventListener('play', () => {
+      hasPlayed = true;
+    })
+
+    // Updates the captions.
+    player.ontimeupdate = () => {
+      components.forEach(component => {
+        component.playhead = player.currentTime;
+      });
+    };
+
+    // On click, Seek's player to caption location.
+    components.forEach(component => {
+      component.addEventListener('seek', e => {
+        if (!hasPlayed) player.play();
+        player.currentTime = e.detail.value;
+      });
+    })
+
+    // (optional) Scroll to the cue when user skips in the player timeline.
+    player.onseeking = () => {
+      components.forEach(component => {
+        component.debounceScrolling = false;
+      });
+    };
+  </script>
+
+</body>
+</html>

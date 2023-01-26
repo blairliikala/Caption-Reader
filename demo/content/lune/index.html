@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="en-GB">
+<html lang="en-us">
 <head>
   <meta charset="utf-8">
-  <title>Caption Reader Web Component</title>
+  <title>Caption Reader Web Component - Music with Lyrics</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark light">
   <link href="/demo/demo.css" rel="stylesheet" type="text/css">
-  <script type="module" src="../../captions-viewer.js"></script>
+  <script type="module" src="../../../captions-viewer.js"></script>
 
   <style>
     /* Hides the component until it has loaded */
@@ -15,7 +15,6 @@
     }
     captions-viewer {
       margin: 1em 0;
-      border: 3px solid hsla(200, 20%, 50%, .5);
       border-radius: 5px;
       font-family: arial;
       display: block;
@@ -44,87 +43,62 @@
 
   <main class="container">
 
-    <audio controls width="100%" playsinline style="width: 100%">
-      <source src="lune/lune.mp4" type="video/mp4">
-      <track label="English" kind="subtitles" srclang="en" src="lune/lune.srt" />
-    </audio>
+    <div id="player"></div>
 
     <captions-viewer
-      src="lune/lune.srt"
-      height="70vh"
+      src="/demo/content/lune/lune.srt"
+      height="40vh"
       color="300"
       disable="timecode|chapters"
       theme="dark"
     >
     </captions-viewer>
 
-    <fieldset>
-      <legend>Toggle</legend>
-      <button type="button" id="toggleTimecode" title="Turn on/off timecode">Timecode</button>
-      <button type="button" id="toggleChapters" title="Turn on/off chapters (might not be any)">Chapters</button>
-      <button type="button" id="toggleText" title="Toggle the cue text.">Text</button>
-      <button type="button" id="toggleSingleLine" title="Put the cue text on a single line or not, ignoring the caption file.">Single Line</button>
-    </fieldset>
+    <article class="info">
+      <p>Example shows how to show lyrics in a similar way as Apple Music. The lyrics were made in Final Cut manually, and exported as SRT.</p>
+    </article>
 
     <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
   </main>
 
-  <script type="module">
+  <script defer src="https://www.youtube.com/iframe_api"></script>
+  <script>
     const component = document.querySelector('captions-viewer');
-    const player = document.querySelector('audio');
 
-    // iOS needs the video to have played before seeking.  Because... Safari.
-    let hasPlayed = false;
-    player.addEventListener('play', () => {
-      hasPlayed = true;
-    })
+    let player;
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('player', {
+        height: '390',
+        width: '100%',
+        videoId: 'xtLCZ2_-Beg',
+        playerVars: {
+          'playsinline': 1
+        },
+        events: {
+          'onStateChange': onPlayerStateChange
+        }
+      });
+    }
 
-    /* **** Required **** */
-
-    // Updates the captions.
-    player.ontimeupdate = () => {
-      component.playhead = player.currentTime;
-    };
+    // While playing, update the component with the current time.
+    // The faster 50ms is to make sure the sub cues are showing on time.
+    let pingInterval;
+    let playheadUpdate = 100;
+    function onPlayerStateChange(event) {
+      if (event.data == YT.PlayerState.PLAYING) {
+        component.playhead = player.getCurrentTime()
+        pingInterval = setInterval(() => {
+          component.playhead = player.getCurrentTime();
+        }, playheadUpdate)
+      } else {
+        clearInterval(pingInterval);
+      }
+    }
 
     // On click, Seek's player to caption location.
     component.addEventListener('seek', e => {
-      if (!hasPlayed) player.play();
-      console.log(e.detail.value)
-      player.currentTime = e.detail.value;
+      player.seekTo(e.detail.value);
     });
-
-    // (optional) Scroll to the cue when user skips in the player timeline.
-    player.onseeking = () => {
-      component.debounceScrolling = false;
-    };
-
-    /* **** Optional *** */
-
-    function toggleDisabledProp(prop, disabled) {
-      const split = disabled.split('|');
-      let newDisabled = '';
-      console.log(split.indexOf(prop))
-      if (split.indexOf(prop) >= 0) {
-        newDisabled = split.filter(dis => dis !== prop);
-      } else {
-        split.push(prop);
-        newDisabled = split;
-      }
-      return newDisabled?.join('|');
-    }
-
-    document.querySelector('#toggleTimecode').addEventListener('click', () => {
-      component.disable = toggleDisabledProp('timecode', component.disable);
-    });
-    document.querySelector('#toggleChapters').addEventListener('click', () => {
-      component.disable = toggleDisabledProp('chapters', component.disable);
-    });
-    document.querySelector('#toggleText').addEventListener('click', () => {
-      component.disable = toggleDisabledProp('text', component.disable);
-    });
-    document.querySelector('#toggleSingleLine').addEventListener('click', () => {
-      component.singleline = (!component.singleline);
-    }); 
   </script>
 
 </body>

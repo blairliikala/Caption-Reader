@@ -127,3 +127,11 @@ fieldset input:checked + label {
 fieldset input[type='radio'] {
   display: none;
 }
+.info {
+  margin: 1em 0;
+  border:1px solid rgba(255,255,255,.1);
+  background: rgba(0,0,0,.1);
+  padding:.5em 2em;
+  border-radius: 5px;
+  line-height: 1.5em;
+}

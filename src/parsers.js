@@ -5,6 +5,7 @@ import util from './utilities.js';
 function parseSubTextCue(text, startSec) {
   const timecodeRegex = /<(\d\d:\d\d:\d\d\.\d\d\d)>/;
   const timecodeText = text.split(timecodeRegex);
+
   const result = [];
   for (let i = 1; i < timecodeText.length; i += 1) {
     if (i === 1) {
@@ -62,7 +63,6 @@ export function parseTextTrack(textTrack) {
 // For parsing cues within a caption cue.  Normally for YouTube.
 export function parseSubTextCues(cues) {
   return cues.map(cue => {
-    // const texts = cue.text.join(' ');
     const texts = cue.text[1] || ''; // TODO Youtube specific. Lines repeat.
     cue.subCues = undefined;
     if (texts.includes('<')) {
@@ -73,6 +73,7 @@ export function parseSubTextCues(cues) {
 }
 
 export function addCueSpaces(cues, distance) {
+  if (!cues || cues.length === 0) return undefined;
   // When blank is added to array, it messes with next loop.
   let isBlank = false;
 
@@ -99,9 +100,9 @@ export function addCueSpaces(cues, distance) {
     const next = cues[index + 1];
     if (isBlank) {
       isBlank = false;
-      return;
+      return undefined;
     }
-    if (!next) return;
+    if (!next) return undefined;
     const diff = next.seconds.start - cue.seconds.end;
     if (diff > distance) {
       const start = cue.seconds.end;
@@ -122,6 +123,7 @@ export function addCueSpaces(cues, distance) {
       cues.splice(index + 1, 0, newCue);
       isBlank = true;
     }
+    return [];
   });
   return cues;
 }

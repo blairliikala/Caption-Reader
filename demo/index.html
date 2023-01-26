@@ -2,38 +2,55 @@
 <html lang="en-GB">
 <head>
   <meta charset="utf-8">
-  <title>Caption Reader Web Component</title>
+  <title>Caption Reader Web Component Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark light">
   <link href="demo.css" rel="stylesheet" type="text/css">
   <script type="module" src="../../captions-viewer.js"></script>
 
   <style>
+    .dark {
+      --caption-background: rgba(0,0,0,.2);
+    }
     /* Hides the component until it has loaded */
     captions-viewer:not(:defined) {
       visibility: hidden
     }
     captions-viewer {
       margin: 1em 0;
-      border: 3px solid hsla(200, 20%, 50%, .5);
       border-radius: 5px;
       font-family: arial;
       display: block;
       background: rgba(0,0,0,.2);
-      /*background: rgba(255,255,255, .9)*/
+      background: var(--caption-background, rgba(255,255,255, .9));
     }
   </style>
 </head>
 <body>
 
-  <main class="container">
+  <main class="container dark">
+
+    <h2>Examples</h2>
+    <nav>
+      <ul>
+        <li><a href="sidebyside.html">Multiple at Once</a></li>
+        <li><a href="content/agent/">Short Clip</a></li>
+        <li><a href="content/bttf/">Lots of captions.</a></li>
+        <li><a href="hls.html">HLS with embedded captions.</a></li>
+        <li><a href="youtube.html">YouTube</a></li>
+      </ul>
+    </nav>
+
+    <section class="info">
+      <p>Basic demo showing captions and toggling some of the options.</p>
+    </section>
 
     <video controls width="100%" playsinline muted>
       <source src="https://blairliikala.com/testvids/captionreader/dune-av1-1080.mp4" type="video/mp4; codecs=av01.0.05M.08"">
       <source src="https://blairliikala.com/testvids/captionreader/dune.mp4" type="video/mp4">
       <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" />
       <track label="French" kind="subtitles" srclang="fr" src="content/dune/dune_fr.vtt" />
-      <track label="Spanish" kind="subtitles" srclang="es" src="content/dune/dune_fr.es" />
+      <track label="Spanish" kind="subtitles" srclang="es" src="content/dune/dune_es.vtt" />
     </video>
 
     <captions-viewer
@@ -64,16 +81,6 @@
       <button type="button" id="toggleText" title="Toggle the cue text.">Text</button>
       <button type="button" id="toggleSingleLine" title="Put the cue text on a single line or not, ignoring the caption file.">Single Line</button>
     </fieldset>
-
-    <h2>Examples</h2>
-    <nav>
-      <ul>
-        <li><a href="agent.html">Short Clip</a></li>
-        <li><a href="content/bttf/index.html">Lots of captions.</a></li>
-        <li><a href="hls.html">HLS with embedded captions.</a></li>
-        <li><a href="youtube.html">YouTube</a></li>
-      </ul>      
-    </nav>
 
     <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
   </main>

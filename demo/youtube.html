@@ -1,9 +1,10 @@
 <!doctype html>
-<html lang="en-GB">
+<html lang="en-us">
 <head>
   <meta charset="utf-8">
   <title>Caption Reader Web Component - Youtube Test</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
   <link href="demo.css" rel="stylesheet" type="text/css">
   <script type="module" src="../../captions-viewer.js"></script>
 
@@ -14,7 +15,6 @@
     }
     captions-viewer {
       margin: 1em 0;
-      border: 3px solid hsla(200, 20%, 50%, .5);
       border-radius: 5px;
       font-family: arial;
       display: block;
@@ -25,6 +25,11 @@
 <body>
 
   <main class="container">
+
+    <section class="info">
+      <p>Syncing a YouTube video with captions, and the use of sub cues.</p>
+      <p>YouTube does not make captions available publicly, but they can be downloaded from YouTube and hosted locally.</p>
+    </section>
 
     <div id="player"></div>
 

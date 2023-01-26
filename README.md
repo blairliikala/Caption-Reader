@@ -70,9 +70,10 @@ player.addEventListener('seeking', () => {
 | `singleline` | false  | True will show all text for a cue on a single line.  False will obey the line breaks in the caption file. |
 | `disable`    | empty  | Turn off displaying `timecode` `chapters` or `text`. Use a pipe `\|` between each option, such as `timecode\|chapters` |
 | `youtube` | false | Enable `true` if the caption vtt track came from YouTube for some special handling. |
+| `nudge` | 0.5 | Amount in seconds to adjust the cues to trigger sooner. |
 | `color` | 360 | The Hue (0-360) of the base color to use.  This is put into an hsla color. |
 | `theme` | light, dark | Light theme shades the text darker for a whiter background.  Dark will lighten text for a darker background. |
-| `css` | True/False to enable the default stylesheet.  False will remove all styling, default is True. See the guide below. |
+| `css` | true | True/False to enable the default stylesheet.  False will remove all styling, default is True. See the guide below. |
 
 ## Methods
 
@@ -127,9 +128,9 @@ Show captions for a video using the native caption tracy system, with a dynamic 
   }
 </style>
 
-<video controls width="100%" playsinline autopictureinpicture>
+<video controls>
   <source src="content/dune/dune.mp4" type="video/mp4">
-  <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" default />
+  <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" />
 </video>
 
 <captions-viewer

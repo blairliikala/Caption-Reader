@@ -266,11 +266,13 @@ export class CaptionsViewer extends HTMLElement {
 
     if (params?.changes.name === 'src' || params?.changes.name === 'textTrack') {
       this.#captions = await this.#parse();
-      if (this.#captions) this.#event('parsed', 'Caption file has been parsed.');
+      if (!this.#captions) return;
+      this.#event('parsed', 'Caption file has been parsed.');
       if (this.#youtube) this.#captions.cues = this.#youtubeAdjustments(this.#captions.cues);
+      this.#updateCaptionStatus(this.#playhead + 0.9);
     }
 
-    this.#showCaptions();
+    this.#divs.root.innerHTML = this.#renderAllCaptions(this.#captions);
   }
 
   async #parse() {
@@ -416,43 +418,45 @@ export class CaptionsViewer extends HTMLElement {
     return (rect.bottom <= parentRect.bottom);
   }
 
-  #showCaptions() {
-    if (!this.#captions) return;
+  #renderAllCaptions(captions) {
+    if (!captions) return '';
     const disabled = this.#disable ? this.#disable.split('|') : [];
-    this.#divs.root.innerHTML = '';
     let html = '<ol>';
-    this.#captions.cues?.forEach((cue, index) => {
-      if (cue.timecode) {
-        const styleName = cue.status || '';
-        const timecode = `<span class="timecode">${Utilities.prettyTimecode(cue.timecode.start)}</span>`;
-        const chapter = cue.chapter ? `<span class="chapter">${cue.chapter}</span>` : '';
-        const textJoiner = this.#singleline ? ' ' : '<br />';
-
-        let spacerProgress = '';
-        if (cue.type === 'spacer') {
-          const progMax = Math.round(cue.seconds.end - cue.seconds.start);
-          spacerProgress = `<progress max="${progMax}" value="0" data-progress="${index}"></progress>`;
-        }
-
-        let text = `<span class="text">${cue.text.join(textJoiner)}</span>`;
-        if (cue.subCues) {
-          text = '<span class="text">';
-          text += cue.subCues.map(sub => `<span class="${sub.status}">${sub.text}</span>`).join('');
-          text += '</span>';
-        }
-
-        html += `<li>
-          <button
-            type="button"
-            tabindex="0"
-            class="cue ${styleName} ${cue.type || ''}"
-            data-index="${index}"
-          >${!disabled.includes('timecode') && cue.type !== 'spacer' ? timecode : ''} ${!disabled.includes('chapters') ? chapter : ''} ${!disabled.includes('text') ? text : ''} ${spacerProgress}
-          </button></li>`;
-      }
+    captions.cues?.forEach((cue, index) => {
+      html += this.#cueToHTML(cue, index, disabled);
     });
     html += '</ol>';
-    this.#divs.root.innerHTML = html;
+    return html;
+  }
+
+  #cueToHTML(cue, index, disabled) {
+    if (!cue.timecode) return '';
+    const styleName = cue.status || '';
+    const timecode = `<span class="timecode">${Utilities.prettyTimecode(cue.timecode.start)}</span>`;
+    const chapter = cue.chapter ? `<span class="chapter">${cue.chapter}</span>` : '';
+    const textJoiner = this.#singleline ? ' ' : '<br />';
+
+    let spacerProgress = '';
+    if (cue.type === 'spacer') {
+      const progMax = Math.round(cue.seconds.end - cue.seconds.start);
+      spacerProgress = `<progress max="${progMax}" value="0" data-progress="${index}"></progress>`;
+    }
+
+    let text = `<span class="text">${cue.text.join(textJoiner)}</span>`;
+    if (cue.subCues) {
+      text = '<span class="text">';
+      text += cue.subCues.map(sub => `<span class="${sub.status}">${sub.text}</span>`).join('');
+      text += '</span>';
+    }
+
+    return `<li>
+      <button
+        type="button"
+        tabindex="0"
+        class="cue ${styleName} ${cue.type || ''}"
+        data-index="${index}"
+      >${!disabled.includes('timecode') && cue.type !== 'spacer' ? timecode : ''} ${!disabled.includes('chapters') ? chapter : ''} ${!disabled.includes('text') ? text : ''} ${spacerProgress}
+      </button></li>`;
   }
 
   #updateCaption() {
@@ -466,7 +470,7 @@ export class CaptionsViewer extends HTMLElement {
   }
 
   #setCuesStatus() {
-    if (!('cues' in this.#captions)) return;
+    if (!this.#captions || !('cues' in this.#captions)) return;
     this.#captions.cues = this.#captions.cues.map(cue => {
       if (cue.seconds.end - this.#nudge < this.#playhead) {
         cue.active = false;
@@ -516,6 +520,7 @@ export class CaptionsViewer extends HTMLElement {
     if (this.#debounceScrolling) return;
     const elms = this.#divs.root.querySelectorAll('li');
     const elm = elms[this.#currentCue];
+    if (!elm) return;
     const elmHeight = elm.offsetHeight;
     const elmOffset = elm.offsetTop;
     this.#divs.root.scrollTop = elmOffset - elmHeight; // Scroll cue to top leaving one.

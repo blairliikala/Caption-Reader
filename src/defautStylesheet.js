@@ -19,6 +19,7 @@ export function defaultStyles() {
     --gray-20-sat: 10%;
     --gray-20-light: 10%;
     --gray-20-opacity: 0.2;
+    --gray-50-opacity: 0.5;
     --gray-70-opacity: 0.7;
     --inactive: hsla(var(--base), 20%, 40%, 0.9);
     --inactive-90: hsla(var(--base), 20%, 40%, 0.5);
@@ -161,11 +162,11 @@ export function defaultStyles() {
     box-shadow: none;
   }
   progress[value]::-moz-progress-bar {
-    background: hsla(var(--base), var(--gray-20-sat), var(--gray-20-light), var(--gray-20-opacity));
+    background: hsla(var(--base), var(--gray-20-sat), var(--gray-20-light), var(--gray-50-opacity));
     box-shadow: none;
   }
   progress[value]::-webkit-progress-value {
-    background: hsla(var(--base), var(--gray-20-sat), var(--gray-20-light), var(--gray-20-opacity));
+    background: hsla(var(--base), var(--gray-20-sat), var(--gray-20-light), var(--gray-50-opacity));
     box-shadow: none;
   }
   </style>`;
