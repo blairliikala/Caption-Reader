@@ -152,6 +152,8 @@ function parseSubTextCues(cues) {
   });
 }
 function addCueSpaces(cues, distance) {
+  if (!cues || cues.length === 0)
+    return void 0;
   let isBlank = false;
   const first = cues[0];
   if (first.seconds.start > distance) {
@@ -174,10 +176,10 @@ function addCueSpaces(cues, distance) {
     const next = cues[index + 1];
     if (isBlank) {
       isBlank = false;
-      return;
+      return void 0;
     }
     if (!next)
-      return;
+      return void 0;
     const diff = next.seconds.start - cue.seconds.end;
     if (diff > distance) {
       const start = cue.seconds.end;
@@ -198,6 +200,7 @@ function addCueSpaces(cues, distance) {
       cues.splice(index + 1, 0, newCue);
       isBlank = true;
     }
+    return [];
   });
   return cues;
 }
@@ -304,6 +307,7 @@ function defaultStyles() {
     --gray-20-sat: 10%;
     --gray-20-light: 10%;
     --gray-20-opacity: 0.2;
+    --gray-50-opacity: 0.5;
     --gray-70-opacity: 0.7;
     --inactive: hsla(var(--base), 20%, 40%, 0.9);
     --inactive-90: hsla(var(--base), 20%, 40%, 0.5);
@@ -446,11 +450,11 @@ function defaultStyles() {
     box-shadow: none;
   }
   progress[value]::-moz-progress-bar {
-    background: hsla(var(--base), var(--gray-20-sat), var(--gray-20-light), var(--gray-20-opacity));
+    background: hsla(var(--base), var(--gray-20-sat), var(--gray-20-light), var(--gray-50-opacity));
     box-shadow: none;
   }
   progress[value]::-webkit-progress-value {
-    background: hsla(var(--base), var(--gray-20-sat), var(--gray-20-light), var(--gray-20-opacity));
+    background: hsla(var(--base), var(--gray-20-sat), var(--gray-20-light), var(--gray-50-opacity));
     box-shadow: none;
   }
   </style>`;
@@ -697,12 +701,14 @@ var CaptionsViewer = class extends HTMLElement {
     this.#divs.root?.setAttribute("style", customStyles.join("; "));
     if (params?.changes.name === "src" || params?.changes.name === "textTrack") {
       this.#captions = await this.#parse();
-      if (this.#captions)
-        this.#event("parsed", "Caption file has been parsed.");
+      if (!this.#captions)
+        return;
+      this.#event("parsed", "Caption file has been parsed.");
       if (this.#youtube)
         this.#captions.cues = this.#youtubeAdjustments(this.#captions.cues);
+      this.#updateCaptionStatus(this.#playhead + 0.9);
     }
-    this.#showCaptions();
+    this.#divs.root.innerHTML = this.#renderAllCaptions(this.#captions);
   }
   async #parse() {
     let captions;
@@ -820,41 +826,43 @@ var CaptionsViewer = class extends HTMLElement {
     const parentRect = parent.getBoundingClientRect();
     return rect.bottom <= parentRect.bottom;
   }
-  #showCaptions() {
-    if (!this.#captions)
-      return;
+  #renderAllCaptions(captions) {
+    if (!captions)
+      return "";
     const disabled = this.#disable ? this.#disable.split("|") : [];
-    this.#divs.root.innerHTML = "";
     let html = "<ol>";
-    this.#captions.cues?.forEach((cue, index) => {
-      if (cue.timecode) {
-        const styleName = cue.status || "";
-        const timecode = `<span class="timecode">${Utilities.prettyTimecode(cue.timecode.start)}</span>`;
-        const chapter = cue.chapter ? `<span class="chapter">${cue.chapter}</span>` : "";
-        const textJoiner = this.#singleline ? " " : "<br />";
-        let spacerProgress = "";
-        if (cue.type === "spacer") {
-          const progMax = Math.round(cue.seconds.end - cue.seconds.start);
-          spacerProgress = `<progress max="${progMax}" value="0" data-progress="${index}"></progress>`;
-        }
-        let text = `<span class="text">${cue.text.join(textJoiner)}</span>`;
-        if (cue.subCues) {
-          text = '<span class="text">';
-          text += cue.subCues.map((sub) => `<span class="${sub.status}">${sub.text}</span>`).join("");
-          text += "</span>";
-        }
-        html += `<li>
-          <button
-            type="button"
-            tabindex="0"
-            class="cue ${styleName} ${cue.type || ""}"
-            data-index="${index}"
-          >${!disabled.includes("timecode") && cue.type !== "spacer" ? timecode : ""} ${!disabled.includes("chapters") ? chapter : ""} ${!disabled.includes("text") ? text : ""} ${spacerProgress}
-          </button></li>`;
-      }
+    captions.cues?.forEach((cue, index) => {
+      html += this.#cueToHTML(cue, index, disabled);
     });
     html += "</ol>";
-    this.#divs.root.innerHTML = html;
+    return html;
+  }
+  #cueToHTML(cue, index, disabled) {
+    if (!cue.timecode)
+      return "";
+    const styleName = cue.status || "";
+    const timecode = `<span class="timecode">${Utilities.prettyTimecode(cue.timecode.start)}</span>`;
+    const chapter = cue.chapter ? `<span class="chapter">${cue.chapter}</span>` : "";
+    const textJoiner = this.#singleline ? " " : "<br />";
+    let spacerProgress = "";
+    if (cue.type === "spacer") {
+      const progMax = Math.round(cue.seconds.end - cue.seconds.start);
+      spacerProgress = `<progress max="${progMax}" value="0" data-progress="${index}"></progress>`;
+    }
+    let text = `<span class="text">${cue.text.join(textJoiner)}</span>`;
+    if (cue.subCues) {
+      text = '<span class="text">';
+      text += cue.subCues.map((sub) => `<span class="${sub.status}">${sub.text}</span>`).join("");
+      text += "</span>";
+    }
+    return `<li>
+      <button
+        type="button"
+        tabindex="0"
+        class="cue ${styleName} ${cue.type || ""}"
+        data-index="${index}"
+      >${!disabled.includes("timecode") && cue.type !== "spacer" ? timecode : ""} ${!disabled.includes("chapters") ? chapter : ""} ${!disabled.includes("text") ? text : ""} ${spacerProgress}
+      </button></li>`;
   }
   #updateCaption() {
     const divs = this.#divs.root.querySelectorAll("[data-index]");
@@ -866,7 +874,7 @@ var CaptionsViewer = class extends HTMLElement {
     });
   }
   #setCuesStatus() {
-    if (!("cues" in this.#captions))
+    if (!this.#captions || !("cues" in this.#captions))
       return;
     this.#captions.cues = this.#captions.cues.map((cue) => {
       if (cue.seconds.end - this.#nudge < this.#playhead) {
@@ -908,6 +916,8 @@ var CaptionsViewer = class extends HTMLElement {
       return;
     const elms = this.#divs.root.querySelectorAll("li");
     const elm = elms[this.#currentCue];
+    if (!elm)
+      return;
     const elmHeight = elm.offsetHeight;
     const elmOffset = elm.offsetTop;
     this.#divs.root.scrollTop = elmOffset - elmHeight;
