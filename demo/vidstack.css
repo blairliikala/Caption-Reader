@@ -1,0 +1,154 @@
+vds-media {
+  --primary-color: hotpink;
+  --text-primary: rgba(255, 255, 255, 1);
+  --text-secondary: rgba(255,255,255, 0.5);
+  color: var(--text-primary);
+}
+.media_controls {
+  display: grid;
+  aspect-ratio: 16/9;
+  grid-template-rows: [header] auto [body] 1fr [footer] auto;
+  grid-template-columns: 1fr;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+.controls_header {
+  display: flex;
+  padding: 0.5em;
+  color: rgba(255,255,255,1);
+  align-items: flex-start;
+}
+.row {
+  display: flex;
+  align-items: center;
+  padding: 0 .5em;
+}
+.row_title {
+  align-items: flex-end;
+}
+.row_title p {
+  margin: 0;
+  padding: 0;
+}
+.row_time, .row_title {
+  padding: 0 .8em;
+}
+.position_end {
+  margin-left: auto;
+}
+.big_play {
+  display: block;
+  height: 100%;
+  font-size: 1.5em;
+}
+
+/******* Hide on idle ********/
+vds-media .media_controls {
+  opacity: 1;
+  visibility: visible;  
+  transition: all .3s ease;
+}
+vds-media[user-idle] .media_controls {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.media-buffering-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  /* prevent blocking lower elements (e.g., gestures). */
+  pointer-events: none;
+  /** place above poster (optional). */
+  z-index: 1;
+}
+.media-buffering-icon {
+  width: 96px;
+  height: 96px;
+  color: white;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+.media-buffering-track {
+  opacity: 0.25;
+}
+.media-buffering-track-fill {
+  opacity: 0.75;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 50;
+}
+
+/* Show buffering indicator while media is not ready, or buffering. */
+vds-media:not([can-play]) .media-buffering-icon,
+vds-media[waiting] .media-buffering-icon {
+  opacity: 1;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/******** Timeline ********/
+vds-time-slider {
+  /* Default values are shown below. */
+  --media-slider-height: 25px;
+  --media-slider-thumb-size: 10px;
+  --media-slider-focused-thumb-size: calc(var(--thumb-size) * 1.1);
+  --media-slider-track-height: 10px;
+  --media-slider-focused-track-height: calc(var(--track-height) * 1.25);
+}
+/* Apply styles to all tracks. */
+vds-time-slider [part~='track'] {
+  background: rgba(255,255,255,.1);
+  border-radius: 25px;
+}
+/* Apply styles to track fill (played portion of slider). */
+vds-time-slider [part~='track-fill'] {
+  background: hotpink;
+}
+/* Apply styles to track progress (buffered). */
+vds-time-slider [part~='track-progress'] {
+  background: rgba(255,105,180, 0.2);
+}
+
+/******** Volume ********/
+.volume {
+  min-width: 150px;
+  display: flex;
+  align-items: center;  
+}
+vds-volume-slider {
+  --media-slider-height: 2em;
+  --media-slider-thumb-size: 8px;
+  --media-slider-focused-thumb-size: calc(var(--thumb-size) * 1.1);
+  --media-slider-track-height: 4px;
+  --media-slider-focused-track-height: calc(var(--track-height) * 1.25);
+  margin-right: 0.5em;
+}
+vds-volume-slider [part~='track'] {
+  background: rgba(255,255,255,.1);
+  border-radius: 25px;
+}
+/* Apply styles to track fill (played portion of slider). */
+vds-volume-slider [part~='track-fill'] {
+  background: var(--primary-color);
+}
+vds-time {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+vds-fullscreen-button {
+  transform: rotate(90deg);
+}
+vds-fullscreen-button:hover {
+  transform: rotate(90deg) scale(1.1);
+}
