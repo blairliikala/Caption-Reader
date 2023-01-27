@@ -58,7 +58,13 @@
 
     <vds-media poster="content/dune/poster.webp" playsinline style="aspect-ratio: 16/9">
       <vds-video playsinline>
-        <video playsinline src="content/dune/dune.mp4"></video>
+        <video playsinline>
+          <source src="https://blairliikala.com/testvids/captionreader/dune-av1-1080.mp4" type="video/mp4; codecs=av01.0.05M.08"">
+          <source src="https://blairliikala.com/testvids/captionreader/dune.mp4" type="video/mp4">
+          <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" />
+          <track label="French" kind="subtitles" srclang="fr" src="content/dune/dune_fr.vtt" />
+          <track label="Spanish" kind="subtitles" srclang="es" src="content/dune/dune_es.vtt" />          
+        </video>
       </vds-video>
       <article class="media_controls">
         <header class="controls_header">
