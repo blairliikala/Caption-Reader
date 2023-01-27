@@ -3,6 +3,7 @@ vds-media {
   --text-primary: rgba(255, 255, 255, 1);
   --text-secondary: rgba(255,255,255, 0.5);
   color: var(--text-primary);
+  overflow: hidden;
 }
 .media_controls {
   display: grid;
@@ -42,6 +43,10 @@ vds-media {
   height: 100%;
   font-size: 1.5em;
 }
+.controls_footer {
+  padding-bottom: 0.5em;
+}
+
 
 /******* Hide on idle ********/
 vds-media .media_controls {
@@ -54,6 +59,7 @@ vds-media[user-idle] .media_controls {
   visibility: hidden;
 }
 
+/*** Buffering/waiting *****/
 .media-buffering-container {
   position: absolute;
   top: 0;
@@ -63,9 +69,7 @@ vds-media[user-idle] .media_controls {
   justify-content: center;
   width: 100%;
   height: 100%;
-  /* prevent blocking lower elements (e.g., gestures). */
   pointer-events: none;
-  /** place above poster (optional). */
   z-index: 1;
 }
 .media-buffering-icon {
@@ -83,14 +87,11 @@ vds-media[user-idle] .media_controls {
   stroke-dasharray: 100;
   stroke-dashoffset: 50;
 }
-
-/* Show buffering indicator while media is not ready, or buffering. */
 vds-media:not([can-play]) .media-buffering-icon,
 vds-media[waiting] .media-buffering-icon {
   opacity: 1;
   animation: spin 1s linear infinite;
 }
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -100,8 +101,8 @@ vds-media[waiting] .media-buffering-icon {
 /******** Timeline ********/
 vds-time-slider {
   /* Default values are shown below. */
-  --media-slider-height: 25px;
-  --media-slider-thumb-size: 10px;
+  --media-slider-height: 26px;
+  --media-slider-thumb-size: 13px;
   --media-slider-focused-thumb-size: calc(var(--thumb-size) * 1.1);
   --media-slider-track-height: 10px;
   --media-slider-focused-track-height: calc(var(--track-height) * 1.25);

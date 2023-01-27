@@ -1,43 +1,62 @@
 <!doctype html>
-<html lang="en-GB">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Caption Reader Web Component - Vidstack</title>
+  <title>Caption Reader Web Component Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark light">
   <link href="demo.css" rel="stylesheet" type="text/css">
-  <script type="module" src="../../../captions-viewer.js"></script>
+  <script type="module" src="/captions-viewer.js"></script>
   <script src="https://kit.fontawesome.com/41aa90cc96.js" crossorigin="anonymous"></script>
 
   <!-- Vidstack -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack/styles/base.min.css"></link>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack/styles/ui/buttons.min.css"></link>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack/styles/ui/sliders.min.css"></link>
-  <link rel="stylesheet" href="vidstack.css" >
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack/styles/base.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack/styles/ui/buttons.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack/styles/ui/sliders.min.css">
+  <link rel="stylesheet" href="vidstack.css">
   <script type="module" src="https://cdn.jsdelivr.net/npm/vidstack/dist/cdn/prod.min.js"></script>
 
   <style>
+    .dark {
+      --caption-background: rgba(0,0,0,.2);
+    }
     /* Hides the component until it has loaded */
     captions-viewer:not(:defined) {
       visibility: hidden
     }
     captions-viewer {
       margin: 1em 0;
-      border: 3px solid hsla(200, 20%, 50%, .5);
       border-radius: 5px;
       font-family: arial;
       display: block;
       background: rgba(0,0,0,.2);
-      /*background: rgba(255,255,255, .9)*/
+      background: var(--caption-background, rgba(255,255,255, .9));
     }
   </style>
 
 </head>
 <body>
 
-  <main class="container">
+  <main class="container dark">
 
-    <vds-media poster="content/dune/poster.webp">
+    <h1>< captions-viewer ></h1>
+
+    <h2>Examples</h2>
+    <nav>
+      <ul>
+        <li><a href="sidebyside.html">Multiple at Once</a></li>
+        <li><a href="content/agent/">Short Clip</a></li>
+        <li><a href="hls.html">HLS with embedded captions.</a></li>
+        <li><a href="youtube.html">YouTube</a></li>
+        <li><a href="content/lune/">Lyrics</a></li>
+      </ul>
+    </nav>
+
+    <section class="info">
+      <p>Basic demo showing captions and toggling some of the options.</p>
+    </section>
+
+    <vds-media poster="content/dune/poster.webp" playsinline style="aspect-ratio: 16/9">
       <vds-video playsinline>
         <video playsinline src="content/dune/dune.mp4"></video>
       </vds-video>
@@ -48,8 +67,8 @@
           <div class="position_end volume">
             <vds-volume-slider>
               <vds-slider-value-text type="pointer" format="percent" slot="preview" />
-            </vds-volume-slider>  
-            <vds-mute-button></vds-mute-button>     
+            </vds-volume-slider>
+            <vds-mute-button></vds-mute-button>
           </div>
         </header>
         <section class="controls_body">
@@ -60,44 +79,42 @@
             <p>Dune Trailer</p>
           </div>
           <div class="row row_slider">
-            <vds-time-slider> 
+            <vds-time-slider>
               <div slot="preview">
                 <vds-slider-video src="/demo/content/dune/dune.mp4"></vds-slider-video>
                 <vds-slider-value-text type="pointer" format="time" />
-              </div>              
+              </div>
             </vds-time-slider>
           </div>
           <div class="row row_time">
-            <div><vds-time type="current"></vds-time></div>
-            <div class="position_end"><vds-time type="current" remainder></vds-time></div>
+            <vds-time type="current"></vds-time>
+            <vds-time type="current" remainder class="position_end"></vds-time>
           </div>
         </footer>
       </article>
 
-    <!--
-    <div class="media-buffering-container">
-      <svg class="media-buffering-icon" fill="none" viewBox="0 0 120 120" aria-hidden="true">
-        <circle
-          class="media-buffering-track"
-          cx="60"
-          cy="60"
-          r="54"
-          stroke="currentColor"
-          stroke-width="8"
-        ></circle>
-        <circle
-          class="media-buffering-track-fill"
-          cx="60"
-          cy="60"
-          r="54"
-          stroke="currentColor"
-          stroke-width="10"
-          pathLength="100"
-        ></circle>
-      </svg>
-    </div>
-    -->
-  </vds-media>    
+      <div class="media-buffering-container">
+        <svg class="media-buffering-icon" fill="none" viewBox="0 0 120 120" aria-hidden="true">
+          <circle
+            class="media-buffering-track"
+            cx="60"
+            cy="60"
+            r="54"
+            stroke="currentColor"
+            stroke-width="8"
+          ></circle>
+          <circle
+            class="media-buffering-track-fill"
+            cx="60"
+            cy="60"
+            r="54"
+            stroke="currentColor"
+            stroke-width="10"
+            pathLength="100"
+          ></circle>
+        </svg>
+      </div>
+  </vds-media>
 
     <!--
     <video controls width="100%" playsinline autopictureinpicture preload="auto">
@@ -138,22 +155,18 @@
       <button type="button" id="toggleSingleLine" title="Put the cue text on a single line or not, ignoring the caption file.">Single Line</button>
     </fieldset>
 
-    <h2>Examples</h2>
-    <nav>
-      <ul>
-        <li><a href="agent.html">Short Clip</a></li>
-        <li><a href="content/bttf/index.html">Lots of captions.</a></li>
-        <li><a href="hls.html">HLS with embedded captions.</a></li>
-        <li><a href="youtube.html">YouTube</a></li>
-      </ul>      
-    </nav>
-
     <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
   </main>
 
   <script type="module">
     const component = document.querySelector('captions-viewer');
     const player = document.querySelector('video');
+
+    // iOS needs the video to have played before seeking.  Because... Safari.
+    let hasPlayed = false;
+    player.addEventListener('play', () => {
+      hasPlayed = true;
+    })
 
     /* **** Required **** */
 
@@ -164,6 +177,7 @@
 
     // On click, Seek's player to caption location.
     component.addEventListener('seek', e => {
+      if (!hasPlayed) player.play();
       player.currentTime = e.detail.value;
     });
 
@@ -189,32 +203,34 @@
       if (file) component.src = file;
     });
 
-    function toggleDisabledProp(prop, split) {
-      if (split.indexOf(prop) > 0) {
-        const disable = split.filter(dis => dis !== prop).join('|');
-        component.disable = disable;
+    function toggleDisabledProp(prop, disabled) {
+      const split = disabled.split('|');
+      let newDisabled = '';
+      if (split.indexOf(prop) >= 0) {
+        newDisabled = split.filter(dis => dis !== prop);
       } else {
         split.push(prop);
-        component.disable = split.join('|');
+        newDisabled = split;
       }
+      return newDisabled?.join('|');
     }
 
     document.querySelector('#toggleTimecode').addEventListener('click', () => {
-      const split = component.disable.split('|');
-      toggleDisabledProp('timecode', split);
+      component.disable = toggleDisabledProp('timecode', component.disable);
     });
     document.querySelector('#toggleChapters').addEventListener('click', () => {
-      const split = component.disable.split('|');
-      toggleDisabledProp('chapters', split);
+      component.disable = toggleDisabledProp('chapters', component.disable);
     });
     document.querySelector('#toggleText').addEventListener('click', () => {
-      const split = component.disable.split('|');
-      toggleDisabledProp('text', split);
+      component.disable = toggleDisabledProp('text', component.disable);
     });
     document.querySelector('#toggleSingleLine').addEventListener('click', () => {
-      // component.singleline = (!component.singleline);
       component.singleline = (!component.singleline);
     });
+
+    component.addEventListener('all', (e) => {
+      console.log(e.detail);
+    })
   </script>
 
 </body>
