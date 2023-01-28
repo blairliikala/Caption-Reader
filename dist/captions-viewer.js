@@ -483,6 +483,7 @@ var CaptionsViewer = class extends HTMLElement {
   #youtube = false;
   // Makes vtt cue adjustments specific to YouTube.
   #enableCSS = true;
+  // Removal of default styles.
   // Internal
   #captions = {};
   // Master array of the cues.
@@ -865,12 +866,11 @@ var CaptionsViewer = class extends HTMLElement {
       </button></li>`;
   }
   #updateCaption() {
-    const divs = this.#divs.root.querySelectorAll("[data-index]");
-    divs.forEach((item) => {
-      const { index } = item.dataset;
+    const divs = this.#divs.root.querySelectorAll("button");
+    divs.forEach((item, index) => {
       const cue = this.#captions.cues[index];
       item.classList.remove("upcoming", "next", "active", "previous", "passed");
-      item.classList.add(cue.status);
+      item.classList.add(cue?.status);
     });
   }
   #setCuesStatus() {
@@ -933,6 +933,25 @@ var CaptionsViewer = class extends HTMLElement {
     const theme = Utilities.getTheme(userPreference || this.#theme || "");
     this.#theme = theme;
     this.#divs.root.dataset.theme = theme;
+  }
+  // Cues would be the complete list and should have more.
+  addCues(textTrack) {
+    const oldLength = this.#captions.cues.length;
+    if (textTrack.cues.length <= this.#captions.cues.length)
+      return "";
+    const newCaptions = parseTextTrack(textTrack);
+    this.#captions.cues = newCaptions.cues;
+    this.#setCuesStatus();
+    newCaptions.cues.splice(0, oldLength);
+    console.log("new", newCaptions.cues, this.#captions.cues);
+    let html = "";
+    newCaptions.cues.forEach((cue, index) => {
+      html += this.#cueToHTML(cue, index, this.#disable);
+    });
+    const ol = this.#divs.root.querySelector("ol");
+    ol.innerHTML += html;
+    this.#updateCaptionStatus(this.#playhead);
+    return html;
   }
   #event(name, value, object) {
     this.dispatchEvent(new CustomEvent("all", { detail: { name, value, full: object } }));

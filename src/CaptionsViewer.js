@@ -460,12 +460,12 @@ export class CaptionsViewer extends HTMLElement {
   }
 
   #updateCaption() {
-    const divs = this.#divs.root.querySelectorAll('[data-index]');
-    divs.forEach(item => {
-      const { index } = item.dataset;
+    const divs = this.#divs.root.querySelectorAll('button');
+    divs.forEach((item, index) => {
+      // const { index } = item.dataset;
       const cue = this.#captions.cues[index];
       item.classList.remove('upcoming', 'next', 'active', 'previous', 'passed');
-      item.classList.add(cue.status);
+      item.classList.add(cue?.status);
     });
   }
 
@@ -536,6 +536,32 @@ export class CaptionsViewer extends HTMLElement {
     const theme = Utilities.getTheme(userPreference || this.#theme || '');
     this.#theme = theme;
     this.#divs.root.dataset.theme = theme;
+  }
+
+  // Cues would be the complete list and should have more.
+  addCues(textTrack) {
+    // if (typeof cues !== 'object') return;
+    const oldLength = this.#captions.cues.length;
+    if (textTrack.cues.length <= this.#captions.cues.length) return '';
+    const newCaptions = parseTextTrack(textTrack);
+
+    // Update Internals.
+    this.#captions.cues = newCaptions.cues;
+    this.#setCuesStatus();
+
+    newCaptions.cues.splice(0, oldLength);
+    console.log('new', newCaptions.cues, this.#captions.cues);
+
+    // Update DOM.
+    let html = '';
+    newCaptions.cues.forEach((cue, index) => {
+      html += this.#cueToHTML(cue, index, this.#disable);
+    });
+    const ol = this.#divs.root.querySelector('ol');
+    ol.innerHTML += html;
+
+    this.#updateCaptionStatus(this.#playhead);
+    return html;
   }
 
   #event(name, value, object) {
