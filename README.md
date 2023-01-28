@@ -99,6 +99,18 @@ Calling this method with the name of the theme will immediately change the color
 captions.setTheme('dark');
 ```
 
+### `updateCues(textTrack.cues)`
+
+Intended for cue updates such as live streaming or HLS, this expects a `textTrack` cue list of all the cues, plus new cues. This method has better performance by only rendering the new cues, while the `textTrack` property is a complete refresh or reset of all the cues.
+
+```javascript
+const tracks = player.textTracks;
+const track = tracks[0]; // example, pick the first track.
+track.addEventListener('cuechange', (e) => {
+  component.updateCues(e.target);
+});
+```
+
 ## Events
 
 |  Name | Description |

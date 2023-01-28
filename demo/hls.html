@@ -69,7 +69,7 @@
           component.textTrack = track;
           track.addEventListener('cuechange', (e) => {
             // component.textTrack = e.target;
-            component.addCues(e.target);
+            component.updateCues(e.target);
           });
         })        
     });

@@ -462,7 +462,6 @@ export class CaptionsViewer extends HTMLElement {
   #updateCaption() {
     const divs = this.#divs.root.querySelectorAll('button');
     divs.forEach((item, index) => {
-      // const { index } = item.dataset;
       const cue = this.#captions.cues[index];
       item.classList.remove('upcoming', 'next', 'active', 'previous', 'passed');
       item.classList.add(cue?.status);
@@ -539,7 +538,8 @@ export class CaptionsViewer extends HTMLElement {
   }
 
   // Cues would be the complete list and should have more.
-  addCues(textTrack) {
+  updateCues(textTrack) {
+    // TODO order by timecode incase there is seeking in the player.
     // if (typeof cues !== 'object') return;
     const oldLength = this.#captions.cues.length;
     if (textTrack.cues.length <= this.#captions.cues.length) return '';
@@ -548,9 +548,8 @@ export class CaptionsViewer extends HTMLElement {
     // Update Internals.
     this.#captions.cues = newCaptions.cues;
     this.#setCuesStatus();
-
+    // Skipping adding spaces as to not augment the comparison later.
     newCaptions.cues.splice(0, oldLength);
-    console.log('new', newCaptions.cues, this.#captions.cues);
 
     // Update DOM.
     let html = '';
