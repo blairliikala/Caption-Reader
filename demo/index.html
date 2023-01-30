@@ -5,7 +5,7 @@
   <title>Caption Reader Web Component Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark light">
-  <link href="demo.css" rel="stylesheet" type="text/css">
+  <link href="/demo/demo.css" rel="stylesheet" type="text/css">
   <script type="module" src="/captions-viewer.js"></script>
   <script src="https://kit.fontawesome.com/41aa90cc96.js" crossorigin="anonymous"></script>
   <script defer src="/_vercel/insights/script.js"></script>
@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack/styles/base.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack/styles/ui/buttons.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack/styles/ui/sliders.min.css">
-  <link rel="stylesheet" href="vidstack.css">
+  <link rel="stylesheet" href="/demo/vidstack.css">
   <script type="module" src="https://cdn.jsdelivr.net/npm/vidstack/dist/cdn/prod.min.js"></script>
 
   <style>
@@ -113,14 +113,14 @@
   </vds-media>
 
     <!-- Plain video element for refrence. 
-    <video controls width="100%" playsinline autopictureinpicture preload="auto">
+    <video controls width="100%" playsinline>
       <source src="content/dune/dune-av1-1080.mp4" type="video/mp4; codecs=av01.0.05M.08"">
       <source src="content/dune/dune.mp4" type="video/mp4">
       <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" />
       <track label="French" kind="subtitles" srclang="fr" src="content/dune/dune_fr.vtt" />
       <track label="Spanish" kind="subtitles" srclang="es" src="content/dune/dune_fr.es" />
     </video>
-     -->
+    -->
 
     <captions-viewer
       src="/demo/content/dune/dune_en.vtt"
@@ -158,13 +158,13 @@
     const component = document.querySelector('captions-viewer');
     const player = document.querySelector('video');
 
-    // iOS needs the video to have played before seeking.  Because... Safari.
+    // iOS may need the video to have played before seeking.  Because... Safari.
     let hasPlayed = false;
     player.addEventListener('play', () => {
       hasPlayed = true;
     })
 
-    /* **** Required **** */
+    /* ************* Required ************* */
 
     // Updates the captions.
     player.ontimeupdate = () => {
@@ -182,17 +182,11 @@
       component.debounceScrolling = false;
     };
 
-    /* **** Optional *** */
+    /* ************* Optional ************ */
 
     document.querySelector('#pause').addEventListener('click', () => {
       component.pause();
     });
-
-    /*
-    component.addEventListener('all', event => {
-      // console.log(event.detail)
-    })
-    */
 
     document.querySelector('#lang_change').addEventListener('click', e => {
       const file = e.target.value;
@@ -226,19 +220,14 @@
 
     component.addEventListener('all', (e) => {
       console.log(e.detail);
-    })
-
+    });
 
     document.querySelector('#skipbackwards').addEventListener('click', () => {
       player.currentTime = Math.round(player.currentTime - 15);
-    })
+    });
     document.querySelector('#skipforwards').addEventListener('click', () => {
       player.currentTime = Math.round(player.currentTime + 15);
-    })
-    /** Vidstack control ***/
-
-    
-
+    });
   </script>
 
 </body>
