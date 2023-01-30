@@ -42,7 +42,7 @@ vds-media {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3em;
+  font-size: clamp(10px, 3vw + .8em, 4em);
   color: var(--text-secondary);
 }
 .controls_body button {
