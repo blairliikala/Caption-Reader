@@ -50,6 +50,7 @@
         <li><a href="/demo/hls.html">HLS with embedded captions.</a></li>
         <li><a href="/demo/youtube.html">YouTube</a></li>
         <li><a href="/demo/content/lune/">Lyrics</a></li>
+        <li><a href="/demo/mux.html">HLS with Mux Player</a></li>
       </ul>
     </nav>
 
@@ -57,11 +58,11 @@
       <p>Basic demo showing captions and toggling some of the options.</p>
     </section>
 
-    <vds-media poster="content/dune/poster.webp" playsinline style="aspect-ratio: 16/9">
+    <vds-media poster="/demo/content/dune/poster.webp" playsinline style="aspect-ratio: 16/9">
       <vds-video playsinline>
         <video playsinline>
-          <source src="https://blairliikala.com/testvids/captionreader/dune-av1-1080.mp4" type="video/mp4; codecs=av01.0.05M.08"">
-          <source src="https://blairliikala.com/testvids/captionreader/dune.mp4" type="video/mp4">
+          <source src="/demo/content/dune/dune-av1-1080.mp4" type="video/mp4; codecs=av01.0.05M.08"">
+          <source src="/demo/content/dune/dune.mp4" type="video/mp4">
           <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" />
           <track label="French" kind="subtitles" srclang="fr" src="content/dune/dune_fr.vtt" />
           <track label="Spanish" kind="subtitles" srclang="es" src="content/dune/dune_es.vtt" />          
@@ -114,8 +115,8 @@
 
     <!-- Plain video element for refrence. 
     <video controls width="100%" playsinline>
-      <source src="content/dune/dune-av1-1080.mp4" type="video/mp4; codecs=av01.0.05M.08"">
-      <source src="content/dune/dune.mp4" type="video/mp4">
+      <source src="/demo/content/dune/dune-av1-1080.mp4" type="video/mp4; codecs=av01.0.05M.08"">
+      <source src="/demo/content/dune/dune.mp4" type="video/mp4">
       <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" />
       <track label="French" kind="subtitles" srclang="fr" src="content/dune/dune_fr.vtt" />
       <track label="Spanish" kind="subtitles" srclang="es" src="content/dune/dune_fr.es" />
