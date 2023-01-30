@@ -51,33 +51,47 @@
     const component = document.querySelector('captions-viewer');
     const player = document.querySelector('video');
 
-    /****** Required ******/
+    // function to check for when textTrack is ready.
+    const trackReady = (video) => {
+      let count = 0;
+      return new Promise(resolve => {
+        const interval = setInterval(() => {
+          count += 1;
+          if (count > 1000) {
+            clearInterval(interval);
+            resolve();
+          }
+          if (Array.from(video.textTracks[0].cues).length) {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 2);
+      });
+    }
+
 
     // const videoSrc = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'; // Bunny.
     // const videoSrc = 'http://stream.mux.com/qP5Eb2cj7MrNnoxBGz012pbZkMHqpIcrKMzd7ykGr01gM.m3u8' // Tears
-    const videoSrc = 'https://playertest.longtailvideo.com/adaptive/captions/playlist.m3u8'; // CNN
+    // const videoSrc = 'https://playertest.longtailvideo.com/adaptive/captions/playlist.m3u8'; // CNN
     // const videoSrc = 'http://cdnbakmi.kaltura.com/p/243342/sp/24334200/playManifest/entryId/0_uka1msg4/flavorIds/1_vqhfu6uy,1_80sohj7p/format/applehttp/protocol/http/a.m3u8';
-    // const videoSrc = 'https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_adv_example_hevc/master.m3u8'; // beep boop.
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hls.loadSource(videoSrc);
-      hls.attachMedia(player);  
-      hls.on(Hls.Events.MANIFEST_PARSED, (e) => {
-        player.addEventListener('loadedmetadata', (e) => {
-          const tracks = e.target.textTracks;
-          const track = tracks[0];
-          component.textTrack = track;
-          track.addEventListener('cuechange', (e) => {
-            // component.textTrack = e.target;
-            component.updateCues(e.target);
-          });
-        })        
+    const videoSrc = 'https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_adv_example_hevc/master.m3u8'; // beep boop.
+    // const videoSrc = 'https://customer-f00p2zh0sy6apae7.cloudflarestream.com/52d0b0c42224dfe5e1edb3926f33b6d5/manifest/video.m3u8';
+    const hls = new Hls();
+    hls.loadSource(videoSrc);
+    hls.attachMedia(player);
+    hls.on(Hls.Events.MANIFEST_PARSED, (e) => {
+      player.addEventListener('loadedmetadata', async (e) => {
+        console.log("loaded", e)
+        const tracks = e.target.textTracks;
+        const track = tracks[0];
+        track.mode = 'hidden';
+        await trackReady(e.target);
+        component.textTrack = track;
+        track.addEventListener('cuechange', (e) => {
+          component.updateCues(e.target);
+        });
+      })
     });
-
-    }
-    else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      player.src = videoSrc;
-    }
 
     let pingInterval;
     const update = 100;
@@ -90,7 +104,7 @@
     player.addEventListener('pause', () => {
       clearInterval(pingInterval);
     })
-  
+
     // On click, Seek's player to caption location.
     component.addEventListener('seek', e => {
       player.currentTime = e.detail.value;
