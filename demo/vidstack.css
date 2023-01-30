@@ -19,6 +19,8 @@ vds-media {
   padding: 0.5em;
   color: rgba(255,255,255,1);
   align-items: flex-start;
+  opacity: 1;
+  visibility: visible;
 }
 .row {
   display: flex;
@@ -44,6 +46,8 @@ vds-media {
   justify-content: center;
   font-size: clamp(10px, 3vw + .8em, 4em);
   color: var(--text-secondary);
+  opacity: 1;
+  visibility: visible;  
 }
 .controls_body button {
   background: none;
@@ -56,19 +60,10 @@ vds-media {
 }
 .controls_footer {
   padding-bottom: 0.5em;
-}
-
-
-/******* Hide on idle ********/
-vds-media .media_controls {
   opacity: 1;
   visibility: visible;  
-  transition: all .3s ease;
 }
-vds-media[user-idle] .media_controls {
-  opacity: 0;
-  visibility: hidden;
-}
+
 
 /*** Buffering/waiting *****/
 .media-buffering-container {
@@ -111,7 +106,6 @@ vds-media[waiting] .media-buffering-icon {
 
 /******** Timeline ********/
 vds-time-slider {
-  /* Default values are shown below. */
   --media-slider-height: 26px;
   --media-slider-thumb-size: 13px;
   --media-slider-focused-thumb-size: calc(var(--thumb-size) * 1.1);
@@ -125,7 +119,7 @@ vds-time-slider [part~='track'] {
 }
 /* Apply styles to track fill (played portion of slider). */
 vds-time-slider [part~='track-fill'] {
-  background: hotpink;
+  background: var(--primary-color);
 }
 /* Apply styles to track progress (buffered). */
 vds-time-slider [part~='track-progress'] {
@@ -163,4 +157,39 @@ vds-fullscreen-button {
 }
 vds-fullscreen-button:hover {
   transform: rotate(90deg) scale(1.1);
+}
+
+
+/******* Hide on idle ********/
+vds-media .media_controls {
+  opacity: 1;
+  visibility: visible;  
+  transition: all .3s ease;
+}
+vds-media .media_controls * {
+    transition: all .2s ease;
+}
+vds-media[user-idle] .controls_header {
+  opacity: 0;
+  visibility: hidden;
+}
+vds-media[user-idle] .controls_body {
+  opacity: 0;
+  visibility: hidden;
+}
+vds-media[user-idle] .row_title {
+  opacity: 0;
+  visibility: hidden;
+}
+vds-media[user-idle] .row_time {
+  opacity: 0;
+  visibility: hidden;
+  height: 0;
+}
+vds-media[user-idle] vds-time-slider [part~='track-fill'] {
+  background: rgba(255, 255, 255, .1);
+}
+vds-media[user-idle] vds-time-slider {
+  --media-slider-height: 2px;
+  --media-slider-track-height: 2px;
 }
