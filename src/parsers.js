@@ -217,7 +217,8 @@ export function parseVTT(contents, type) {
     }
     else if (line !== '') {
       if (type === 'srt') {
-        // remove html tags in srt.
+        // remove html tags in srt so a stylesheet has complete control.
+        // Also Final Cut and Premiere, and probably most NLE's, butcher this.
         currentCue.text.push(line.replace(/(<([^>]+)>)/gi, ''));
       } else {
         currentCue.text.push(line);
