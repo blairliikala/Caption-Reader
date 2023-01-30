@@ -33,6 +33,10 @@
 
   <main class="container dark">
 
+    <section class="info">
+      <p>Example uses HLS with embedded captions and Mux Player. Captions progressively load as video is played back.</p>
+    </section>
+
     <mux-player
       stream-type="on-demand"
       playback-id="qP5Eb2cj7MrNnoxBGz012pbZkMHqpIcrKMzd7ykGr01gM"
@@ -73,7 +77,7 @@
 
     player.media.addEventListener('loadedmetadata', async (e) => {
       const tracks = player.media.textTracks;
-      const track = tracks[1]; // hard-coded value.
+      const track = tracks[1]; // hard-coded value for this specific video.
       track.mode = 'hidden';
       await trackReady(player.media);
       component.textTrack = track;
