@@ -166,9 +166,13 @@ vds-media .media_controls {
   visibility: visible;  
   transition: all .3s ease;
 }
-vds-media .media_controls * {
-    transition: all .2s ease;
+
+vds-media[user-idle] .media_controls {
+  opacity: 0;
+  visibility: hidden;
 }
+
+/*
 vds-media[user-idle] .controls_header {
   opacity: 0;
   visibility: hidden;
@@ -193,3 +197,4 @@ vds-media[user-idle] vds-time-slider {
   --media-slider-height: 2px;
   --media-slider-track-height: 2px;
 }
+*/
