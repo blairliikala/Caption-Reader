@@ -370,7 +370,7 @@ export class CaptionsViewer extends HTMLElement {
       if (cue.type === 'spacer' && cue.status === 'active') {
         const progValue = Math.round(this.#playhead - cue.seconds.start);
         const progress = this.#divs.root.querySelector(`[data-progress="${index}"]`);
-        if (progress) progress.value = progValue;
+        if (progress && progValue) progress.value = progValue;
       }
     });
 
