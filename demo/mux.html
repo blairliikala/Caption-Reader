@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Caption Reader Web Component Demo - Mux Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
+  <link href="/demo/demo.css" rel="stylesheet" type="text/css">
+  <script type="module" src="/captions-viewer.js"></script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/@mux/mux-player"></script>
+
+  <style>
+    .dark {
+      --caption-background: rgba(0,0,0,.2);
+    }
+    /* Hides the component until it has loaded */
+    captions-viewer:not(:defined) {
+      visibility: hidden
+    }
+    captions-viewer {
+      margin: 1em 0;
+      border-radius: 5px;
+      font-family: arial;
+      display: block;
+      background: rgba(0,0,0,.2);
+      background: var(--caption-background, rgba(255,255,255, .9));
+    }
+  </style>
+
+</head>
+<body>
+
+  <main class="container dark">
+
+    <mux-player
+      stream-type="on-demand"
+      playback-id="qP5Eb2cj7MrNnoxBGz012pbZkMHqpIcrKMzd7ykGr01gM"
+    ></mux-player>
+
+    <captions-viewer theme="dark" disable="chapters" nudge="0"></captions-viewer>
+
+    <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
+  </main>
+
+  <script type="module">
+    const component = document.querySelector('captions-viewer');
+    const player = document.querySelector('mux-player');
+
+    // iOS feel better when the video has played before seeking it.
+    let hasPlayed = false;
+    player.addEventListener('play', () => {
+      hasPlayed = true;
+    }, { once : true })
+
+    // function to check for when textTrack is ready or timeout.
+    const trackReady = (video) => {
+      let count = 0;
+      return new Promise(resolve => {
+        const interval = setInterval(() => {
+          count += 1;
+          if (count > 500) {
+            clearInterval(interval);
+            resolve();
+          }
+          if (Array.from(video.textTracks[0].cues).length) {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 2);
+      });
+    }
+
+    player.media.addEventListener('loadedmetadata', async (e) => {
+      const tracks = player.media.textTracks;
+      const track = tracks[1]; // hard-coded value.
+      track.mode = 'hidden';
+      await trackReady(player.media);
+      component.textTrack = track;
+      track.addEventListener('cuechange', (e) => {
+        component.updateCues(e.target);
+      });
+    });
+
+    // Updates the captions.
+    player.ontimeupdate = () => {
+      component.playhead = player.currentTime;
+    };
+
+    // On click, Seek's player to caption location.
+    component.addEventListener('seek', e => {
+      if (!hasPlayed) player.play();
+      player.currentTime = e.detail.value;
+    });
+
+    // (optional) Scroll to the cue when user skips in the player timeline.
+    player.onseeking = () => {
+      component.debounceScrolling = false;
+    };
+  </script>
+
+</body>
+</html>
