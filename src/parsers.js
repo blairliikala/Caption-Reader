@@ -128,6 +128,19 @@ export function addCueSpaces(cues, distance) {
   return cues;
 }
 
+export function sortCues(cues) {
+  if (!cues) return cues;
+  return cues.sort((a, b) => {
+    if (a.seconds.start < b.seconds.start) {
+      return -1;
+    }
+    if (a.seconds.start > b.seconds.start) {
+      return 1;
+    }
+    return 0;
+  });
+}
+
 // This is a simple parser to keep the size down.
 export function parseVTT(contents, type) {
   const lines = contents.split('\n');
