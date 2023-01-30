@@ -73,4 +73,10 @@ describe('<captions-viewer>', () => {
     const htmlCues = document.querySelectorAll('progress');
     expect(htmlCues.length).to.equal(3);
   });
+
+  it('Cues are put in order.', async () => {
+    const component = await fixture('<captions-viewer src="test/out_of_order_cues.vtt"></captions-viewer>');
+    await waitUntil(() => ('cues' in component.captions), 'Captions parsed');
+    expect(component.captions.cues[4].text[0]).to.equal('- out of order cue.');
+  });
 });
