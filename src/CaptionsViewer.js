@@ -6,6 +6,7 @@ import {
   parseSubTextCues,
   parseTextTrack,
   addCueSpaces,
+  sortCues,
 } from './parsers.js';
 import { defaultStyles } from './defautStylesheet.js';
 
@@ -220,8 +221,7 @@ export class CaptionsViewer extends HTMLElement {
     this.#divs.root.addEventListener('click', e => {
       const div = e.composedPath()[0].closest('button');
       if (div && 'localName' in div && div.localName === 'button') {
-        const { index } = div.dataset;
-        const seconds = this.#captions.cues[index].seconds.start;
+        const seconds = div.dataset.start;
         this.#event('seek', seconds);
         this.#updateCaptionStatus(seconds + 0.2);
       }
@@ -265,37 +265,38 @@ export class CaptionsViewer extends HTMLElement {
     this.#divs.root?.setAttribute('style', customStyles.join('; '));
 
     if (params?.changes.name === 'src' || params?.changes.name === 'textTrack') {
-      this.#captions = await this.#parse();
-      if (!this.#captions) return;
+      this.#captions = await this.#parse(this.#textTrack, this.#src);
+      if (!this.#captions || !this.#captions.cues) return;
       this.#event('parsed', 'Caption file has been parsed.');
       if (this.#youtube) this.#captions.cues = this.#youtubeAdjustments(this.#captions.cues);
+      this.#setCuesStatus();
       this.#updateCaptionStatus(this.#playhead + 0.9);
     }
 
     this.#divs.root.innerHTML = this.#renderAllCaptions(this.#captions);
   }
 
-  async #parse() {
+  async #parse(TEXTTRACK, SRC) {
     let captions;
+    let textTrack = TEXTTRACK;
 
-    // Send src through native parser.
-    if (this.#src && Utilities.getSupportedFileType(this.#src) === 'vtt') {
-      this.#textTrack = await this.#renderCaptionSrc(this.#src);
+    // Send file through native browser parser.
+    if (SRC && Utilities.getSupportedFileType(SRC) === 'vtt') {
+      textTrack = await this.#renderCaptionSrc(SRC);
     }
 
     // Track in video element. Pushed after load.
-    if (this.#textTrack && 'cues' in this.#textTrack) {
-      captions = parseTextTrack(this.#textTrack);
+    if (textTrack && 'cues' in textTrack) {
+      captions = parseTextTrack(textTrack);
     }
 
-    // Both failed, use the fallback src parser.
-    if (this.#src && (!captions || !captions.cues)) {
-      const srcContents = await fetch(this.#src).then(res => res.text());
-      const type = Utilities.getSupportedFileType(this.#src);
+    // Both failed, use the fallback src parser, mostly for SRT.
+    if (SRC && (!captions || !captions.cues)) {
+      const srcContents = await fetch(SRC).then(res => res.text());
+      const type = Utilities.getSupportedFileType(SRC);
       if (srcContents) captions = parseVTT(srcContents, type);
     }
 
-    // || Array.from(this.#textTrack.cues).length === 0
     if (!captions || !captions.cues) {
       console.error('Not able to find and render captions.', captions);
       this.#divs.root.innerHTML = '<p class="empty">No captions.</p>';
@@ -303,9 +304,9 @@ export class CaptionsViewer extends HTMLElement {
     }
     captions.cues = parseSubTextCues(captions.cues);
     captions.cues = addCueSpaces(captions.cues, this.#spacer);
+    captions.cues = sortCues(captions.cues);
 
-    this.#setCuesStatus();
-    // console.log('Final Captions.', captions); // TODO remove.
+    this.#textTrack = textTrack;
     return captions;
   }
 
@@ -360,6 +361,7 @@ export class CaptionsViewer extends HTMLElement {
   #updateCaptionStatus(playhead) {
     if (this.#paused) return;
     this.#playhead = playhead;
+    if (!this.#captions || !this.#captions.cues) return;
     this.#setCuesStatus();
     const activeIndex = this.#captions.cues?.findIndex(cue => cue.status === 'active');
 
@@ -449,10 +451,11 @@ export class CaptionsViewer extends HTMLElement {
       text += '</span>';
     }
 
-    return `<li>
+    return `<li class="cueitem">
       <button
         type="button"
         tabindex="0"
+        data-start="${cue.seconds.start}"
         class="cue ${styleName} ${cue.type || ''}"
         data-index="${index}"
       >${!disabled.includes('timecode') && cue.type !== 'spacer' ? timecode : ''} ${!disabled.includes('chapters') ? chapter : ''} ${!disabled.includes('text') ? text : ''} ${spacerProgress}
@@ -460,11 +463,11 @@ export class CaptionsViewer extends HTMLElement {
   }
 
   #updateCaption() {
-    const divs = this.#divs.root.querySelectorAll('button');
+    const divs = this.#divs.root.querySelectorAll('.cueitem');
     divs.forEach((item, index) => {
       const cue = this.#captions.cues[index];
-      item.classList.remove('upcoming', 'next', 'active', 'previous', 'passed');
-      item.classList.add(cue?.status);
+      item.firstElementChild.classList.remove('upcoming', 'next', 'active', 'previous', 'passed');
+      item.firstElementChild.classList.add(cue?.status);
     });
   }
 
@@ -537,27 +540,28 @@ export class CaptionsViewer extends HTMLElement {
     this.#divs.root.dataset.theme = theme;
   }
 
-  // Cues would be the complete list and should have more.
-  updateCues(textTrack) {
-    // TODO order by timecode incase there is seeking in the player.
-    // if (typeof cues !== 'object') return;
-    const oldLength = this.#captions.cues.length;
+  // textTrack.cues would be the complete cue list plus more.
+  async updateCues(textTrack) {
+    if (!textTrack) return '';
+    if (!this.#captions || !this.#captions.cues) return '';
+    const prevLength = this.#captions.cues.length;
     if (textTrack.cues.length <= this.#captions.cues.length) return '';
-    const newCaptions = parseTextTrack(textTrack);
+    const newCaptions = await this.#parse(textTrack);
 
     // Update Internals.
     this.#captions.cues = newCaptions.cues;
     this.#setCuesStatus();
-    // Skipping adding spaces as to not augment the comparison later.
-    newCaptions.cues.splice(0, oldLength);
+
+    // Only get new cues.  TODO instead of splice, use loop with offset to preserve index count.
+    newCaptions.cues.splice(0, prevLength);
 
     // Update DOM.
     let html = '';
     newCaptions.cues.forEach((cue, index) => {
       html += this.#cueToHTML(cue, index, this.#disable);
     });
-    const ol = this.#divs.root.querySelector('ol');
-    ol.innerHTML += html;
+    const contianer = this.#divs.root.querySelector('ol');
+    contianer.innerHTML += html;
 
     this.#updateCaptionStatus(this.#playhead);
     return html;
