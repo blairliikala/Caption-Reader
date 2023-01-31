@@ -63,7 +63,7 @@
       return new Promise(resolve => {
         const interval = setInterval(() => {
           count += 1;
-          if (count > 500) {
+          if (count > 1000) {
             clearInterval(interval);
             resolve();
           }
@@ -79,8 +79,13 @@
       const tracks = player.media.textTracks;
       const track = tracks[1]; // hard-coded value for this specific video.
       track.mode = 'hidden';
+      setTimeout(() => {
+        component.textTrack = track;
+      }, 2000);
+      /*
       await trackReady(player.media);
       component.textTrack = track;
+      */
       track.addEventListener('cuechange', (e) => {
         component.updateCues(e.target);
       });
