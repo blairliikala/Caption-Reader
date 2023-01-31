@@ -204,6 +204,19 @@ function addCueSpaces(cues, distance) {
   });
   return cues;
 }
+function sortCues(cues) {
+  if (!cues)
+    return cues;
+  return cues.sort((a, b) => {
+    if (a.seconds.start < b.seconds.start) {
+      return -1;
+    }
+    if (a.seconds.start > b.seconds.start) {
+      return 1;
+    }
+    return 0;
+  });
+}
 function parseVTT(contents, type) {
   const lines = contents.split("\n");
   const caption = {
@@ -663,8 +676,7 @@ var CaptionsViewer = class extends HTMLElement {
     this.#divs.root.addEventListener("click", (e) => {
       const div = e.composedPath()[0].closest("button");
       if (div && "localName" in div && div.localName === "button") {
-        const { index } = div.dataset;
-        const seconds = this.#captions.cues[index].seconds.start;
+        const seconds = div.dataset.start;
         this.#event("seek", seconds);
         this.#updateCaptionStatus(seconds + 0.2);
       }
@@ -701,27 +713,29 @@ var CaptionsViewer = class extends HTMLElement {
     }
     this.#divs.root?.setAttribute("style", customStyles.join("; "));
     if (params?.changes.name === "src" || params?.changes.name === "textTrack") {
-      this.#captions = await this.#parse();
-      if (!this.#captions)
+      this.#captions = await this.#parse(this.#textTrack, this.#src);
+      if (!this.#captions || !this.#captions.cues)
         return;
       this.#event("parsed", "Caption file has been parsed.");
       if (this.#youtube)
         this.#captions.cues = this.#youtubeAdjustments(this.#captions.cues);
+      this.#setCuesStatus();
       this.#updateCaptionStatus(this.#playhead + 0.9);
     }
     this.#divs.root.innerHTML = this.#renderAllCaptions(this.#captions);
   }
-  async #parse() {
+  async #parse(TEXTTRACK, SRC) {
     let captions;
-    if (this.#src && Utilities.getSupportedFileType(this.#src) === "vtt") {
-      this.#textTrack = await this.#renderCaptionSrc(this.#src);
+    let textTrack = TEXTTRACK;
+    if (SRC && Utilities.getSupportedFileType(SRC) === "vtt") {
+      textTrack = await this.#renderCaptionSrc(SRC);
     }
-    if (this.#textTrack && "cues" in this.#textTrack) {
-      captions = parseTextTrack(this.#textTrack);
+    if (textTrack && "cues" in textTrack) {
+      captions = parseTextTrack(textTrack);
     }
-    if (this.#src && (!captions || !captions.cues)) {
-      const srcContents = await fetch(this.#src).then((res) => res.text());
-      const type = Utilities.getSupportedFileType(this.#src);
+    if (SRC && (!captions || !captions.cues)) {
+      const srcContents = await fetch(SRC).then((res) => res.text());
+      const type = Utilities.getSupportedFileType(SRC);
       if (srcContents)
         captions = parseVTT(srcContents, type);
     }
@@ -732,7 +746,8 @@ var CaptionsViewer = class extends HTMLElement {
     }
     captions.cues = parseSubTextCues(captions.cues);
     captions.cues = addCueSpaces(captions.cues, this.#spacer);
-    this.#setCuesStatus();
+    captions.cues = sortCues(captions.cues);
+    this.#textTrack = textTrack;
     return captions;
   }
   #iniScrollingEvents() {
@@ -781,13 +796,15 @@ var CaptionsViewer = class extends HTMLElement {
     if (this.#paused)
       return;
     this.#playhead = playhead;
+    if (!this.#captions || !this.#captions.cues)
+      return;
     this.#setCuesStatus();
     const activeIndex = this.#captions.cues?.findIndex((cue) => cue.status === "active");
     this.#captions.cues?.forEach((cue, index) => {
       if (cue.type === "spacer" && cue.status === "active") {
         const progValue = Math.round(this.#playhead - cue.seconds.start);
         const progress = this.#divs.root.querySelector(`[data-progress="${index}"]`);
-        if (progress)
+        if (progress && progValue)
           progress.value = progValue;
       }
     });
@@ -856,21 +873,22 @@ var CaptionsViewer = class extends HTMLElement {
       text += cue.subCues.map((sub) => `<span class="${sub.status}">${sub.text}</span>`).join("");
       text += "</span>";
     }
-    return `<li>
+    return `<li class="cueitem">
       <button
         type="button"
         tabindex="0"
+        data-start="${cue.seconds.start}"
         class="cue ${styleName} ${cue.type || ""}"
         data-index="${index}"
       >${!disabled.includes("timecode") && cue.type !== "spacer" ? timecode : ""} ${!disabled.includes("chapters") ? chapter : ""} ${!disabled.includes("text") ? text : ""} ${spacerProgress}
       </button></li>`;
   }
   #updateCaption() {
-    const divs = this.#divs.root.querySelectorAll("button");
+    const divs = this.#divs.root.querySelectorAll(".cueitem");
     divs.forEach((item, index) => {
       const cue = this.#captions.cues[index];
-      item.classList.remove("upcoming", "next", "active", "previous", "passed");
-      item.classList.add(cue?.status);
+      item.firstElementChild.classList.remove("upcoming", "next", "active", "previous", "passed");
+      item.firstElementChild.classList.add(cue?.status);
     });
   }
   #setCuesStatus() {
@@ -934,22 +952,25 @@ var CaptionsViewer = class extends HTMLElement {
     this.#theme = theme;
     this.#divs.root.dataset.theme = theme;
   }
-  // Cues would be the complete list and should have more.
-  addCues(textTrack) {
-    const oldLength = this.#captions.cues.length;
+  // textTrack.cues would be the complete cue list plus more.
+  async updateCues(textTrack) {
+    if (!textTrack)
+      return "";
+    if (!this.#captions || !this.#captions.cues)
+      return "";
+    const prevLength = this.#captions.cues.length;
     if (textTrack.cues.length <= this.#captions.cues.length)
       return "";
-    const newCaptions = parseTextTrack(textTrack);
+    const newCaptions = await this.#parse(textTrack);
     this.#captions.cues = newCaptions.cues;
     this.#setCuesStatus();
-    newCaptions.cues.splice(0, oldLength);
-    console.log("new", newCaptions.cues, this.#captions.cues);
+    newCaptions.cues.splice(0, prevLength);
     let html = "";
     newCaptions.cues.forEach((cue, index) => {
       html += this.#cueToHTML(cue, index, this.#disable);
     });
-    const ol = this.#divs.root.querySelector("ol");
-    ol.innerHTML += html;
+    const contianer = this.#divs.root.querySelector("ol");
+    contianer.innerHTML += html;
     this.#updateCaptionStatus(this.#playhead);
     return html;
   }
