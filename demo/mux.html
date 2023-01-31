@@ -64,7 +64,7 @@
       // Arbitrary time to wait for captions to be ready.
       setTimeout(() => {
         component.textTrack = track;
-      }, 1000);
+      }, 2000);
       track.addEventListener('cuechange', (e) => {
         component.updateCues(e.target);
       });
