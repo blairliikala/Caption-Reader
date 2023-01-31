@@ -10,11 +10,24 @@ A web component to display captions as a video plays. Includes automatic scrolli
 npm i captions-viewer
 ```
 
+```html
+<script type="module">
+  import captionsViewer from 'https://cdn.jsdelivr.net/npm/captions-viewer/+esm'
+</script>
+```
+
+Or
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/captions-viewer/dist/captions-viewer.min.js"></script>
+```
+
 ## Add Captions
 
 Provide the path to a caption file the `src` parameter on the element.  The caption file procesesd by the browser-native caption parser for vtt with a backup lightweight parser for srt or if there is a problem.
 
 ```html
+<script type="module" src="/dist/captions-viewer.min.js"></script>
 <video controls>
    <source src="video.mp4" type="video/mp4">
 </video>
@@ -22,11 +35,11 @@ Provide the path to a caption file the `src` parameter on the element.  The capt
 <captions-viewer src="caption.vtt"></caption-viewer>
 ```
 
-## Link Elements
+## Link Player and Captions
 
 To make the captions to update when the video is playing, the player's current position (playhead) must be regularly sent to the captions component.  Luckily this is easy to do by using the native video element, and most video players provide a time update event to listen for.
 
-Example connecting a native video tag to the component;
+Simple example connecting a native video tag to the component:
 
 ```html
 <video controls src="video.mp4"></video>
@@ -37,7 +50,7 @@ Example connecting a native video tag to the component;
 const captions = document.querySelector('captions-viewer');
 const player = document.querySelector('video');
 
-player.addEventListener('timeupdate', (e) => {
+player.addEventListener('timeupdate', () => {
   captions.playhead = player.currentTime;
 })
 </script>
@@ -63,14 +76,24 @@ player.addEventListener('seeking', () => {
 
 |  Name | Default | Description |
 | - | - | - |
-| `src`       | null   | (required) Location of the vtt/srt file. |
-| `playhead`   | 0      | The time the player is at, in seconds.  Used to keep the player and reader in-sync. (see more below) |
-| `height`     | 300px  | Height of the scrolling box.  Valid CSS unit. |
+| `src`       | null   | Location of the vtt/srt file. |
+| `playhead`   | 0      | The current player time, in seconds, to keep the player and reader in-sync. (see more below) |
 | `debounce`   | 5000   | Control the time between scrolling. Time in ms between the last scroll (user or automatic) |
 | `singleline` | false  | True will show all text for a cue on a single line.  False will obey the line breaks in the caption file. |
 | `disable`    | empty  | Turn off displaying `timecode` `chapters` or `text`. Use a pipe `\|` between each option, such as `timecode\|chapters` |
 | `youtube` | false | Enable `true` if the caption vtt track came from YouTube for some special handling. |
 | `nudge` | 0.5 | Amount in seconds to adjust the cues to trigger sooner. |
+| `spacer` | 5 | Time in seconds between cues where a spacer (progress bar) will display |
+| `captions` | undefined | Read-only property of the internal object of caption cues. |
+| `paused` | false | Read-only property if the reader system is enabled or not. |
+| `textTrack` | undefined |  |
+
+
+### Simple Theming
+
+| Name | Default | Description |
+| - | - | - |
+| `height`     | 300px  | Height of the scrolling box.  Valid CSS unit. |
 | `color` | 360 | The Hue (0-360) of the base color to use.  This is put into an hsla color. |
 | `theme` | light, dark | Light theme shades the text darker for a whiter background.  Dark will lighten text for a darker background. |
 | `css` | true | True/False to enable the default stylesheet.  False will remove all styling, default is True. See the guide below. |
@@ -79,7 +102,7 @@ player.addEventListener('seeking', () => {
 
 ### `pause()`
 
-Calling this method will toggle pausing the automatic reading.
+A toggle to stop/start the component without removing it.  All events, scrolling and updating stop.
 
 ```html
 <button>Toggle Caption Reading</button>
@@ -87,7 +110,7 @@ Calling this method will toggle pausing the automatic reading.
 ...
 button.addEventListener('click', () => {
   captions.pause();
-})
+});
 </script>
 ```
 
@@ -101,7 +124,7 @@ captions.setTheme('dark');
 
 ### `updateCues(textTrack.cues)`
 
-Intended for cue updates such as live streaming or HLS, this expects a `textTrack` cue list of all the cues, plus new cues. This method has better performance by only rendering the new cues, while the `textTrack` property is a complete refresh or reset of all the cues.
+Intended for cue updates such as live streaming or HLS, this expects a `textTrack` cue list of all the current cues, plus new cues. This method has better performance by only rendering the new cues, while updating the `textTrack` property is a complete refresh and re-render of all the cues.
 
 ```javascript
 const tracks = player.textTracks;
@@ -131,9 +154,6 @@ Show captions for a video using the native caption tracy system, with a dynamic 
   }
   /* set the container styles */
   captions-viewer {
-    margin: 1em 0;
-    border: 3px solid hsla(200, 20%, 50%, .5);
-    border-radius: 5px;
     font-family: arial;
     display: block;
     background: rgba(0,0,0,.2);
@@ -141,11 +161,14 @@ Show captions for a video using the native caption tracy system, with a dynamic 
 </style>
 
 <video controls>
-  <source src="content/dune/dune.mp4" type="video/mp4">
-  <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" />
+  <source src="movie.mp4" type="video/mp4">
+  <!-- Not required for the reader,
+      but best for accessibility to keep them here for the actual player. -->
+  <track label="English" kind="subtitles" srclang="en" src="subtitle.vtt" />
 </video>
 
 <captions-viewer
+  src="subtitle.vtt"
   height="30vw"
   singleline="true"
   color="300"
@@ -154,7 +177,7 @@ Show captions for a video using the native caption tracy system, with a dynamic 
 >
 </captions-viewer>
 
-<script type="module" src="../../captions-viewer.js"></script>
+<script type="module" src="/dist/captions-viewer.js"></script>
 <script type="module">
 
   const captions = document.querySelector('captions-viewer');
@@ -183,7 +206,7 @@ Show captions for a video using the native caption tracy system, with a dynamic 
 
 ### YouTube
 
-Download the vtt option from YouTube in the Creator Studio and make it available online.
+YouTube captions are not accessible publicly.  One way is to download the vtt option from YouTube in the Creator Studio, put it on your own server.  Another is using YouTube's API.
 
 **Note** when using the YouTube vtt file, one edit may be needed to the first cue.  Normally there is a blank line between the timecode and cue code. Each browser handles this slightly differently, so to provide browser parity simply add text in this blank line.  Any text will do, and will be removed by the parser.
 
