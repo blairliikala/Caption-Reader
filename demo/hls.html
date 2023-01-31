@@ -2,7 +2,7 @@
 <html lang="en-GB">
 <head>
   <meta charset="utf-8">
-  <title>Caption Reader Web Component - HLS</title>
+  <title>Caption Reader Web Component - HLS.js</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark light">
   <link href="demo.css" rel="stylesheet" type="text/css">
@@ -69,13 +69,10 @@
       });
     }
 
-
     // const videoSrc = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'; // Bunny.
     // const videoSrc = 'http://stream.mux.com/qP5Eb2cj7MrNnoxBGz012pbZkMHqpIcrKMzd7ykGr01gM.m3u8' // Tears
     // const videoSrc = 'https://playertest.longtailvideo.com/adaptive/captions/playlist.m3u8'; // CNN
-    // const videoSrc = 'http://cdnbakmi.kaltura.com/p/243342/sp/24334200/playManifest/entryId/0_uka1msg4/flavorIds/1_vqhfu6uy,1_80sohj7p/format/applehttp/protocol/http/a.m3u8';
     const videoSrc = 'https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_adv_example_hevc/master.m3u8'; // beep boop.
-    // const videoSrc = 'https://customer-f00p2zh0sy6apae7.cloudflarestream.com/52d0b0c42224dfe5e1edb3926f33b6d5/manifest/video.m3u8';
     const hls = new Hls();
     hls.loadSource(videoSrc);
     hls.attachMedia(player);
