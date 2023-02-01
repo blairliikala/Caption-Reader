@@ -198,3 +198,48 @@ vds-media[user-idle] vds-time-slider {
   --media-slider-track-height: 2px;
 }
 */
+
+/*** Possible loading icon
+<div class="circle-8"></div>
+.circle-8 {
+  width: 50px;
+  aspect-ratio: 1;
+  box-shadow: 0 0 0 3px #fff inset;
+  border-radius: 50%;
+  position: relative;
+  animation: c8-0 1.5s linear infinite;
+}
+.circle-8:before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 2px);
+  box-shadow: inherit;
+  width: 25px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  animation: c8-1 1.5s linear infinite;
+}
+@keyframes c8-1 {
+  0% {
+    transform-origin: -27px 50%;
+    width: 20px;
+    transform: translateY(-50%) rotate(0);
+  }
+  100% {
+    transform-origin: -12px 50%;
+    width: 50px;
+    transform: translateY(-50%) rotate(180deg);
+  }
+}
+@keyframes c8-0 {
+  0% {
+    width: 50px;
+    transform: translate(0);
+  }
+  100% {
+    width: 20px;
+    transform: translate(37px);
+  }
+}
+*/
