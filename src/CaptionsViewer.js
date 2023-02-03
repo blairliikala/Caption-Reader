@@ -7,6 +7,7 @@ import {
   parseTextTrack,
   addCueSpaces,
   sortCues,
+  removeDuplicateCues,
 } from './parsers.js';
 import { defaultStyles } from './defautStylesheet.js';
 
@@ -116,6 +117,7 @@ export class CaptionsViewer extends HTMLElement {
     this.#create({ changes: { name: 'textTrack' } });
   }
   set spacer(item) {
+    // TODO needs validation.
     this.#spacer = item;
   }
   set youtube(item) {
@@ -204,7 +206,7 @@ export class CaptionsViewer extends HTMLElement {
     `;
 
     const html = template.content.cloneNode(true);
-    /* Apply using shadow DOM instead of made-up unknown element hack.
+    /* Apply using shadow DOM instead of made-up unknown element trick.
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.appendChild(html);
 
@@ -303,6 +305,7 @@ export class CaptionsViewer extends HTMLElement {
       return undefined;
     }
     captions.cues = parseSubTextCues(captions.cues);
+    captions.cues = removeDuplicateCues(captions.cues);
     captions.cues = addCueSpaces(captions.cues, this.#spacer);
     captions.cues = sortCues(captions.cues);
 
@@ -507,7 +510,7 @@ export class CaptionsViewer extends HTMLElement {
     this.#captions.cues = this.#captions.cues.map(cue => {
       if (cue.subCues) {
         cue.subCues.map(sub => {
-          // Disabling becuase a deep close is a big performane hit.
+          // Disabling becuase a deep clone is a performane hit.
           // eslint-disable-next-line no-param-reassign
           sub.status = sub.seconds < this.#playhead ? 'sub_active' : 'sub_upcoming';
           return sub;
@@ -527,6 +530,7 @@ export class CaptionsViewer extends HTMLElement {
     const elmOffset = elm.offsetTop;
     this.#divs.root.scrollTop = elmOffset - elmHeight; // Scroll cue to top leaving one.
     this.#isAutoScroll = true;
+    // About how long a browser smooth-scroll will take:
     setTimeout(() => { this.#isAutoScroll = false; }, 1000);
   }
 
@@ -543,25 +547,29 @@ export class CaptionsViewer extends HTMLElement {
   // textTrack.cues would be the complete cue list plus more.
   async updateCues(textTrack) {
     if (!textTrack) return '';
-    if (!this.#captions || !this.#captions.cues) return '';
-    const prevLength = this.#captions.cues.length;
-    if (textTrack.cues.length <= this.#captions.cues.length) return '';
+    // if (!this.#captions || !this.#captions.cues) return '';
+    const prevLength = (this.#captions.cues) ? this.#captions.cues.length : 0;
+    if (textTrack.cues.length <= prevLength) return '';
     const newCaptions = await this.#parse(textTrack);
 
     // Update Internals.
     this.#captions.cues = newCaptions.cues;
     this.#setCuesStatus();
 
-    // Only get new cues.  TODO instead of splice, use loop with offset to preserve index count.
     newCaptions.cues.splice(0, prevLength);
 
     // Update DOM.
     let html = '';
     newCaptions.cues.forEach((cue, index) => {
-      html += this.#cueToHTML(cue, index, this.#disable);
+      html += this.#cueToHTML(cue, index + prevLength, this.#disable);
     });
     const contianer = this.#divs.root.querySelector('ol');
-    contianer.innerHTML += html;
+    if (contianer) contianer.innerHTML += html;
+
+    // No captions yet, need to add the ol.
+    if (!contianer) {
+      this.#divs.root.innerHTML = `<ol>${html}</ol>`;
+    }
 
     this.#updateCaptionStatus(this.#playhead);
     return html;

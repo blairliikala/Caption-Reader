@@ -141,6 +141,16 @@ export function sortCues(cues) {
   });
 }
 
+export function removeDuplicateCues(cues) {
+  if (!cues) return cues;
+  const deduplicatedCues = cues.filter((cue, index) => {
+    const _cue = JSON.stringify(cue);
+    const searchResultIndex = cues.findIndex(obj => JSON.stringify(obj) === _cue);
+    return index === searchResultIndex;
+  });
+  return deduplicatedCues;
+}
+
 // This is a simple parser to keep the size down.
 export function parseVTT(contents, type) {
   const lines = contents.split('\n');

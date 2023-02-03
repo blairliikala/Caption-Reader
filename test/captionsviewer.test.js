@@ -79,4 +79,11 @@ describe('<captions-viewer>', () => {
     await waitUntil(() => ('cues' in component.captions), 'Captions parsed');
     expect(component.captions.cues[4].text[0]).to.equal('- out of order cue.');
   });
+
+  it('removes duplicate cues', async () => {
+    const component = await fixture('<captions-viewer src="test/duplicates.vtt"></captions-viewer>');
+    await waitUntil(() => ('cues' in component.captions), 'Captions parsed');
+    console.log(component.captions.cues);
+    expect(component.captions.cues.length).to.equal(4);
+  });
 });
