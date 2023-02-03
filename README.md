@@ -1,6 +1,12 @@
 # \<captions-viewer>
 
-A web component to display captions as a video plays. Includes automatic scrolling to the caption cue, and events when a chapter is clicked.
+A web component to display captions as a video plays. Think Spotify or Apple Music lyrics. Includes automatic scrolling to the caption cue as the video plays, and events when a chapter is clicked.
+
+Also check out the other component that makes it easier to manage starting and ending live streams for viewers [https://livestreamwrapper.vercel.app/demo/](https://livestreamwrapper.vercel.app/demo/)
+
+## In Development
+
+While this remains under a 1.0 release, some things might change.  I am not happy yet with how HLS captions are working, or how styling is applied and plan to do some releases to improve those.
 
 ## Basic Usage
 
@@ -35,7 +41,7 @@ Provide the path to a caption file the `src` parameter on the element.  The capt
 <captions-viewer src="caption.vtt"></caption-viewer>
 ```
 
-## Link Player and Captions
+## Link the video Player and Captions Reader
 
 To make the captions to update when the video is playing, the player's current position (playhead) must be regularly sent to the captions component.  Luckily this is easy to do by using the native video element, and most video players provide a time update event to listen for.
 
@@ -87,7 +93,6 @@ player.addEventListener('seeking', () => {
 | `captions` | undefined | Read-only property of the internal object of caption cues. |
 | `paused` | false | Read-only property if the reader system is enabled or not. |
 | `textTrack` | undefined |  |
-
 
 ### Simple Theming
 
