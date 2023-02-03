@@ -25,7 +25,7 @@
     "version:bump": "npm version patch --no-git-tag-version --silent",
     "prod": "yarn esbuild captions-viewer.js --format=esm --bundle --outdir=dist",
     "prod:min": "yarn esbuild captions-viewer.js --format=esm --bundle --minify --outfile=./dist/captions-viewer.min.js",
-    "build": "npm run version:bump && npm run prod && npm run prod:min",
+    "build": "npm run version:bump && npm run prod && npm run prod:min && npm run analyze",
     "test:watch": "web-test-runner --watch"
   },
   "devDependencies": {
