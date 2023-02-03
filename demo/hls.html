@@ -65,9 +65,12 @@
           }
           const textTracks = Array.from(video.textTracks);
           if (textTracks.length > 0) {
-            clearInterval(interval);
-            console.timeEnd('trackReady')
-            resolve();
+            const subtitles = textTracks.find(track => track.kind === 'captions' || track.kind === 'subtitles');
+            if (subtitles) {
+              clearInterval(interval);
+              console.timeEnd('trackReady')
+              resolve();
+            }
           }
         }, 2);
       });
@@ -90,18 +93,22 @@
             resolve();
           }
         }, 2);
-      });      
+      });
     }
 
     async function setCaptionReader(player) {
       await trackReady(player).catch(error => {
-        console.error('No Tracks', error);
+        console.error(error);
       });
       const tracks = player.textTracks;
       const track = Array.from(tracks).find(track => track.kind === 'subtitles');
+      if (!track) {
+        console.error('No subtitle track found.', {tracks});
+        return;
+      }
       track.mode = 'hidden';
       await cuesReady(track).catch(error => {
-        console.error('No Cues', error);
+        console.error(error);
       });
       component.textTrack = track;
       track.addEventListener('cuechange', (e) => {
@@ -134,6 +141,8 @@
       console.warn('There be issues.');
     }
 
+    // Using intervals to check for caption updates instead of play,
+    // so that 1 second cues show quicker.
     let pingInterval;
     const update = 100;
     player.addEventListener('play', () => {
