@@ -217,6 +217,16 @@ function sortCues(cues) {
     return 0;
   });
 }
+function removeDuplicateCues(cues) {
+  if (!cues)
+    return cues;
+  const deduplicatedCues = cues.filter((cue, index) => {
+    const _cue = JSON.stringify(cue);
+    const searchResultIndex = cues.findIndex((obj) => JSON.stringify(obj) === _cue);
+    return index === searchResultIndex;
+  });
+  return deduplicatedCues;
+}
 function parseVTT(contents, type) {
   const lines = contents.split("\n");
   const caption = {
@@ -745,6 +755,7 @@ var CaptionsViewer = class extends HTMLElement {
       return void 0;
     }
     captions.cues = parseSubTextCues(captions.cues);
+    captions.cues = removeDuplicateCues(captions.cues);
     captions.cues = addCueSpaces(captions.cues, this.#spacer);
     captions.cues = sortCues(captions.cues);
     this.#textTrack = textTrack;
@@ -956,10 +967,8 @@ var CaptionsViewer = class extends HTMLElement {
   async updateCues(textTrack) {
     if (!textTrack)
       return "";
-    if (!this.#captions || !this.#captions.cues)
-      return "";
-    const prevLength = this.#captions.cues.length;
-    if (textTrack.cues.length <= this.#captions.cues.length)
+    const prevLength = this.#captions.cues ? this.#captions.cues.length : 0;
+    if (textTrack.cues.length <= prevLength)
       return "";
     const newCaptions = await this.#parse(textTrack);
     this.#captions.cues = newCaptions.cues;
@@ -967,10 +976,14 @@ var CaptionsViewer = class extends HTMLElement {
     newCaptions.cues.splice(0, prevLength);
     let html = "";
     newCaptions.cues.forEach((cue, index) => {
-      html += this.#cueToHTML(cue, index, this.#disable);
+      html += this.#cueToHTML(cue, index + prevLength, this.#disable);
     });
     const contianer = this.#divs.root.querySelector("ol");
-    contianer.innerHTML += html;
+    if (contianer)
+      contianer.innerHTML += html;
+    if (!contianer) {
+      this.#divs.root.innerHTML = `<ol>${html}</ol>`;
+    }
     this.#updateCaptionStatus(this.#playhead);
     return html;
   }
