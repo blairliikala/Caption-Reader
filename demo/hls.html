@@ -51,94 +51,26 @@
     const component = document.querySelector('captions-viewer');
     const player = document.querySelector('video');
 
-    // function to check for when textTrack is ready.
-    const trackReady = (video) => {
-      console.time('trackReady')
-      let count = 0;
-      return new Promise((resolve, rejected) => {
-        const interval = setInterval(() => {
-          count += 1;
-          if (count > 1000) {
-            clearInterval(interval);
-            console.timeEnd('trackReady')
-            rejected('No tracks found in time.');
-          }
-          const textTracks = Array.from(video.textTracks);
-          if (textTracks.length > 0) {
-            const subtitles = textTracks.find(track => track.kind === 'captions' || track.kind === 'subtitles');
-            if (subtitles) {
-              clearInterval(interval);
-              console.timeEnd('trackReady')
-              resolve();
-            }
-          }
-        }, 2);
-      });
-    }
-
-    const cuesReady = (track) => {
-      console.time('cuesReady')
-      let count = 0;
-      return new Promise((resolve, rejected) => {
-        const interval = setInterval(() => {
-          count += 1;
-          if (count > 1000) {
-            clearInterval(interval);
-            console.timeEnd('cuesReady')
-            rejected('No cues found in time.');
-          }
-          if (track.cues && track.cues.length > 0) {
-            clearInterval(interval);
-            console.timeEnd('cuesReady')
-            resolve();
-          }
-        }, 2);
-      });
-    }
-
-    async function setCaptionReader(player) {
-      await trackReady(player).catch(error => {
-        console.error(error);
-      });
-      const tracks = player.textTracks;
-      const track = Array.from(tracks).find(track => track.kind === 'subtitles');
-      if (!track) {
-        console.error('No subtitle track found.', {tracks});
-        return;
-      }
-      track.mode = 'hidden';
-      await cuesReady(track).catch(error => {
-        console.error(error);
-      });
-      component.textTrack = track;
-      track.addEventListener('cuechange', (e) => {
-        component.updateCues(e.target);
-      });
-    }
-
     // const videoSrc = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'; // Bunny.
     // const videoSrc = 'http://stream.mux.com/qP5Eb2cj7MrNnoxBGz012pbZkMHqpIcrKMzd7ykGr01gM.m3u8' // Tears
     // const videoSrc = 'https://playertest.longtailvideo.com/adaptive/captions/playlist.m3u8'; // CNN
     const videoSrc = 'https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_adv_example_hevc/master.m3u8'; // beep boop.
-    // const videoSrc = 'https://stream.mux.com/qP5Eb2cj7MrNnoxBGz012pbZkMHqpIcrKMzd7ykGr01gM.m3u8';
     if (Hls.isSupported()) {
-      console.log('HLS is supported')
       const hls = new Hls();
       hls.loadSource(videoSrc);
       hls.attachMedia(player);
       hls.on(Hls.Events.MANIFEST_PARSED, (e) => {
         player.addEventListener('loadedmetadata', async (e) => {
-          setCaptionReader(player);
+          component.setTrack(player);
         })
       });
     } else if (player.canPlayType('application/vnd.apple.mpegurl')) {
-      console.log('HLS.js is not supported, HLS is native.');
       player.src = videoSrc;
       player.addEventListener('play', (e) => {
-        setCaptionReader(player);
+        component.setTrack(player, 'en');
       });
     } else {
-      console.warn('There be issues.');
+      console.warn('There be issues batman.');
     }
 
     // Using intervals to check for caption updates instead of play,
