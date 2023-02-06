@@ -143,15 +143,15 @@ export function sortCues(cues) {
 
 export function removeDuplicateCues(cues) {
   if (!cues) return cues;
-  const deduplicatedCues = cues.filter((cue, index) => {
+  const cuesDeduplicated = cues.filter((cue, index) => {
     const _cue = JSON.stringify(cue);
-    const searchResultIndex = cues.findIndex(obj => JSON.stringify(obj) === _cue);
+    const searchResultIndex = cues.findIndex(cueObj => JSON.stringify(cueObj) === _cue);
     return index === searchResultIndex;
   });
-  return deduplicatedCues;
+  return cuesDeduplicated;
 }
 
-// This is a simple parser to keep the size down.
+// This is a simple parser to keep the size down. Works with SRT and VTT.
 export function parseVTT(contents, type) {
   const lines = contents.split('\n');
 
