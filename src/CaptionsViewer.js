@@ -1,3 +1,10 @@
+/*
+  TODO
+  - Handling for tons of caption cues.
+    - Prune.  Method to prune x number of captions from the start, and refresh.
+    - load x captions at a time.
+*/
+
 /* eslint-disable grouped-accessor-pairs */
 /* eslint-disable lines-between-class-members */
 import Utilities from './utilities.js';
@@ -71,37 +78,16 @@ export class CaptionsViewer extends HTMLElement {
     this.#create({ changes: { name, oldValue, newValue } });
   }
 
-  set src(item) {
-    if (item) {
-      this.setAttribute('src', item);
-    } else {
-      this.removeAttribute('src');
-    }
-  }
-  set playhead(item) {
-    this.setAttribute('playhead', item);
-  }
   set debounce(item) {
+    if (typeof item !== 'number') {
+      console.warn('debounce must be a number.', item);
+      this.#event('error', 'debounce must be a number.');
+      return;
+    }
     if (item) {
       this.setAttribute('debounce', item);
     } else {
       this.removeAttribute('debounce');
-    }
-  }
-  set singleline(item) {
-    if (typeof item !== 'boolean') {
-      console.warn('singleline must be a boolean.', item);
-      this.#event('error', 'singleline must be a boolean.');
-      return;
-    }
-    this.setAttribute('singleline', item);
-  }
-  set disable(item) {
-    this.setAttribute('disable', item);
-    if (item) {
-      this.setAttribute('disable', item);
-    } else {
-      this.removeAttribute('disabled');
     }
   }
   set debounceScrolling(item) {
@@ -112,21 +98,26 @@ export class CaptionsViewer extends HTMLElement {
     }
     this.#debounceScrolling = item;
   }
-  set textTrack(item) {
-    this.#textTrack = item;
-    this.#create({ changes: { name: 'textTrack' } });
-  }
-  set spacer(item) {
-    // TODO needs validation.
-    this.#spacer = item;
-  }
-  set youtube(item) {
-    if (typeof item !== 'boolean') {
-      console.warn('youtube must be a boolean.', item);
-      this.#event('error', 'youtube must be a boolean.');
+  set disable(item) {
+    if (typeof item !== 'string') {
+      console.warn('Disable must be a string.', item);
+      this.#event('error', 'Disable must be a string.');
       return;
     }
-    this.#youtube = item;
+    this.setAttribute('disable', item);
+    if (item) {
+      this.setAttribute('disable', item);
+    } else {
+      this.removeAttribute('disabled');
+    }
+  }
+  set playhead(item) {
+    if (typeof item !== 'number') {
+      console.warn('playhead property must be a number.', item);
+      this.#event('error', 'playhead must be a number.');
+      return;
+    }
+    this.setAttribute('playhead', item);
   }
   set height(item) {
     if (typeof item !== 'string') {
@@ -137,58 +128,99 @@ export class CaptionsViewer extends HTMLElement {
     this.setAttribute('height', item);
   }
   set nudge(item) {
+    if (typeof item !== 'number') {
+      console.warn('nudge must be a number.', item);
+      this.#event('error', 'nudge must be a number');
+      return;
+    }
     this.#nudge = item;
   }
+  set singleline(item) {
+    if (typeof item !== 'boolean') {
+      console.warn('singleline must be a boolean.', item);
+      this.#event('error', 'singleline must be a boolean.');
+      return;
+    }
+    this.setAttribute('singleline', item);
+  }
+  set spacer(item) {
+    if (typeof item !== 'number') {
+      console.warn('spacer must be a number.', item);
+      this.#event('error', 'spacer must be a number.');
+      return;
+    }
+    this.#spacer = item;
+  }
+  set src(item) {
+    if (typeof item !== 'string') {
+      console.warn('src must be a string.', item);
+      this.#event('error', 'src must be a string.');
+      return;
+    }
+    if (item) {
+      this.setAttribute('src', item);
+    } else {
+      this.removeAttribute('src');
+    }
+  }
+  set textTrack(item) {
+    this.#textTrack = item;
+    this.#create({ changes: { name: 'textTrack' } });
+  }
+  set youtube(item) {
+    if (typeof item !== 'boolean') {
+      console.warn('youtube must be a boolean.', item);
+      this.#event('error', 'youtube must be a boolean.');
+      return;
+    }
+    this.#youtube = item;
+  }
 
-  get src() {
-    return this.#src;
-  }
-  get playhead() {
-    return this.#playhead;
-  }
   get captions() {
     return this.#captions;
   }
   get debounce() {
     return this.#debounce;
   }
-  get singleline() {
-    return this.#singleline;
-  }
-  get height() {
-    return this.#height;
-  }
-  get paused() {
-    return this.#paused;
-  }
   get disable() {
     return this.#disable;
-  }
-  get theme() {
-    return this.#theme;
-  }
-  get spacer() {
-    return this.#spacer;
-  }
-  get textTrack() {
-    return this.#textTrack;
-  }
-  get youtube() {
-    return this.#youtube;
   }
   get enableCSS() {
     return this.#enableCSS;
   }
+  get height() {
+    return this.#height;
+  }
   get nudge() {
     return this.#nudge;
+  }
+  get paused() {
+    return this.#paused;
+  }
+  get playhead() {
+    return this.#playhead;
+  }
+  get singleline() {
+    return this.#singleline;
+  }
+  get spacer() {
+    return this.#spacer;
+  }
+  get src() {
+    return this.#src;
+  }
+  get textTrack() {
+    return this.#textTrack;
+  }
+  get theme() {
+    return this.#theme;
+  }
+  get youtube() {
+    return this.#youtube;
   }
 
   connectedCallback() {
     this.#init();
-  }
-
-  disconnectedCallback() {
-
   }
 
   #init() {
@@ -206,7 +238,7 @@ export class CaptionsViewer extends HTMLElement {
     `;
 
     const html = template.content.cloneNode(true);
-    /* Apply using shadow DOM instead of made-up unknown element trick.
+    /* Apply using shadow DOM instead of made-up element trick.
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.appendChild(html);
 
@@ -246,7 +278,6 @@ export class CaptionsViewer extends HTMLElement {
     this.#enableCSS = this.getAttribute('stylesheet') || this.#enableCSS;
 
     if (!this.#src && !(this.#textTrack && 'id' in this.#textTrack)) {
-      console.debug('No text track');
       return;
     }
 
@@ -594,22 +625,60 @@ export class CaptionsViewer extends HTMLElement {
     }
     const videodiv = this.#divs.root.querySelector('#tempVid');
     // We have to wait till the cues are ready (foo async).
-    await CaptionsViewer.trackReady(videodiv);
+    const subtitleTrack = await CaptionsViewer.trackReady(videodiv).catch(e => console.warn(e));
+    await CaptionsViewer.cuesReady(subtitleTrack).catch(e => console.warn(e));
     return videodiv.textTracks[0];
   }
 
-  static trackReady(video) {
+  async setTrack(player, lang) {
+    const track = await CaptionsViewer.trackReady(player, lang).catch(e => undefined);
+    if (!track) {
+      return new Error('No subtitle track found.', player.textTracks);
+    }
+    track.mode = 'hidden';
+    await CaptionsViewer.cuesReady(track);
+    this.textTrack = track;
+    track.addEventListener('cuechange', e => {
+      this.updateCues(e.target);
+    });
+    return track;
+  }
+
+  static trackReady(video, lang) {
     let count = 0;
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       const interval = setInterval(() => {
         count += 1;
         if (count > 1000) {
           clearInterval(interval);
-          resolve();
+          reject(new Error('No tracks found in time.'));
         }
-        if (Array.from(video.textTracks[0].cues).length) {
+        const textTracks = Array.from(video.textTracks);
+        if (textTracks.length > 0) {
+          const subtitles = (lang)
+            ? textTracks.find(track => track.language === lang)
+            : textTracks.find(track => track.kind === 'captions' || track.kind === 'subtitles');
+          if (subtitles) {
+            clearInterval(interval);
+            resolve(subtitles);
+          }
+        }
+      }, 2);
+    });
+  }
+
+  static cuesReady(track) {
+    let count = 0;
+    return new Promise((resolve, reject) => {
+      const interval = setInterval(() => {
+        count += 1;
+        if (count > 1000) {
           clearInterval(interval);
-          resolve();
+          reject(new Error('No cues found in time.'));
+        }
+        if (track.cues && track.cues.length > 0) {
+          clearInterval(interval);
+          resolve(track.cues);
         }
       }, 2);
     });
