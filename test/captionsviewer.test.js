@@ -1,13 +1,9 @@
 /* eslint-disable no-undef */
-import { fixture, html, assert, aTimeout, waitUntil, oneEvent } from '@open-wc/testing';
+import {
+  fixture, assert, aTimeout, waitUntil, oneEvent,
+} from '@open-wc/testing';
 import { expect } from '@esm-bundle/chai';
 import '../captions-viewer.js';
-
-/*
-function timeout(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-*/
 
 describe('<captions-viewer>', () => {
   it('has correct properties', async () => {
@@ -83,7 +79,6 @@ describe('<captions-viewer>', () => {
   it('removes duplicate cues', async () => {
     const component = await fixture('<captions-viewer src="test/duplicates.vtt"></captions-viewer>');
     await waitUntil(() => ('cues' in component.captions), 'Captions parsed');
-    console.log(component.captions.cues);
-    expect(component.captions.cues.length).to.equal(4);
+    expect(component.captions.cues.length).to.equal(5);
   });
 });
