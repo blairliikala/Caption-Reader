@@ -169,5 +169,20 @@ export function defaultStyles() {
     background: hsla(var(--base), var(--gray-20-sat), var(--gray-20-light), var(--gray-50-opacity));
     box-shadow: none;
   }
+
+  .hidden {
+    display: none;
+  }
+  captions-viewer-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    color: rgba(100,100,100, .9)
+  }
   </style>`;
 }

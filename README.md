@@ -144,8 +144,21 @@ track.addEventListener('cuechange', (e) => {
 |  Name | Description |
 | - | - |
 | `parsed` | When the caption file has been parsed. |
-| `error` | Fired when an error occurs. Returns the text description of the error. |
-| `seek` | Fired when a click/select is made on a caption cue. Returns the start of that cue in seconds. |
+| `error` | Fires when an error occurs. Returns the text description of the error. |
+| `seek` | Fires when a click/select is made on a caption cue. Returns the start of that cue in seconds. |
+| `cuechange` | Fires when cues change.  Returns the internal cue object of the single active track, or the last one if there are multiple. `undefined` if no cue is active. |
+
+## No Captions
+
+To display a "no captions" message, add the custom element:
+
+```html
+<captions-viewer>
+  <captions-viewer-empty>
+    Your Custom Message
+  </captions-viewer-empty>
+</caption-viewer>
+```
 
 ## Complete Examples
 
@@ -179,7 +192,8 @@ Show captions for a video using the native caption tracy system, with a dynamic 
   color="300"
   theme="dark"
   disable="chapters"
->
+  >
+  <captions-viewer-empty></captions-viewer-empty>
 </captions-viewer>
 
 <script type="module" src="/dist/captions-viewer.js"></script>
@@ -235,7 +249,8 @@ hello<00:00:00.539><c> boys</c><00:00:00.719><c> and</c><00:00:00.750><c> girls<
   disable="chapters"
   debounce="1000"
   youtube="true"
->
+  >
+  <captions-viewer-empty></captions-viewer-empty>
 </captions-viewer>
 
 <script type="module" src="captions-viewer.js"></script>

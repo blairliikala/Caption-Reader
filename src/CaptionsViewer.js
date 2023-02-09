@@ -250,6 +250,7 @@ export class CaptionsViewer extends HTMLElement {
 
     this.#divs = {
       root: this.querySelector('#root'),
+      empty: this.querySelector('captions-viewer-empty'),
     };
 
     this.#divs.root.addEventListener('click', e => {
@@ -260,7 +261,6 @@ export class CaptionsViewer extends HTMLElement {
         this.#updateCaptionStatus(seconds + 0.2);
       }
     });
-
     this.#iniScrollingEvents();
     this.#create();
   }
@@ -278,6 +278,7 @@ export class CaptionsViewer extends HTMLElement {
     this.#enableCSS = this.getAttribute('stylesheet') || this.#enableCSS;
 
     if (!this.#src && !(this.#textTrack && 'id' in this.#textTrack)) {
+      this.#displayNoCaptions();
       return;
     }
 
@@ -300,12 +301,13 @@ export class CaptionsViewer extends HTMLElement {
     if (params?.changes.name === 'src' || params?.changes.name === 'textTrack') {
       this.#captions = await this.#parse(this.#textTrack, this.#src);
       if (!this.#captions || !this.#captions.cues) return;
-      this.#event('parsed', 'Caption file has been parsed.');
+      this.#event('parsed', 'Caption file has been parsed.', this.#captions);
       if (this.#youtube) this.#captions.cues = this.#youtubeAdjustments(this.#captions.cues);
       this.#setCuesStatus();
       this.#updateCaptionStatus(this.#playhead + 0.9);
     }
 
+    this.#removeNoCaptions();
     this.#divs.root.innerHTML = this.#renderAllCaptions(this.#captions);
   }
 
@@ -332,7 +334,7 @@ export class CaptionsViewer extends HTMLElement {
 
     if (!captions || !captions.cues) {
       console.error('Not able to find and render captions.', captions);
-      this.#divs.root.innerHTML = '<p class="empty">No captions.</p>';
+      this.#displayNoCaptions();
       return undefined;
     }
     captions.cues = parseSubTextCues(captions.cues);
@@ -424,6 +426,7 @@ export class CaptionsViewer extends HTMLElement {
     }
 
     this.#currentCue = activeIndex;
+    this.#event('cuechange', this.#captions.cues[this.#currentCue]);
 
     // Clear other Progress bar.
     const progressbars = this.#divs.root.querySelectorAll('[data-progress]');
@@ -565,6 +568,24 @@ export class CaptionsViewer extends HTMLElement {
     setTimeout(() => { this.#isAutoScroll = false; }, 1000);
   }
 
+  #displayNoCaptions() {
+    this.#divs.root.classList.add('hidden');
+    if (!this.#divs.empty) {
+      this.#divs.root.innerHTML = '';
+      return;
+    }
+    if (this.#divs.empty.innerHTML === '') {
+      this.#divs.empty.innerHTML = 'No captions.';
+      return;
+    }
+
+    this.#divs.empty.classList.remove('hidden');
+  }
+
+  #removeNoCaptions() {
+    this.#divs.empty.classList.add('hidden');
+  }
+
   pause() {
     this.#paused = !this.#paused;
   }
@@ -631,7 +652,7 @@ export class CaptionsViewer extends HTMLElement {
   }
 
   async setTrack(player, lang) {
-    const track = await CaptionsViewer.trackReady(player, lang).catch(e => undefined);
+    const track = await CaptionsViewer.trackReady(player, lang).catch(() => undefined);
     if (!track) {
       return new Error('No subtitle track found.', player.textTracks);
     }

@@ -25,6 +25,36 @@ describe('<captions-viewer>', () => {
     // assert.equal(component.enableCSS, true, 'default stylesheet is set');
   });
 
+  it('src changes', async () => {
+    const component = await fixture('<captions-viewer src="test/dune_en.vtt"></captions-viewer>');
+    component.src = 'test/duplicates.vtt';
+    expect(component.src).to.equal('test/duplicates.vtt');
+    component.src = 'failed';
+    expect(component.src).to.equal('failed');
+    expect(component.querySelector('captionselement').innerHTML).to.contain('something happenin');
+  });
+  it('height changes', async () => {
+    const component = await fixture('<captions-viewer height="100vw" src="test/dune_en.vtt"></captions-viewer>');
+    expect(component.height).to.equal('100vw');
+    expect(component.querySelector('captionselement').style.height).to.equal('100vw');
+    component.height = '200vw';
+    expect(component.height).to.equal('200vw');
+    expect(component.querySelector('captionselement').style.height).to.equal('200vw');
+  });
+
+  it('sets custom captions message', async () => {
+    const component = await fixture('<captions-viewer><captions-viewer-empty>EmptyCaptions</captions-viewer-empty></captions-viewer>');
+    expect(component.querySelector('captions-viewer-empty').innerHTML).to.equal('EmptyCaptions');
+  });
+  it('sets default captions message', async () => {
+    const component = await fixture('<captions-viewer><captions-viewer-empty></captions-viewer-empty></captions-viewer>');
+    expect(component.querySelector('captions-viewer-empty').innerHTML).to.equal('No captions.');
+  });
+  it('sets empty message when there are no captions, and no custom element.', async () => {
+    const component = await fixture('<captions-viewer></captions-viewer>');
+    expect(component.querySelector('captions-viewer-empty')).to.equal(null);
+  });
+
   it('parsed the dune vtt correctly', async () => {
     const component = await fixture(`<captions-viewer
         src="test/dune_en.vtt"
