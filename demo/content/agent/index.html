@@ -8,7 +8,7 @@
   <link href="/demo/demo.css" rel="stylesheet" type="text/css">
   <script type="module" src="/captions-viewer.js"></script>
   <script defer src="/_vercel/insights/script.js"></script>
-  
+
   <style>
     /* Hides the component until it has loaded */
     captions-viewer:not(:defined) {
@@ -39,13 +39,14 @@
       <track label="French" kind="subtitles" srclang="fr" src="content/agent/agent_fr.vtt" />
       <track label="German" kind="subtitles" srclang="de" src="content/agent/agent_fr.vtt" />
     </video>
-    
+
     <captions-viewer
       src="/demo/content/agent/agent_en.vtt"
       height="30vw"
       color="300"
       theme="dark"
     >
+      <captions-viewer-empty></captions-viewer-empty>
     </captions-viewer>
 
     <button id="pause" type="button" title="Turns the UI updates on/off">Toggle Caption Reading</button>
@@ -95,12 +96,12 @@
     };
 
     /****** Optional *****/
+
     document.querySelector('#pause').addEventListener('click', () => {
       component.pause();
     });
 
     document.querySelector('#lang_change').addEventListener('click', e => {
-      console.log('Changing Languages.')
       const file = e.target.value;
       if (file) component.src = file;
     });

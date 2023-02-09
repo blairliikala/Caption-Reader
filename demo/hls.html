@@ -41,6 +41,7 @@
       disable="chapters"
       debounce="1000"
     >
+      <captions-viewer-empty></captions-viewer-empty>
     </captions-viewer>
 
     <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
@@ -59,14 +60,14 @@
       const hls = new Hls();
       hls.loadSource(videoSrc);
       hls.attachMedia(player);
-      hls.on(Hls.Events.MANIFEST_PARSED, (e) => {
-        player.addEventListener('loadedmetadata', async (e) => {
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        player.addEventListener('loadedmetadata', async () => {
           component.setTrack(player);
-        })
+        });
       });
     } else if (player.canPlayType('application/vnd.apple.mpegurl')) {
       player.src = videoSrc;
-      player.addEventListener('play', (e) => {
+      player.addEventListener('play', () => {
         component.setTrack(player, 'en');
       });
     } else {
@@ -81,11 +82,11 @@
       component.playhead = player.currentTime;
       pingInterval = setInterval(() => {
         component.playhead = player.currentTime;
-      })
+      });
     }, update);
     player.addEventListener('pause', () => {
       clearInterval(pingInterval);
-    })
+    });
 
     // On click, Seek's player to caption location.
     component.addEventListener('seek', e => {
@@ -97,10 +98,9 @@
       component.debounceScrolling = false;
     };
 
-    component.addEventListener('all', (e) => {
+    component.addEventListener('all', e => {
       console.log(e.detail);
-    })
-
+    });
   </script>
 
 </body>

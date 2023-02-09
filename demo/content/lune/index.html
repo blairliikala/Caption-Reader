@@ -53,6 +53,7 @@
       disable="timecode|chapters"
       theme="dark"
     >
+      <captions-viewer-empty></captions-viewer-empty>
     </captions-viewer>
 
     <article class="info">
@@ -73,24 +74,24 @@
         width: '100%',
         videoId: 'xtLCZ2_-Beg',
         playerVars: {
-          'playsinline': 1
+          playsinline: 1,
         },
         events: {
-          'onStateChange': onPlayerStateChange
-        }
+          onStateChange: onPlayerStateChange,
+        },
       });
     }
 
     // While playing, update the component with the current time.
     // The faster 50ms is to make sure the sub cues are showing on time.
     let pingInterval;
-    let playheadUpdate = 100;
+    const playheadUpdate = 100;
     function onPlayerStateChange(event) {
-      if (event.data == YT.PlayerState.PLAYING) {
-        component.playhead = player.getCurrentTime()
+      if (event.data === YT.PlayerState.PLAYING) {
+        component.playhead = player.getCurrentTime();
         pingInterval = setInterval(() => {
           component.playhead = player.getCurrentTime();
-        }, playheadUpdate)
+        }, playheadUpdate);
       } else {
         clearInterval(pingInterval);
       }

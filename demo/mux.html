@@ -43,7 +43,13 @@
       prefer-playback="mse"
     ></mux-player>
 
-    <captions-viewer theme="dark" disable="chapters" nudge="0"></captions-viewer>
+    <captions-viewer
+      theme="dark"
+      disable="chapters" 
+      nudge="0"
+      >
+      <captions-viewer-empty></captions-viewer-empty>
+    </captions-viewer>
 
     <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
   </main>
@@ -53,14 +59,14 @@
     const player = document.querySelector('mux-player');
     let hasPlayed = false;
 
-    const cuesReady = (track) => {
+    const cuesReady = track => {
       let count = 0;
       return new Promise((resolve, rejected) => {
         const interval = setInterval(() => {
           count += 1;
           if (count > 1000) {
             clearInterval(interval);
-            rejected('No cues found in time.');
+            rejected(new Error('No cues found in time.'));
           }
           if (track.cues && track.cues.length > 0) {
             clearInterval(interval);
@@ -70,11 +76,11 @@
       });
     }
 
-    player.media.addEventListener('loadedmetadata', async (e) => {
+    player.media.addEventListener('loadedmetadata', async () => {
       const tracks = player.media.textTracks;
-      const track = Array.from(tracks).find(track => track.kind === 'subtitles' || track.kind === 'captions');
+      const track = Array.from(tracks).find(t => t.kind === 'subtitles' || t.kind === 'captions');
       if (!track) {
-        console.error('No subtitle track found.', {track}, {tracks});
+        console.error('No subtitle track found.', { track }, { tracks });
         return;
       }
       track.mode = 'hidden';
@@ -89,10 +95,10 @@
     player.media.addEventListener('play', async () => {
       hasPlayed = true;
       const tracks = player.textTracks;
-      tracks.addEventListener('addtrack', (e) => {
-        const track = Array.from(tracks).find(track => track.kind === 'subtitles' || track.kind === 'captions');
+      tracks.addEventListener('addtrack', () => {
+        const track = Array.from(tracks).find(t => t.kind === 'subtitles' || t.kind === 'captions');
         if (!track) {
-          console.error('No subtitle track found.', {track}, {tracks});
+          console.error('No subtitle track found.', { track }, { tracks });
           return;
         }
         track.mode = 'hidden';
@@ -105,18 +111,17 @@
 
     // Updates the captions.
     let pingInterval;
-    let playheadUpdate = 100;
+    const playheadUpdate = 100;
     const updateCaptions = () => {
       component.playhead = player.currentTime;
-    }
+    };
     player.onplay = () => {
       updateCaptions();
       pingInterval = setInterval(updateCaptions, playheadUpdate);
-    }
+    };
     player.onpause = () => {
       clearInterval(pingInterval);
-    }
-
+    };
 
     // On click, Seek's player to caption location.
     component.addEventListener('seek', e => {
