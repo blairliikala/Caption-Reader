@@ -220,12 +220,12 @@ function sortCues(cues) {
 function removeDuplicateCues(cues) {
   if (!cues)
     return cues;
-  const deduplicatedCues = cues.filter((cue, index) => {
+  const cuesDeduplicated = cues.filter((cue, index) => {
     const _cue = JSON.stringify(cue);
-    const searchResultIndex = cues.findIndex((obj) => JSON.stringify(obj) === _cue);
+    const searchResultIndex = cues.findIndex((cueObj) => JSON.stringify(cueObj) === _cue);
     return index === searchResultIndex;
   });
-  return deduplicatedCues;
+  return cuesDeduplicated;
 }
 function parseVTT(contents, type) {
   const lines = contents.split("\n");
@@ -480,6 +480,21 @@ function defaultStyles() {
     background: hsla(var(--base), var(--gray-20-sat), var(--gray-20-light), var(--gray-50-opacity));
     box-shadow: none;
   }
+
+  .hidden {
+    display: none;
+  }
+  captions-viewer-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    color: rgba(100,100,100, .9)
+  }
   </style>`;
 }
 
@@ -553,37 +568,16 @@ var CaptionsViewer = class extends HTMLElement {
     }
     this.#create({ changes: { name, oldValue, newValue } });
   }
-  set src(item) {
-    if (item) {
-      this.setAttribute("src", item);
-    } else {
-      this.removeAttribute("src");
-    }
-  }
-  set playhead(item) {
-    this.setAttribute("playhead", item);
-  }
   set debounce(item) {
+    if (typeof item !== "number") {
+      console.warn("debounce must be a number.", item);
+      this.#event("error", "debounce must be a number.");
+      return;
+    }
     if (item) {
       this.setAttribute("debounce", item);
     } else {
       this.removeAttribute("debounce");
-    }
-  }
-  set singleline(item) {
-    if (typeof item !== "boolean") {
-      console.warn("singleline must be a boolean.", item);
-      this.#event("error", "singleline must be a boolean.");
-      return;
-    }
-    this.setAttribute("singleline", item);
-  }
-  set disable(item) {
-    this.setAttribute("disable", item);
-    if (item) {
-      this.setAttribute("disable", item);
-    } else {
-      this.removeAttribute("disabled");
     }
   }
   set debounceScrolling(item) {
@@ -594,20 +588,26 @@ var CaptionsViewer = class extends HTMLElement {
     }
     this.#debounceScrolling = item;
   }
-  set textTrack(item) {
-    this.#textTrack = item;
-    this.#create({ changes: { name: "textTrack" } });
-  }
-  set spacer(item) {
-    this.#spacer = item;
-  }
-  set youtube(item) {
-    if (typeof item !== "boolean") {
-      console.warn("youtube must be a boolean.", item);
-      this.#event("error", "youtube must be a boolean.");
+  set disable(item) {
+    if (typeof item !== "string") {
+      console.warn("Disable must be a string.", item);
+      this.#event("error", "Disable must be a string.");
       return;
     }
-    this.#youtube = item;
+    this.setAttribute("disable", item);
+    if (item) {
+      this.setAttribute("disable", item);
+    } else {
+      this.removeAttribute("disabled");
+    }
+  }
+  set playhead(item) {
+    if (typeof item !== "number") {
+      console.warn("playhead property must be a number.", item);
+      this.#event("error", "playhead must be a number.");
+      return;
+    }
+    this.setAttribute("playhead", item);
   }
   set height(item) {
     if (typeof item !== "string") {
@@ -618,13 +618,52 @@ var CaptionsViewer = class extends HTMLElement {
     this.setAttribute("height", item);
   }
   set nudge(item) {
+    if (typeof item !== "number") {
+      console.warn("nudge must be a number.", item);
+      this.#event("error", "nudge must be a number");
+      return;
+    }
     this.#nudge = item;
   }
-  get src() {
-    return this.#src;
+  set singleline(item) {
+    if (typeof item !== "boolean") {
+      console.warn("singleline must be a boolean.", item);
+      this.#event("error", "singleline must be a boolean.");
+      return;
+    }
+    this.setAttribute("singleline", item);
   }
-  get playhead() {
-    return this.#playhead;
+  set spacer(item) {
+    if (typeof item !== "number") {
+      console.warn("spacer must be a number.", item);
+      this.#event("error", "spacer must be a number.");
+      return;
+    }
+    this.#spacer = item;
+  }
+  set src(item) {
+    if (typeof item !== "string") {
+      console.warn("src must be a string.", item);
+      this.#event("error", "src must be a string.");
+      return;
+    }
+    if (item) {
+      this.setAttribute("src", item);
+    } else {
+      this.removeAttribute("src");
+    }
+  }
+  set textTrack(item) {
+    this.#textTrack = item;
+    this.#create({ changes: { name: "textTrack" } });
+  }
+  set youtube(item) {
+    if (typeof item !== "boolean") {
+      console.warn("youtube must be a boolean.", item);
+      this.#event("error", "youtube must be a boolean.");
+      return;
+    }
+    this.#youtube = item;
   }
   get captions() {
     return this.#captions;
@@ -632,40 +671,44 @@ var CaptionsViewer = class extends HTMLElement {
   get debounce() {
     return this.#debounce;
   }
-  get singleline() {
-    return this.#singleline;
-  }
-  get height() {
-    return this.#height;
-  }
-  get paused() {
-    return this.#paused;
-  }
   get disable() {
     return this.#disable;
-  }
-  get theme() {
-    return this.#theme;
-  }
-  get spacer() {
-    return this.#spacer;
-  }
-  get textTrack() {
-    return this.#textTrack;
-  }
-  get youtube() {
-    return this.#youtube;
   }
   get enableCSS() {
     return this.#enableCSS;
   }
+  get height() {
+    return this.#height;
+  }
   get nudge() {
     return this.#nudge;
   }
+  get paused() {
+    return this.#paused;
+  }
+  get playhead() {
+    return this.#playhead;
+  }
+  get singleline() {
+    return this.#singleline;
+  }
+  get spacer() {
+    return this.#spacer;
+  }
+  get src() {
+    return this.#src;
+  }
+  get textTrack() {
+    return this.#textTrack;
+  }
+  get theme() {
+    return this.#theme;
+  }
+  get youtube() {
+    return this.#youtube;
+  }
   connectedCallback() {
     this.#init();
-  }
-  disconnectedCallback() {
   }
   #init() {
     if (this.#isInit) {
@@ -681,7 +724,8 @@ var CaptionsViewer = class extends HTMLElement {
     const html = template.content.cloneNode(true);
     this.appendChild(html);
     this.#divs = {
-      root: this.querySelector("#root")
+      root: this.querySelector("#root"),
+      empty: this.querySelector("captions-viewer-empty")
     };
     this.#divs.root.addEventListener("click", (e) => {
       const div = e.composedPath()[0].closest("button");
@@ -706,7 +750,7 @@ var CaptionsViewer = class extends HTMLElement {
     this.#youtube = this.getAttribute("youtube") === "true" || this.getAttribute("youtube") === true || this.#youtube;
     this.#enableCSS = this.getAttribute("stylesheet") || this.#enableCSS;
     if (!this.#src && !(this.#textTrack && "id" in this.#textTrack)) {
-      console.debug("No text track");
+      this.#displayNoCaptions();
       return;
     }
     if (this.#enableCSS === "false" || this.#enableCSS === false) {
@@ -726,12 +770,13 @@ var CaptionsViewer = class extends HTMLElement {
       this.#captions = await this.#parse(this.#textTrack, this.#src);
       if (!this.#captions || !this.#captions.cues)
         return;
-      this.#event("parsed", "Caption file has been parsed.");
+      this.#event("parsed", "Caption file has been parsed.", this.#captions);
       if (this.#youtube)
         this.#captions.cues = this.#youtubeAdjustments(this.#captions.cues);
       this.#setCuesStatus();
       this.#updateCaptionStatus(this.#playhead + 0.9);
     }
+    this.#removeNoCaptions();
     this.#divs.root.innerHTML = this.#renderAllCaptions(this.#captions);
   }
   async #parse(TEXTTRACK, SRC) {
@@ -751,7 +796,7 @@ var CaptionsViewer = class extends HTMLElement {
     }
     if (!captions || !captions.cues) {
       console.error("Not able to find and render captions.", captions);
-      this.#divs.root.innerHTML = '<p class="empty">No captions.</p>';
+      this.#displayNoCaptions();
       return void 0;
     }
     captions.cues = parseSubTextCues(captions.cues);
@@ -831,6 +876,7 @@ var CaptionsViewer = class extends HTMLElement {
       return;
     }
     this.#currentCue = activeIndex;
+    this.#event("cuechange", this.#captions.cues[this.#currentCue]);
     const progressbars = this.#divs.root.querySelectorAll("[data-progress]");
     if (progressbars) {
       [...progressbars].forEach((bar) => {
@@ -955,6 +1001,21 @@ var CaptionsViewer = class extends HTMLElement {
       this.#isAutoScroll = false;
     }, 1e3);
   }
+  #displayNoCaptions() {
+    this.#divs.root.classList.add("hidden");
+    if (!this.#divs.empty) {
+      this.#divs.root.innerHTML = "";
+      return;
+    }
+    if (this.#divs.empty.innerHTML === "") {
+      this.#divs.empty.innerHTML = "No captions.";
+      return;
+    }
+    this.#divs.empty.classList.remove("hidden");
+  }
+  #removeNoCaptions() {
+    this.#divs.empty.classList.add("hidden");
+  }
   pause() {
     this.#paused = !this.#paused;
   }
@@ -1004,21 +1065,55 @@ var CaptionsViewer = class extends HTMLElement {
       this.#divs.root.appendChild(video);
     }
     const videodiv = this.#divs.root.querySelector("#tempVid");
-    await CaptionsViewer.trackReady(videodiv);
+    const subtitleTrack = await CaptionsViewer.trackReady(videodiv).catch((e) => console.warn(e));
+    await CaptionsViewer.cuesReady(subtitleTrack).catch((e) => console.warn(e));
     return videodiv.textTracks[0];
   }
-  static trackReady(video) {
+  async setTrack(player, lang) {
+    const track = await CaptionsViewer.trackReady(player, lang).catch(() => void 0);
+    if (!track) {
+      return new Error("No subtitle track found.", player.textTracks);
+    }
+    track.mode = "hidden";
+    await CaptionsViewer.cuesReady(track);
+    this.textTrack = track;
+    track.addEventListener("cuechange", (e) => {
+      this.updateCues(e.target);
+    });
+    return track;
+  }
+  static trackReady(video, lang) {
     let count = 0;
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const interval = setInterval(() => {
         count += 1;
         if (count > 1e3) {
           clearInterval(interval);
-          resolve();
+          reject(new Error("No tracks found in time."));
         }
-        if (Array.from(video.textTracks[0].cues).length) {
+        const textTracks = Array.from(video.textTracks);
+        if (textTracks.length > 0) {
+          const subtitles = lang ? textTracks.find((track) => track.language === lang) : textTracks.find((track) => track.kind === "captions" || track.kind === "subtitles");
+          if (subtitles) {
+            clearInterval(interval);
+            resolve(subtitles);
+          }
+        }
+      }, 2);
+    });
+  }
+  static cuesReady(track) {
+    let count = 0;
+    return new Promise((resolve, reject) => {
+      const interval = setInterval(() => {
+        count += 1;
+        if (count > 1e3) {
           clearInterval(interval);
-          resolve();
+          reject(new Error("No cues found in time."));
+        }
+        if (track.cues && track.cues.length > 0) {
+          clearInterval(interval);
+          resolve(track.cues);
         }
       }, 2);
     });
