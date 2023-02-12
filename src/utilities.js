@@ -17,11 +17,6 @@ export default class Utilities {
     return (hours * 3600) + (minutes * 60) + seconds + (mili[1] / 1000);
   }
 
-  // Credit: Chat GPT
-  static isValidJSON(input) {
-    return /^[\],:{}\s]*$/.test(input.replace(/\\["\\/bfnrtu]/g, '@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?/g, ']').replace(/(?:^|:|,)(?:\s*\[)+/g, ''));
-  }
-
   static isTimecode(input) {
     const regex = /^[0-9][0-9]/;
     return regex.test(input);
@@ -79,16 +74,10 @@ export default class Utilities {
     return supported.find(ext => ext === extension);
   }
 
-  // Remove: my text as<00:02:56.080><c> ids</c><00:02:56.640><c> or</c>
-  /*
-  static removeExtraTimecode(cues) {
-    if (!cues) return cues;
-    return cues.map(cue => {
-      cue.text.forEach((line, index) => {
-        cue.text[index] = line.replace(/<.*?>/g, '');
-      });
-      return cue;
-    });
+  static isElementInViewport(el, container) {
+    const rect = el.getBoundingClientRect();
+    const parent = el.closest(container);
+    const parentRect = parent.getBoundingClientRect();
+    return (rect.bottom <= parentRect.bottom);
   }
-  */
 }
