@@ -1,5 +1,4 @@
 /* eslint-disable brace-style */ // I think its more readable for this here.
-
 import util from './utilities.js';
 
 function parseSubTextCue(text, startSec) {
