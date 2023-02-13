@@ -3,20 +3,25 @@
   - Handling for tons of caption cues.
     - Prune.  Method to prune x number of captions from the start, and refresh.
     - load x captions at a time.
+  - Split HTML into file?
+  - Migrate from data properties for speed.
 */
 
-/* eslint-disable grouped-accessor-pairs */
 /* eslint-disable lines-between-class-members */
-import Utilities from './utilities.js';
+import { parseVTT, parseTextTrack } from './utilities/parsers.js';
 import {
-  parseVTT,
+  prettyTimecode,
+  getTheme,
+  getSupportedFileType,
+  isElementInViewport,
+} from './utilities/utilities.js';
+import {
   parseSubTextCues,
-  parseTextTrack,
   addCueSpaces,
   sortCues,
   removeDuplicateCues,
-} from './parsers.js';
-import { defaultStyles } from './defautStylesheet.js';
+} from './utilities/cues.js';
+import { defaultStyles } from './themes/stylesheet.js';
 
 export class CaptionsViewer extends HTMLElement {
   #isInit = false;
@@ -63,12 +68,13 @@ export class CaptionsViewer extends HTMLElement {
       'color',
       'disable',
       'spacer',
+      'enableCSS',
     ];
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (name === 'playhead') {
-      this.#updateCaptionStatus(newValue);
+      this.#update(newValue);
       return;
     }
     if (name === 'debounce') {
@@ -78,9 +84,16 @@ export class CaptionsViewer extends HTMLElement {
     this.#create({ changes: { name, oldValue, newValue } });
   }
 
+  get captions() {
+    return this.#captions;
+  }
+
+  get debounce() {
+    return this.#debounce;
+  }
+
   set debounce(item) {
     if (typeof item !== 'number') {
-      console.warn('debounce must be a number.', item);
       this.#event('error', 'debounce must be a number.');
       return;
     }
@@ -90,17 +103,25 @@ export class CaptionsViewer extends HTMLElement {
       this.removeAttribute('debounce');
     }
   }
+
+  get debounceScrolling() {
+    return this.#debounceScrolling;
+  }
+
   set debounceScrolling(item) {
     if (typeof item !== 'boolean') {
-      console.warn('debounceScrolling must be a boolean.', item);
       this.#event('error', 'debounceScrolling must be a boolean.');
       return;
     }
     this.#debounceScrolling = item;
   }
+
+  get disable() {
+    return this.#disable;
+  }
+
   set disable(item) {
     if (typeof item !== 'string') {
-      console.warn('Disable must be a string.', item);
       this.#event('error', 'Disable must be a string.');
       return;
     }
@@ -111,49 +132,93 @@ export class CaptionsViewer extends HTMLElement {
       this.removeAttribute('disabled');
     }
   }
-  set playhead(item) {
-    if (typeof item !== 'number') {
-      console.warn('playhead property must be a number.', item);
-      this.#event('error', 'playhead must be a number.');
+
+  get enableCSS() {
+    return this.#enableCSS;
+  }
+
+  set enableCSS(item) {
+    if (typeof item !== 'boolean') {
+      this.#event('error', 'enableCSS must be a boolean.');
       return;
     }
-    this.setAttribute('playhead', item);
+    this.#enableCSS = item;
   }
+
+  get height() {
+    return this.#height;
+  }
+
   set height(item) {
     if (typeof item !== 'string') {
-      console.warn('height must be a string with a unit value.', item);
       this.#event('error', 'height must be a string with a unit value.');
       return;
     }
     this.setAttribute('height', item);
   }
+
+  get nudge() {
+    return this.#nudge;
+  }
+
   set nudge(item) {
     if (typeof item !== 'number') {
-      console.warn('nudge must be a number.', item);
       this.#event('error', 'nudge must be a number');
       return;
     }
     this.#nudge = item;
   }
+
+  get paused() {
+    return this.#paused;
+  }
+
+  set paused(item) {
+    this.passed(item);
+  }
+
+  get singleline() {
+    return this.#singleline;
+  }
+
   set singleline(item) {
     if (typeof item !== 'boolean') {
-      console.warn('singleline must be a boolean.', item);
       this.#event('error', 'singleline must be a boolean.');
       return;
     }
     this.setAttribute('singleline', item);
   }
+
+  get playhead() {
+    return this.#playhead;
+  }
+
+  set playhead(item) {
+    if (typeof item !== 'number') {
+      this.#event('error', 'playhead must be a number.');
+      return;
+    }
+    this.setAttribute('playhead', item);
+  }
+
+  get spacer() {
+    return this.#spacer;
+  }
+
   set spacer(item) {
     if (typeof item !== 'number') {
-      console.warn('spacer must be a number.', item);
       this.#event('error', 'spacer must be a number.');
       return;
     }
     this.#spacer = item;
   }
+
+  get src() {
+    return this.#src;
+  }
+
   set src(item) {
     if (typeof item !== 'string') {
-      console.warn('src must be a string.', item);
       this.#event('error', 'src must be a string.');
       return;
     }
@@ -163,60 +228,34 @@ export class CaptionsViewer extends HTMLElement {
       this.removeAttribute('src');
     }
   }
+
+  get textTrack() {
+    return this.#textTrack;
+  }
+
   set textTrack(item) {
     this.#textTrack = item;
     this.#create({ changes: { name: 'textTrack' } });
   }
+
+  get theme() {
+    return this.#theme;
+  }
+
+  set theme(item) {
+    this.setTheme(item);
+  }
+
+  get youtube() {
+    return this.#youtube;
+  }
+
   set youtube(item) {
     if (typeof item !== 'boolean') {
-      console.warn('youtube must be a boolean.', item);
       this.#event('error', 'youtube must be a boolean.');
       return;
     }
     this.#youtube = item;
-  }
-
-  get captions() {
-    return this.#captions;
-  }
-  get debounce() {
-    return this.#debounce;
-  }
-  get disable() {
-    return this.#disable;
-  }
-  get enableCSS() {
-    return this.#enableCSS;
-  }
-  get height() {
-    return this.#height;
-  }
-  get nudge() {
-    return this.#nudge;
-  }
-  get paused() {
-    return this.#paused;
-  }
-  get playhead() {
-    return this.#playhead;
-  }
-  get singleline() {
-    return this.#singleline;
-  }
-  get spacer() {
-    return this.#spacer;
-  }
-  get src() {
-    return this.#src;
-  }
-  get textTrack() {
-    return this.#textTrack;
-  }
-  get theme() {
-    return this.#theme;
-  }
-  get youtube() {
-    return this.#youtube;
   }
 
   connectedCallback() {
@@ -258,10 +297,10 @@ export class CaptionsViewer extends HTMLElement {
       if (div && 'localName' in div && div.localName === 'button') {
         const seconds = div.dataset.start;
         this.#event('seek', seconds);
-        this.#updateCaptionStatus(seconds + 0.2);
+        this.#update(seconds + 0.2);
       }
     });
-    this.#iniScrollingEvents();
+    this.#setScrollingEvents();
     this.#create();
   }
 
@@ -304,7 +343,7 @@ export class CaptionsViewer extends HTMLElement {
       this.#event('parsed', 'Caption file has been parsed.', this.#captions);
       if (this.#youtube) this.#captions.cues = this.#youtubeAdjustments(this.#captions.cues);
       this.#setCuesStatus();
-      this.#updateCaptionStatus(this.#playhead + 0.9);
+      this.#update(this.#playhead + 0.9);
     }
 
     this.#removeNoCaptions();
@@ -316,7 +355,7 @@ export class CaptionsViewer extends HTMLElement {
     let textTrack = TEXTTRACK;
 
     // Send file through native browser parser.
-    if (SRC && Utilities.getSupportedFileType(SRC) === 'vtt') {
+    if (SRC && getSupportedFileType(SRC) === 'vtt') {
       textTrack = await this.#renderCaptionSrc(SRC);
     }
 
@@ -327,16 +366,18 @@ export class CaptionsViewer extends HTMLElement {
 
     // Both failed, use the fallback src parser, mostly for SRT.
     if (SRC && (!captions || !captions.cues)) {
-      const srcContents = await fetch(SRC).then(res => res.text());
-      const type = Utilities.getSupportedFileType(SRC);
-      if (srcContents) captions = parseVTT(srcContents, type);
+      const srcText = await fetch(SRC).then(res => res.text());
+      const type = getSupportedFileType(SRC);
+      if (srcText) captions = parseVTT(srcText, type);
     }
 
     if (!captions || !captions.cues) {
-      console.error('Not able to find and render captions.', captions);
+      // console.error('Not able to find and render captions.', captions);
       this.#displayNoCaptions();
-      return undefined;
+      return null;
     }
+
+    // captions.cues = pruneCues(captions.cues, 200); // TODO does not work yet.
     captions.cues = parseSubTextCues(captions.cues);
     captions.cues = removeDuplicateCues(captions.cues);
     captions.cues = addCueSpaces(captions.cues, this.#spacer);
@@ -346,7 +387,7 @@ export class CaptionsViewer extends HTMLElement {
     return captions;
   }
 
-  #iniScrollingEvents() {
+  #setScrollingEvents() {
     let isTouch = false;
     let timeout;
     const addScrollStyle = () => {
@@ -394,7 +435,7 @@ export class CaptionsViewer extends HTMLElement {
     }, 1000);
   }
 
-  #updateCaptionStatus(playhead) {
+  #update(playhead) {
     if (this.#paused) return;
     this.#playhead = playhead;
     if (!this.#captions || !this.#captions.cues) return;
@@ -432,6 +473,7 @@ export class CaptionsViewer extends HTMLElement {
     const progressbars = this.#divs.root.querySelectorAll('[data-progress]');
     if (progressbars) {
       [...progressbars].forEach(bar => {
+        if (bar.value === 0) return;
         const newBar = bar;
         newBar.value = 0;
       });
@@ -442,19 +484,12 @@ export class CaptionsViewer extends HTMLElement {
       const elms = this.#divs.root.querySelectorAll('[data-index]');
       const elm = elms[this.#currentCue];
       if (elm) {
-        if (!CaptionsViewer.isElementInViewport(elm, 'captionselement')) this.#debounceScrolling = false;
+        if (!isElementInViewport(elm, 'captionselement')) this.#debounceScrolling = false;
       }
     }
 
-    this.#updateCaption();
+    this.#updateCaptionClasses();
     this.#scrollToCue();
-  }
-
-  static isElementInViewport(el, container) {
-    const rect = el.getBoundingClientRect();
-    const parent = el.closest(container);
-    const parentRect = parent.getBoundingClientRect();
-    return (rect.bottom <= parentRect.bottom);
   }
 
   #renderAllCaptions(captions) {
@@ -471,7 +506,7 @@ export class CaptionsViewer extends HTMLElement {
   #cueToHTML(cue, index, disabled) {
     if (!cue.timecode) return '';
     const styleName = cue.status || '';
-    const timecode = `<span class="timecode">${Utilities.prettyTimecode(cue.timecode.start)}</span>`;
+    const timecode = `<span class="timecode">${prettyTimecode(cue.timecode.start)}</span>`;
     const chapter = cue.chapter ? `<span class="chapter">${cue.chapter}</span>` : '';
     const textJoiner = this.#singleline ? ' ' : '<br />';
 
@@ -495,11 +530,22 @@ export class CaptionsViewer extends HTMLElement {
         data-start="${cue.seconds.start}"
         class="cue ${styleName} ${cue.type || ''}"
         data-index="${index}"
+        style="animation-duration: ${Math.round(cue.seconds.end - cue.seconds.start)}s"
       >${!disabled.includes('timecode') && cue.type !== 'spacer' ? timecode : ''} ${!disabled.includes('chapters') ? chapter : ''} ${!disabled.includes('text') ? text : ''} ${spacerProgress}
       </button></li>`;
   }
 
-  #updateCaption() {
+  #puneHTMLCues(total = 200) {
+    const li = this.querySelectorAll('li');
+    if (li.length <= total) return;
+    let n = 0;
+    while (li.length > total) {
+      li[n].remove();
+      n += 1;
+    }
+  }
+
+  #updateCaptionClasses() {
     const divs = this.#divs.root.querySelectorAll('.cueitem');
     divs.forEach((item, index) => {
       const cue = this.#captions.cues[index];
@@ -569,12 +615,12 @@ export class CaptionsViewer extends HTMLElement {
   }
 
   #displayNoCaptions() {
-    this.#divs.root.classList.add('hidden');
+    this.#divs.root?.classList.add('hidden');
     if (!this.#divs.empty) {
       this.#divs.root.innerHTML = '';
       return;
     }
-    if (this.#divs.empty.innerHTML === '') {
+    if (this.#divs.empty?.innerHTML === '') {
       this.#divs.empty.innerHTML = 'No captions.';
       return;
     }
@@ -583,48 +629,7 @@ export class CaptionsViewer extends HTMLElement {
   }
 
   #removeNoCaptions() {
-    this.#divs.empty.classList.add('hidden');
-  }
-
-  pause() {
-    this.#paused = !this.#paused;
-  }
-
-  setTheme(userPreference = undefined) {
-    const theme = Utilities.getTheme(userPreference || this.#theme || '');
-    this.#theme = theme;
-    this.#divs.root.dataset.theme = theme;
-  }
-
-  // textTrack.cues would be the complete cue list plus more.
-  async updateCues(textTrack) {
-    if (!textTrack) return '';
-    // if (!this.#captions || !this.#captions.cues) return '';
-    const prevLength = (this.#captions.cues) ? this.#captions.cues.length : 0;
-    if (textTrack.cues.length <= prevLength) return '';
-    const newCaptions = await this.#parse(textTrack);
-
-    // Update Internals.
-    this.#captions.cues = newCaptions.cues;
-    this.#setCuesStatus();
-
-    newCaptions.cues.splice(0, prevLength);
-
-    // Update DOM.
-    let html = '';
-    newCaptions.cues.forEach((cue, index) => {
-      html += this.#cueToHTML(cue, index + prevLength, this.#disable);
-    });
-    const contianer = this.#divs.root.querySelector('ol');
-    if (contianer) contianer.innerHTML += html;
-
-    // No captions yet, need to add the ol.
-    if (!contianer) {
-      this.#divs.root.innerHTML = `<ol>${html}</ol>`;
-    }
-
-    this.#updateCaptionStatus(this.#playhead);
-    return html;
+    this.#divs.empty?.classList.add('hidden');
   }
 
   #event(name, value, object) {
@@ -646,23 +651,13 @@ export class CaptionsViewer extends HTMLElement {
     }
     const videodiv = this.#divs.root.querySelector('#tempVid');
     // We have to wait till the cues are ready (foo async).
-    const subtitleTrack = await CaptionsViewer.trackReady(videodiv).catch(e => console.warn(e));
-    await CaptionsViewer.cuesReady(subtitleTrack).catch(e => console.warn(e));
-    return videodiv.textTracks[0];
-  }
-
-  async setTrack(player, lang) {
-    const track = await CaptionsViewer.trackReady(player, lang).catch(() => undefined);
-    if (!track) {
-      return new Error('No subtitle track found.', player.textTracks);
-    }
-    track.mode = 'hidden';
-    await CaptionsViewer.cuesReady(track);
-    this.textTrack = track;
-    track.addEventListener('cuechange', e => {
-      this.updateCues(e.target);
+    const subtitleTrack = await CaptionsViewer.trackReady(videodiv).catch(e => {
+      this.#event('error', 'No Tracks found.', e);
     });
-    return track;
+    await CaptionsViewer.cuesReady(subtitleTrack).catch(e => {
+      this.#event('error', 'No cues found in track.', e);
+    });
+    return videodiv.textTracks[0];
   }
 
   static trackReady(video, lang) {
@@ -728,5 +723,61 @@ export class CaptionsViewer extends HTMLElement {
     newCues = cues.filter(cue => cue.text[0] && cue.text[0].length !== 0);
 
     return newCues;
+  }
+
+  // ********* Public Methods ********* //
+  async setTrack(player, lang) {
+    const track = await CaptionsViewer.trackReady(player, lang).catch(() => undefined);
+    if (!track) {
+      return new Error('No subtitle track found.', player.textTracks);
+    }
+    track.mode = 'hidden';
+    await CaptionsViewer.cuesReady(track);
+    this.textTrack = track;
+    track.addEventListener('cuechange', e => {
+      this.updateCues(e.target);
+    });
+    return track;
+  }
+
+  // textTrack.cues would be the complete cue list plus more.
+  async updateCues(textTrack) {
+    if (!textTrack) return '';
+    // if (!this.#captions || !this.#captions.cues) return '';
+    const prevLength = (this.#captions.cues) ? this.#captions.cues.length : 0;
+    if (textTrack.cues.length <= prevLength) return '';
+    const newCaptions = await this.#parse(textTrack);
+
+    // Update Internals.
+    this.#captions.cues = newCaptions.cues;
+    this.#setCuesStatus();
+
+    newCaptions.cues.splice(0, prevLength);
+
+    // Update DOM.
+    let html = '';
+    newCaptions.cues.forEach((cue, index) => {
+      html += this.#cueToHTML(cue, index + prevLength, this.#disable);
+    });
+    const contianer = this.#divs.root.querySelector('ol');
+    if (contianer) contianer.innerHTML += html;
+
+    // No captions yet, need to add the ol.
+    if (!contianer) {
+      this.#divs.root.innerHTML = `<ol>${html}</ol>`;
+    }
+
+    this.#update(this.#playhead);
+    return html;
+  }
+
+  pause() {
+    this.#paused = !this.#paused;
+  }
+
+  setTheme(userPreference = undefined) {
+    const theme = getTheme(userPreference || this.#theme || '');
+    this.#theme = theme;
+    this.#divs.root.dataset.theme = theme;
   }
 }
