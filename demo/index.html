@@ -81,12 +81,12 @@
           </div>
         </header>
         <section class="controls_body">
-          <button type="button" id="skipbackwards">15 <i class="fa-solid fa-rotate-left"></i></button>
+          <button type="button" id="skipbackwards">10 <i class="fa-solid fa-rotate-left"></i></button>
           <vds-play-button class="big_play">
             <i class="fa-solid fa-play" slot="play"></i>
             <i class="fa-solid fa-pause" slot="pause"></i>
           </vds-play-button>
-          <button type="button" id="skipforwards"><i class="fa-solid fa-rotate-right"></i> 15</button>
+          <button type="button" id="skipforwards"><i class="fa-solid fa-rotate-right"></i> 10</button>
         </section>
         <footer class="controls_footer">
           <div class="row row_title">
@@ -226,11 +226,12 @@
     });
 
     document.querySelector('#skipbackwards').addEventListener('click', () => {
-      player.currentTime = Math.round(player.currentTime - 15);
+      player.currentTime = Math.round(player.currentTime - 10);
     });
     document.querySelector('#skipforwards').addEventListener('click', () => {
-      player.currentTime = Math.round(player.currentTime + 15);
+      player.currentTime = Math.round(player.currentTime + 10);
     });
+
   </script>
 
 </body>
