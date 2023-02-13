@@ -1,14 +1,10 @@
 /* eslint-disable no-undef */
-import {
-  fixture, assert, aTimeout, waitUntil, oneEvent,
-} from '@open-wc/testing';
+import { fixture, assert, waitUntil, oneEvent } from '@open-wc/testing';
 import { expect } from '@esm-bundle/chai';
 import '../captions-viewer.js';
 
 describe('<captions-viewer>', () => {
   it('has correct properties', async () => {
-    aTimeout(500);
-
     const component = await fixture(`<captions-viewer
         src="test/dune_en.vtt"
       ></captions-viewer>`);

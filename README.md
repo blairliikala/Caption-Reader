@@ -2,11 +2,17 @@
 
 A web component to display captions as a video plays. Think Spotify or Apple Music lyrics. Includes automatic scrolling to the caption cue as the video plays, and events when a chapter is clicked.
 
+The component takes a webvtt or srt caption file and renders to a list.  Caption parsing uses the faster native browser `textTracks` for vtt files, or a super small srt parser.  Classes are updated depending on if the cue is upcoming, active or passed, and a little JS is used to move the cue into view.  Cues are sorted, and larger gaps show a progress bar.
+
+HLS streaming files with captions are supported, but take a few extra steps to send caption cues to the component.  Examples are shown below.
+
+The component has been tested with about 3,000 cues (2hr move) for performance.
+
 Also check out the other component that makes it easier to manage starting and ending live streams for viewers [https://livestreamwrapper.vercel.app/demo/](https://livestreamwrapper.vercel.app/demo/)
 
 ## In Development
 
-While this remains under a 1.0 release, some things might change.  I am not happy yet with how HLS captions are working, or how styling is applied and plan to do some releases to improve those.
+While this remains under 1.0, things are probably going to change.
 
 ## Basic Usage
 
@@ -91,8 +97,8 @@ player.addEventListener('seeking', () => {
 | `nudge` | 0.5 | Amount in seconds to adjust the cues to trigger sooner. |
 | `spacer` | 5 | Time in seconds between cues where a spacer (progress bar) will display |
 | `captions` | undefined | Read-only property of the internal object of caption cues. |
-| `paused` | false | Read-only property if the reader system is enabled or not. |
-| `textTrack` | undefined |  |
+| `paused` | false | If the reader system is enabled or not. |
+| `textTrack` | undefined |  HTMLTextTrack object if you wanted to push it directly...for now. |
 
 ### Simple Theming
 
@@ -101,7 +107,7 @@ player.addEventListener('seeking', () => {
 | `height`     | 300px  | Height of the scrolling box.  Valid CSS unit. |
 | `color` | 360 | The Hue (0-360) of the base color to use.  This is put into an hsla color. |
 | `theme` | light, dark | Light theme shades the text darker for a whiter background.  Dark will lighten text for a darker background. |
-| `css` | true | True/False to enable the default stylesheet.  False will remove all styling, default is True. See the guide below. |
+| `stylesheet` | true | True/False to enable the default stylesheet.  False will remove all styling, default is True. See the guide below. |
 
 ## Methods
 
