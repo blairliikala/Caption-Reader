@@ -1,114 +1,80 @@
-// src/utilities.js
-var Utilities = class {
-  // HH:MM:SS, or HH:MM:SS.FFF
-  static timecodeToSeconds(timecode = "") {
-    const regex = /^[0-9][0-9]/;
-    if (!regex.test(timecode) || typeof timecode !== "string") {
-      return void 0;
-    }
-    const parts = timecode.split(":");
-    if (!parts || parts.length === 1)
-      return timecode;
-    const hours = parseInt(parts[0], 10);
-    const minutes = parseInt(parts[1], 10);
-    const seconds = parseInt(parts[2], 10);
-    let mili = timecode.split(".");
-    if (mili.length === 1) {
-      mili = timecode.split(",");
-    }
-    return hours * 3600 + minutes * 60 + seconds + mili[1] / 1e3;
+// src/utilities/utilities.js
+function timecodeToSeconds(timecode = "") {
+  const regex = /^[0-9][0-9]/;
+  if (!regex.test(timecode) || typeof timecode !== "string") {
+    return void 0;
   }
-  // Credit: Chat GPT
-  static isValidJSON(input) {
-    return /^[\],:{}\s]*$/.test(input.replace(/\\["\\/bfnrtu]/g, "@").replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?/g, "]").replace(/(?:^|:|,)(?:\s*\[)+/g, ""));
+  const parts = timecode.split(":");
+  if (!parts || parts.length === 1)
+    return timecode;
+  const hours = parseInt(parts[0], 10);
+  const minutes = parseInt(parts[1], 10);
+  const seconds = parseInt(parts[2], 10);
+  let mili = timecode.split(".");
+  if (mili.length === 1) {
+    mili = timecode.split(",");
   }
-  static isTimecode(input) {
-    const regex = /^[0-9][0-9]/;
-    return regex.test(input);
+  return hours * 3600 + minutes * 60 + seconds + mili[1] / 1e3;
+}
+function isTimecode(input) {
+  const regex = /^[0-9][0-9]/;
+  return regex.test(input);
+}
+function prettyTimecode(timecode) {
+  const regex = /^[0-9][0-9]/;
+  if (!regex.test(timecode) || typeof timecode !== "string") {
+    return void 0;
   }
-  static prettyTimecode(timecode) {
-    const regex = /^[0-9][0-9]/;
-    if (!regex.test(timecode) || typeof timecode !== "string") {
-      return void 0;
+  const split = timecode.split(":");
+  if (split.length === 0)
+    return [];
+  if (split.length - 1 === 2) {
+    if (split[0] === "00") {
+      split.splice(0, 1);
     }
-    const split = timecode.split(":");
-    if (split.length === 0)
-      return [];
-    if (split.length - 1 === 2) {
-      if (split[0] === "00") {
-        split.splice(0, 1);
-      }
-    }
-    let seconds = split[split.length - 1];
-    seconds = seconds.replace(",", ".");
-    seconds = Math.round(seconds);
-    if (seconds < 10) {
-      seconds = `0${seconds}`;
-    }
-    split[split.length - 1] = seconds;
-    return split.join(":");
   }
-  static secondsToTimecode(seconds = 0) {
-    if (typeof seconds !== "number")
-      return "";
-    if (seconds < 0)
-      return "00:00:00";
-    return new Date(seconds * 1e3).toISOString().substring(11, 11 + 8);
+  let seconds = split[split.length - 1];
+  seconds = seconds.replace(",", ".");
+  seconds = Math.round(seconds);
+  if (seconds < 10) {
+    seconds = `0${seconds}`;
   }
-  static getTheme(userPreference) {
-    if (userPreference === "light") {
-      return "light";
-    }
-    if (userPreference === "dark") {
-      return "dark";
-    }
-    if (matchMedia("(prefers-color-scheme: light)").matches) {
-      return "light";
-    }
+  split[split.length - 1] = seconds;
+  return split.join(":");
+}
+function secondsToTimecode(seconds = 0) {
+  if (typeof seconds !== "number")
+    return "";
+  if (seconds < 0)
+    return "00:00:00";
+  return new Date(seconds * 1e3).toISOString().substring(11, 11 + 8);
+}
+function getTheme(userPreference) {
+  if (userPreference === "light") {
+    return "light";
+  }
+  if (userPreference === "dark") {
     return "dark";
   }
-  static getSupportedFileType(file) {
-    const split = file.split(".");
-    const extension = split[split.length - 1];
-    const supported = ["vtt", "srt"];
-    return supported.find((ext) => ext === extension);
+  if (matchMedia("(prefers-color-scheme: light)").matches) {
+    return "light";
   }
-  // Remove: my text as<00:02:56.080><c> ids</c><00:02:56.640><c> or</c>
-  /*
-  static removeExtraTimecode(cues) {
-    if (!cues) return cues;
-    return cues.map(cue => {
-      cue.text.forEach((line, index) => {
-        cue.text[index] = line.replace(/<.*?>/g, '');
-      });
-      return cue;
-    });
-  }
-  */
-};
-
-// src/parsers.js
-function parseSubTextCue(text, startSec) {
-  const timecodeRegex = /<(\d\d:\d\d:\d\d\.\d\d\d)>/;
-  const timecodeText = text.split(timecodeRegex);
-  const result = [];
-  for (let i = 1; i < timecodeText.length; i += 1) {
-    if (i === 1) {
-      result.push({
-        seconds: startSec,
-        text: timecodeText[0],
-        status: void 0
-      });
-    }
-    result.push({
-      seconds: Utilities.timecodeToSeconds(timecodeText[i]),
-      text: timecodeText[i + 1],
-      status: void 0
-    });
-    i += 1;
-  }
-  return result;
+  return "dark";
 }
+function getSupportedFileType(file) {
+  const split = file.split(".");
+  const extension = split[split.length - 1];
+  const supported = ["vtt", "srt"];
+  return supported.find((ext) => ext === extension);
+}
+function isElementInViewport(el, container) {
+  const rect = el.getBoundingClientRect();
+  const parent = el.closest(container);
+  const parentRect = parent.getBoundingClientRect();
+  return rect.bottom <= parentRect.bottom;
+}
+
+// src/utilities/parsers.js
 function parseTextTrack(textTrack) {
   if (!textTrack.cues) {
     return void 0;
@@ -126,8 +92,8 @@ function parseTextTrack(textTrack) {
         end: cue.endTime
       },
       timecode: {
-        start: Utilities.secondsToTimecode(cue.startTime),
-        end: Utilities.secondsToTimecode(cue.endTime)
+        start: secondsToTimecode(cue.startTime),
+        end: secondsToTimecode(cue.endTime)
       }
     };
   });
@@ -140,92 +106,6 @@ function parseTextTrack(textTrack) {
     cues
   };
   return track;
-}
-function parseSubTextCues(cues) {
-  return cues.map((cue) => {
-    const texts = cue.text[1] || "";
-    cue.subCues = void 0;
-    if (texts.includes("<")) {
-      cue.subCues = parseSubTextCue(texts, cue.seconds.start);
-    }
-    return cue;
-  });
-}
-function addCueSpaces(cues, distance) {
-  if (!cues || cues.length === 0)
-    return void 0;
-  let isBlank = false;
-  const first = cues[0];
-  if (first.seconds.start > distance) {
-    const newCue = {
-      chapter: "",
-      text: [],
-      type: "spacer",
-      timecode: {
-        start: Utilities.secondsToTimecode(0),
-        end: Utilities.secondsToTimecode(first.seconds.start)
-      },
-      seconds: {
-        start: 0,
-        end: first.seconds.start
-      }
-    };
-    cues.unshift(newCue);
-  }
-  cues.forEach((cue, index) => {
-    const next = cues[index + 1];
-    if (isBlank) {
-      isBlank = false;
-      return void 0;
-    }
-    if (!next)
-      return void 0;
-    const diff = next.seconds.start - cue.seconds.end;
-    if (diff > distance) {
-      const start = cue.seconds.end;
-      const end = next.seconds.start;
-      const newCue = {
-        chapter: "",
-        text: [],
-        type: "spacer",
-        timecode: {
-          start: Utilities.secondsToTimecode(start),
-          end: Utilities.secondsToTimecode(start)
-        },
-        seconds: {
-          start,
-          end
-        }
-      };
-      cues.splice(index + 1, 0, newCue);
-      isBlank = true;
-    }
-    return [];
-  });
-  return cues;
-}
-function sortCues(cues) {
-  if (!cues)
-    return cues;
-  return cues.sort((a, b) => {
-    if (a.seconds.start < b.seconds.start) {
-      return -1;
-    }
-    if (a.seconds.start > b.seconds.start) {
-      return 1;
-    }
-    return 0;
-  });
-}
-function removeDuplicateCues(cues) {
-  if (!cues)
-    return cues;
-  const cuesDeduplicated = cues.filter((cue, index) => {
-    const _cue = JSON.stringify(cue);
-    const searchResultIndex = cues.findIndex((cueObj) => JSON.stringify(cueObj) === _cue);
-    return index === searchResultIndex;
-  });
-  return cuesDeduplicated;
 }
 function parseVTT(contents, type) {
   const lines = contents.split("\n");
@@ -266,9 +146,9 @@ function parseVTT(contents, type) {
       caption.styles = cueBlockData;
       cueBlock = false;
       cueBlockData = "";
-    } else if (line !== "" && Utilities.isTimecode(lines[count + 1])) {
+    } else if (line !== "" && isTimecode(lines[count + 1])) {
       currentCue.chapter = line;
-    } else if (Utilities.isTimecode(line)) {
+    } else if (isTimecode(line)) {
       const times = line.split("-->");
       const endSplit = times[1] ? times[1]?.split(" ") : void 0;
       const end = endSplit ? endSplit[1]?.trim() : "";
@@ -277,8 +157,8 @@ function parseVTT(contents, type) {
         end
       };
       currentCue.seconds = {
-        start: Utilities.timecodeToSeconds(times[0]),
-        end: Utilities.timecodeToSeconds(end)
+        start: timecodeToSeconds(times[0]),
+        end: timecodeToSeconds(end)
       };
       currentCue.length = currentCue.seconds.start + currentCue.seconds.end;
       const spaces = line.split(" ");
@@ -308,7 +188,125 @@ function parseVTT(contents, type) {
   return caption;
 }
 
-// src/defautStylesheet.js
+// src/utilities/cues.js
+function parseSubTextCue(text, startSec) {
+  const timecodeRegex = /<(\d\d:\d\d:\d\d\.\d\d\d)>/;
+  const timecodeText = text.split(timecodeRegex);
+  const result = [];
+  for (let i = 1; i < timecodeText.length; i += 1) {
+    if (i === 1) {
+      result.push({
+        seconds: startSec,
+        text: timecodeText[0],
+        status: void 0
+      });
+    }
+    result.push({
+      seconds: timecodeToSeconds(timecodeText[i]),
+      text: timecodeText[i + 1],
+      status: void 0
+    });
+    i += 1;
+  }
+  return result;
+}
+function parseSubTextCues(cues) {
+  return cues.map((cue) => {
+    const texts = cue.text[1] || "";
+    cue.subCues = void 0;
+    if (texts.includes("<")) {
+      cue.subCues = parseSubTextCue(texts, cue.seconds.start);
+    }
+    return cue;
+  });
+}
+function addCueSpaces(cues, distance) {
+  if (!cues || cues.length === 0)
+    return void 0;
+  let isBlank = false;
+  const first = cues[0];
+  if (first.seconds.start > distance) {
+    const newCue = {
+      chapter: "",
+      text: [],
+      type: "spacer",
+      timecode: {
+        start: secondsToTimecode(0),
+        end: secondsToTimecode(first.seconds.start)
+      },
+      seconds: {
+        start: 0,
+        end: first.seconds.start
+      }
+    };
+    cues.unshift(newCue);
+  }
+  cues.forEach((cue, index) => {
+    const next = cues[index + 1];
+    if (isBlank) {
+      isBlank = false;
+      return void 0;
+    }
+    if (!next)
+      return void 0;
+    const diff = next.seconds.start - cue.seconds.end;
+    if (diff > distance) {
+      const start = cue.seconds.end;
+      const end = next.seconds.start;
+      const newCue = {
+        chapter: "",
+        text: [],
+        type: "spacer",
+        timecode: {
+          start: secondsToTimecode(start),
+          end: secondsToTimecode(start)
+        },
+        seconds: {
+          start,
+          end
+        }
+      };
+      cues.splice(index + 1, 0, newCue);
+      isBlank = true;
+    }
+    return [];
+  });
+  return cues;
+}
+function sortCues(cues) {
+  if (!cues)
+    return cues;
+  return cues.sort((a, b) => {
+    if (a.seconds.start < b.seconds.start) {
+      return -1;
+    }
+    if (a.seconds.start > b.seconds.start) {
+      return 1;
+    }
+    return 0;
+  });
+}
+function removeDuplicateCues(cues) {
+  if (!cues)
+    return cues;
+  const cuesDeduplicated = [];
+  for (let index = 0; index < cues.length; index += 1) {
+    const cue = cues[index];
+    let match = 0;
+    for (let i = 0; i < cues.length; i += 1) {
+      const _cue = cues[i];
+      if (_cue.seconds.start === cue.seconds.start && _cue.seconds.end === cue.seconds.end) {
+        match = i;
+      }
+    }
+    if (index === match) {
+      cuesDeduplicated.push(cue);
+    }
+  }
+  return cuesDeduplicated;
+}
+
+// src/themes/stylesheet.js
 function defaultStyles() {
   return `<style id="theme_a">
   #root {
@@ -554,12 +552,13 @@ var CaptionsViewer = class extends HTMLElement {
       "singleline",
       "color",
       "disable",
-      "spacer"
+      "spacer",
+      "enableCSS"
     ];
   }
   attributeChangedCallback(name, oldValue, newValue) {
     if (name === "playhead") {
-      this.#updateCaptionStatus(newValue);
+      this.#update(newValue);
       return;
     }
     if (name === "debounce") {
@@ -568,9 +567,14 @@ var CaptionsViewer = class extends HTMLElement {
     }
     this.#create({ changes: { name, oldValue, newValue } });
   }
+  get captions() {
+    return this.#captions;
+  }
+  get debounce() {
+    return this.#debounce;
+  }
   set debounce(item) {
     if (typeof item !== "number") {
-      console.warn("debounce must be a number.", item);
       this.#event("error", "debounce must be a number.");
       return;
     }
@@ -580,17 +584,21 @@ var CaptionsViewer = class extends HTMLElement {
       this.removeAttribute("debounce");
     }
   }
+  get debounceScrolling() {
+    return this.#debounceScrolling;
+  }
   set debounceScrolling(item) {
     if (typeof item !== "boolean") {
-      console.warn("debounceScrolling must be a boolean.", item);
       this.#event("error", "debounceScrolling must be a boolean.");
       return;
     }
     this.#debounceScrolling = item;
   }
+  get disable() {
+    return this.#disable;
+  }
   set disable(item) {
     if (typeof item !== "string") {
-      console.warn("Disable must be a string.", item);
       this.#event("error", "Disable must be a string.");
       return;
     }
@@ -601,49 +609,77 @@ var CaptionsViewer = class extends HTMLElement {
       this.removeAttribute("disabled");
     }
   }
-  set playhead(item) {
-    if (typeof item !== "number") {
-      console.warn("playhead property must be a number.", item);
-      this.#event("error", "playhead must be a number.");
+  get enableCSS() {
+    return this.#enableCSS;
+  }
+  set enableCSS(item) {
+    if (typeof item !== "boolean") {
+      this.#event("error", "enableCSS must be a boolean.");
       return;
     }
-    this.setAttribute("playhead", item);
+    this.#enableCSS = item;
+  }
+  get height() {
+    return this.#height;
   }
   set height(item) {
     if (typeof item !== "string") {
-      console.warn("height must be a string with a unit value.", item);
       this.#event("error", "height must be a string with a unit value.");
       return;
     }
     this.setAttribute("height", item);
   }
+  get nudge() {
+    return this.#nudge;
+  }
   set nudge(item) {
     if (typeof item !== "number") {
-      console.warn("nudge must be a number.", item);
       this.#event("error", "nudge must be a number");
       return;
     }
     this.#nudge = item;
   }
+  get paused() {
+    return this.#paused;
+  }
+  set paused(item) {
+    this.passed(item);
+  }
+  get singleline() {
+    return this.#singleline;
+  }
   set singleline(item) {
     if (typeof item !== "boolean") {
-      console.warn("singleline must be a boolean.", item);
       this.#event("error", "singleline must be a boolean.");
       return;
     }
     this.setAttribute("singleline", item);
   }
+  get playhead() {
+    return this.#playhead;
+  }
+  set playhead(item) {
+    if (typeof item !== "number") {
+      this.#event("error", "playhead must be a number.");
+      return;
+    }
+    this.setAttribute("playhead", item);
+  }
+  get spacer() {
+    return this.#spacer;
+  }
   set spacer(item) {
     if (typeof item !== "number") {
-      console.warn("spacer must be a number.", item);
       this.#event("error", "spacer must be a number.");
       return;
     }
     this.#spacer = item;
   }
+  get src() {
+    return this.#src;
+  }
   set src(item) {
     if (typeof item !== "string") {
-      console.warn("src must be a string.", item);
       this.#event("error", "src must be a string.");
       return;
     }
@@ -653,59 +689,28 @@ var CaptionsViewer = class extends HTMLElement {
       this.removeAttribute("src");
     }
   }
+  get textTrack() {
+    return this.#textTrack;
+  }
   set textTrack(item) {
     this.#textTrack = item;
     this.#create({ changes: { name: "textTrack" } });
   }
+  get theme() {
+    return this.#theme;
+  }
+  set theme(item) {
+    this.setTheme(item);
+  }
+  get youtube() {
+    return this.#youtube;
+  }
   set youtube(item) {
     if (typeof item !== "boolean") {
-      console.warn("youtube must be a boolean.", item);
       this.#event("error", "youtube must be a boolean.");
       return;
     }
     this.#youtube = item;
-  }
-  get captions() {
-    return this.#captions;
-  }
-  get debounce() {
-    return this.#debounce;
-  }
-  get disable() {
-    return this.#disable;
-  }
-  get enableCSS() {
-    return this.#enableCSS;
-  }
-  get height() {
-    return this.#height;
-  }
-  get nudge() {
-    return this.#nudge;
-  }
-  get paused() {
-    return this.#paused;
-  }
-  get playhead() {
-    return this.#playhead;
-  }
-  get singleline() {
-    return this.#singleline;
-  }
-  get spacer() {
-    return this.#spacer;
-  }
-  get src() {
-    return this.#src;
-  }
-  get textTrack() {
-    return this.#textTrack;
-  }
-  get theme() {
-    return this.#theme;
-  }
-  get youtube() {
-    return this.#youtube;
   }
   connectedCallback() {
     this.#init();
@@ -732,10 +737,10 @@ var CaptionsViewer = class extends HTMLElement {
       if (div && "localName" in div && div.localName === "button") {
         const seconds = div.dataset.start;
         this.#event("seek", seconds);
-        this.#updateCaptionStatus(seconds + 0.2);
+        this.#update(seconds + 0.2);
       }
     });
-    this.#iniScrollingEvents();
+    this.#setScrollingEvents();
     this.#create();
   }
   async #create(params) {
@@ -774,7 +779,7 @@ var CaptionsViewer = class extends HTMLElement {
       if (this.#youtube)
         this.#captions.cues = this.#youtubeAdjustments(this.#captions.cues);
       this.#setCuesStatus();
-      this.#updateCaptionStatus(this.#playhead + 0.9);
+      this.#update(this.#playhead + 0.9);
     }
     this.#removeNoCaptions();
     this.#divs.root.innerHTML = this.#renderAllCaptions(this.#captions);
@@ -782,22 +787,21 @@ var CaptionsViewer = class extends HTMLElement {
   async #parse(TEXTTRACK, SRC) {
     let captions;
     let textTrack = TEXTTRACK;
-    if (SRC && Utilities.getSupportedFileType(SRC) === "vtt") {
+    if (SRC && getSupportedFileType(SRC) === "vtt") {
       textTrack = await this.#renderCaptionSrc(SRC);
     }
     if (textTrack && "cues" in textTrack) {
       captions = parseTextTrack(textTrack);
     }
     if (SRC && (!captions || !captions.cues)) {
-      const srcContents = await fetch(SRC).then((res) => res.text());
-      const type = Utilities.getSupportedFileType(SRC);
-      if (srcContents)
-        captions = parseVTT(srcContents, type);
+      const srcText = await fetch(SRC).then((res) => res.text());
+      const type = getSupportedFileType(SRC);
+      if (srcText)
+        captions = parseVTT(srcText, type);
     }
     if (!captions || !captions.cues) {
-      console.error("Not able to find and render captions.", captions);
       this.#displayNoCaptions();
-      return void 0;
+      return null;
     }
     captions.cues = parseSubTextCues(captions.cues);
     captions.cues = removeDuplicateCues(captions.cues);
@@ -806,7 +810,7 @@ var CaptionsViewer = class extends HTMLElement {
     this.#textTrack = textTrack;
     return captions;
   }
-  #iniScrollingEvents() {
+  #setScrollingEvents() {
     let isTouch = false;
     let timeout;
     const addScrollStyle = () => {
@@ -848,7 +852,7 @@ var CaptionsViewer = class extends HTMLElement {
       }, false);
     }, 1e3);
   }
-  #updateCaptionStatus(playhead) {
+  #update(playhead) {
     if (this.#paused)
       return;
     this.#playhead = playhead;
@@ -880,6 +884,8 @@ var CaptionsViewer = class extends HTMLElement {
     const progressbars = this.#divs.root.querySelectorAll("[data-progress]");
     if (progressbars) {
       [...progressbars].forEach((bar) => {
+        if (bar.value === 0)
+          return;
         const newBar = bar;
         newBar.value = 0;
       });
@@ -888,18 +894,12 @@ var CaptionsViewer = class extends HTMLElement {
       const elms = this.#divs.root.querySelectorAll("[data-index]");
       const elm = elms[this.#currentCue];
       if (elm) {
-        if (!CaptionsViewer.isElementInViewport(elm, "captionselement"))
+        if (!isElementInViewport(elm, "captionselement"))
           this.#debounceScrolling = false;
       }
     }
-    this.#updateCaption();
+    this.#updateCaptionClasses();
     this.#scrollToCue();
-  }
-  static isElementInViewport(el, container) {
-    const rect = el.getBoundingClientRect();
-    const parent = el.closest(container);
-    const parentRect = parent.getBoundingClientRect();
-    return rect.bottom <= parentRect.bottom;
   }
   #renderAllCaptions(captions) {
     if (!captions)
@@ -916,7 +916,7 @@ var CaptionsViewer = class extends HTMLElement {
     if (!cue.timecode)
       return "";
     const styleName = cue.status || "";
-    const timecode = `<span class="timecode">${Utilities.prettyTimecode(cue.timecode.start)}</span>`;
+    const timecode = `<span class="timecode">${prettyTimecode(cue.timecode.start)}</span>`;
     const chapter = cue.chapter ? `<span class="chapter">${cue.chapter}</span>` : "";
     const textJoiner = this.#singleline ? " " : "<br />";
     let spacerProgress = "";
@@ -937,10 +937,21 @@ var CaptionsViewer = class extends HTMLElement {
         data-start="${cue.seconds.start}"
         class="cue ${styleName} ${cue.type || ""}"
         data-index="${index}"
+        style="animation-duration: ${Math.round(cue.seconds.end - cue.seconds.start)}s"
       >${!disabled.includes("timecode") && cue.type !== "spacer" ? timecode : ""} ${!disabled.includes("chapters") ? chapter : ""} ${!disabled.includes("text") ? text : ""} ${spacerProgress}
       </button></li>`;
   }
-  #updateCaption() {
+  #puneHTMLCues(total = 200) {
+    const li = this.querySelectorAll("li");
+    if (li.length <= total)
+      return;
+    let n = 0;
+    while (li.length > total) {
+      li[n].remove();
+      n += 1;
+    }
+  }
+  #updateCaptionClasses() {
     const divs = this.#divs.root.querySelectorAll(".cueitem");
     divs.forEach((item, index) => {
       const cue = this.#captions.cues[index];
@@ -1002,51 +1013,19 @@ var CaptionsViewer = class extends HTMLElement {
     }, 1e3);
   }
   #displayNoCaptions() {
-    this.#divs.root.classList.add("hidden");
+    this.#divs.root?.classList.add("hidden");
     if (!this.#divs.empty) {
       this.#divs.root.innerHTML = "";
       return;
     }
-    if (this.#divs.empty.innerHTML === "") {
+    if (this.#divs.empty?.innerHTML === "") {
       this.#divs.empty.innerHTML = "No captions.";
       return;
     }
     this.#divs.empty.classList.remove("hidden");
   }
   #removeNoCaptions() {
-    this.#divs.empty.classList.add("hidden");
-  }
-  pause() {
-    this.#paused = !this.#paused;
-  }
-  setTheme(userPreference = void 0) {
-    const theme = Utilities.getTheme(userPreference || this.#theme || "");
-    this.#theme = theme;
-    this.#divs.root.dataset.theme = theme;
-  }
-  // textTrack.cues would be the complete cue list plus more.
-  async updateCues(textTrack) {
-    if (!textTrack)
-      return "";
-    const prevLength = this.#captions.cues ? this.#captions.cues.length : 0;
-    if (textTrack.cues.length <= prevLength)
-      return "";
-    const newCaptions = await this.#parse(textTrack);
-    this.#captions.cues = newCaptions.cues;
-    this.#setCuesStatus();
-    newCaptions.cues.splice(0, prevLength);
-    let html = "";
-    newCaptions.cues.forEach((cue, index) => {
-      html += this.#cueToHTML(cue, index + prevLength, this.#disable);
-    });
-    const contianer = this.#divs.root.querySelector("ol");
-    if (contianer)
-      contianer.innerHTML += html;
-    if (!contianer) {
-      this.#divs.root.innerHTML = `<ol>${html}</ol>`;
-    }
-    this.#updateCaptionStatus(this.#playhead);
-    return html;
+    this.#divs.empty?.classList.add("hidden");
   }
   #event(name, value, object) {
     this.dispatchEvent(new CustomEvent("all", { detail: { name, value, full: object } }));
@@ -1065,22 +1044,13 @@ var CaptionsViewer = class extends HTMLElement {
       this.#divs.root.appendChild(video);
     }
     const videodiv = this.#divs.root.querySelector("#tempVid");
-    const subtitleTrack = await CaptionsViewer.trackReady(videodiv).catch((e) => console.warn(e));
-    await CaptionsViewer.cuesReady(subtitleTrack).catch((e) => console.warn(e));
-    return videodiv.textTracks[0];
-  }
-  async setTrack(player, lang) {
-    const track = await CaptionsViewer.trackReady(player, lang).catch(() => void 0);
-    if (!track) {
-      return new Error("No subtitle track found.", player.textTracks);
-    }
-    track.mode = "hidden";
-    await CaptionsViewer.cuesReady(track);
-    this.textTrack = track;
-    track.addEventListener("cuechange", (e) => {
-      this.updateCues(e.target);
+    const subtitleTrack = await CaptionsViewer.trackReady(videodiv).catch((e) => {
+      this.#event("error", "No Tracks found.", e);
     });
-    return track;
+    await CaptionsViewer.cuesReady(subtitleTrack).catch((e) => {
+      this.#event("error", "No cues found in track.", e);
+    });
+    return videodiv.textTracks[0];
   }
   static trackReady(video, lang) {
     let count = 0;
@@ -1130,6 +1100,52 @@ var CaptionsViewer = class extends HTMLElement {
     newCues = cues.filter((cue) => cue.text.length !== 0);
     newCues = cues.filter((cue) => cue.text[0] && cue.text[0].length !== 0);
     return newCues;
+  }
+  // ********* Public Methods ********* //
+  async setTrack(player, lang) {
+    const track = await CaptionsViewer.trackReady(player, lang).catch(() => void 0);
+    if (!track) {
+      return new Error("No subtitle track found.", player.textTracks);
+    }
+    track.mode = "hidden";
+    await CaptionsViewer.cuesReady(track);
+    this.textTrack = track;
+    track.addEventListener("cuechange", (e) => {
+      this.updateCues(e.target);
+    });
+    return track;
+  }
+  // textTrack.cues would be the complete cue list plus more.
+  async updateCues(textTrack) {
+    if (!textTrack)
+      return "";
+    const prevLength = this.#captions.cues ? this.#captions.cues.length : 0;
+    if (textTrack.cues.length <= prevLength)
+      return "";
+    const newCaptions = await this.#parse(textTrack);
+    this.#captions.cues = newCaptions.cues;
+    this.#setCuesStatus();
+    newCaptions.cues.splice(0, prevLength);
+    let html = "";
+    newCaptions.cues.forEach((cue, index) => {
+      html += this.#cueToHTML(cue, index + prevLength, this.#disable);
+    });
+    const contianer = this.#divs.root.querySelector("ol");
+    if (contianer)
+      contianer.innerHTML += html;
+    if (!contianer) {
+      this.#divs.root.innerHTML = `<ol>${html}</ol>`;
+    }
+    this.#update(this.#playhead);
+    return html;
+  }
+  pause() {
+    this.#paused = !this.#paused;
+  }
+  setTheme(userPreference = void 0) {
+    const theme = getTheme(userPreference || this.#theme || "");
+    this.#theme = theme;
+    this.#divs.root.dataset.theme = theme;
   }
 };
 
