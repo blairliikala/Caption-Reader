@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+  <meta charset="utf-8">
+  <title>Caption Reader Web Component - Music with Lyrics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark light">
+  <link href="/demo/demo.css" rel="stylesheet" type="text/css">
+  <script type="module" src="/captions-viewer.js"></script>
+  <script defer src="/_vercel/insights/script.js"></script>
+
+  <style>
+
+
+    /* Hides the component until it has loaded */
+    captions-viewer:not(:defined) {
+      visibility: hidden
+    }
+    captions-viewer {
+      margin: 1em 0;
+      border-radius: 5px;
+      font-family: arial;
+      display: block;
+      /*background: rgba(0,0,0,.2);*/
+      /*background: rgba(255,255,255, .9)*/
+    }
+    captions-viewer .cue {
+      font-size: 1.5rem;
+      padding-top: .8rem;
+      padding-bottom: .8rem;
+      border: 0;
+    }
+    captions-viewer .cue:hover,
+    captions-viewer .cue:active {
+      border: 0;
+      outline: 0;
+    }
+    captions-viewer .cue:focus-within {
+      border: 0;
+      outline: 1px solid rgba(255,255,255, .1);
+      border-radius: 4px;
+    }
+    .player {
+      display: flex;
+      align-items: center;
+    }
+    .player button {
+      max-width: 100px;
+      background: none;
+      cursor: pointer;
+    }
+    .player button:hover, .player button:focus  {
+
+    }
+    #waveform {
+      width: calc(100% - 100px);
+    }
+    .hidden {
+      display: none;
+    }
+  
+  </style>
+</head>
+<body>
+
+  <main class="container">
+
+    <article class="info">
+      <p>Example shows music using the Wavesurfer player with captions from an srt file.</p>
+    </article>
+
+    <section class="player">
+      <button type="button" id="play">
+        <svg fill="#fff" height="100%" width="100%" version="1.1" id="playicon" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+          viewBox="0 0 60 60" xml:space="preserve">
+          <g>
+            <path d="M45.563,29.174l-22-15c-0.307-0.208-0.703-0.231-1.031-0.058C22.205,14.289,22,14.629,22,15v30
+              c0,0.371,0.205,0.711,0.533,0.884C22.679,45.962,22.84,46,23,46c0.197,0,0.394-0.059,0.563-0.174l22-15
+              C45.836,30.64,46,30.331,46,30S45.836,29.36,45.563,29.174z M24,43.107V16.893L43.225,30L24,43.107z"/>
+            <path d="M30,0C13.458,0,0,13.458,0,30s13.458,30,30,30s30-13.458,30-30S46.542,0,30,0z M30,58C14.561,58,2,45.439,2,30
+              S14.561,2,30,2s28,12.561,28,28S45.439,58,30,58z"/>
+          </g>
+        </svg>
+        <svg fill="#fff" width="100%" height="100%" viewBox="0 0 24 24" id="pauseicon"  class="hidden" xmlns="http://www.w3.org/2000/svg"><path d="M12,1A11,11,0,1,0,23,12,11.013,11.013,0,0,0,12,1Zm0,20a9,9,0,1,1,9-9A9.011,9.011,0,0,1,12,21ZM9,8h2v8H9Zm4,0h2v8H13Z"/></svg>
+    </button>
+      <!--<button type="button" id="pause">Pause</button>-->
+      <div id="waveform"></div>
+    </section>
+
+    <captions-viewer
+      src="/demo/content/lune/lune.srt"
+      height="60vh"
+      color="300"
+      disable="timecode|chapters"
+      theme="dark"
+    >
+      <captions-viewer-empty></captions-viewer-empty>
+    </captions-viewer>
+
+    <p>Find it on <a href="https://github.com/blairliikala/Caption-Reader">Github</a>.</p>
+  </main>
+
+  <script type="module">
+    import 'https://unpkg.com/wavesurfer.js';
+    const component = document.querySelector('captions-viewer');
+    const playButton = document.querySelector('#play');
+    const pauseButton = document.querySelector('#pause');
+
+    const wavesurfer = WaveSurfer.create({
+      container: '#waveform',
+      waveColor: 'violet',
+      progressColor: 'purple',
+      responsive: true,
+      hideScrollbar: true,
+      barWidth: 1,
+      height: 75,
+    });
+    wavesurfer.load('lune.mp4');
+
+    let pingInterval;
+    const playheadUpdate = 200;
+
+    function startInterval() {
+      component.playhead = wavesurfer.getCurrentTime();
+      pingInterval = setInterval(() => {
+        component.playhead = wavesurfer.getCurrentTime();
+      }, playheadUpdate);
+    }
+    function stopInterval() {
+      clearInterval(pingInterval);
+    }
+
+    // On click, Seek's player to caption location.
+    component.addEventListener('seek', e => {
+      const duration = wavesurfer.getDuration();
+      const seekTime = e.detail.value;
+      const percent = seekTime / duration;
+      wavesurfer.seekTo(percent);
+    });
+    playButton.addEventListener('click', () => {
+      wavesurfer.playPause();
+    });
+    /*
+    pauseButton?.addEventListener('click', () => {
+      wavesurfer.pause();
+    });
+    */
+
+    wavesurfer.on('seek', () => {
+      component.playhead = wavesurfer.getCurrentTime();
+    });
+    wavesurfer.on('play', () => {
+      startInterval();
+      document.querySelector('#pauseicon').classList.remove('hidden');
+      document.querySelector('#playicon').classList.add('hidden');
+    });
+    wavesurfer.on('pause', () => {
+      stopInterval();
+      document.querySelector('#pauseicon').classList.add('hidden');
+      document.querySelector('#playicon').classList.remove('hidden');
+    });
+</script>
+
+</body>
+</html>
