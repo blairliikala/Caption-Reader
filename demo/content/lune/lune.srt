@@ -149,3 +149,7 @@
 38
 00:04:48,850 --> 00:04:52,449
 <font color="#ffffff">Don't let go</font>
+
+39
+00:04:52,449 --> 00:05:00,000
+<font color="#ffffff">Captions ended after this point.</font>
