@@ -535,16 +535,6 @@ export class CaptionsViewer extends HTMLElement {
       </button></li>`;
   }
 
-  #puneHTMLCues(total = 200) {
-    const li = this.querySelectorAll('li');
-    if (li.length <= total) return;
-    let n = 0;
-    while (li.length > total) {
-      li[n].remove();
-      n += 1;
-    }
-  }
-
   #updateCaptionClasses() {
     const divs = this.#divs.root.querySelectorAll('.cueitem');
     divs.forEach((item, index) => {
