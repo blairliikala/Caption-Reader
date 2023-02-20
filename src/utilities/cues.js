@@ -105,21 +105,9 @@ export function sortCues(cues) {
 }
 
 export function removeDuplicateCues(cues) {
-  if (!cues) return cues;
-  const cuesDeduplicated = [];
-  // Written with For loops for performance.
-  for (let index = 0; index < cues.length; index += 1) {
-    const cue = cues[index];
-    let match = 0;
-    for (let i = 0; i < cues.length; i += 1) {
-      const _cue = cues[i];
-      if (_cue.seconds.start === cue.seconds.start && _cue.seconds.end === cue.seconds.end) {
-        match = i;
-      }
-    }
-    if (index === match) {
-      cuesDeduplicated.push(cue);
-    }
-  }
-  return cuesDeduplicated;
+  const cuesFlat = cues.map(cue => JSON.stringify(cue));
+  return cues.filter((cue, index) => {
+    const match = cues.findIndex((c, i) => cuesFlat[i] === cuesFlat[index]);
+    return index === match;
+  });
 }
