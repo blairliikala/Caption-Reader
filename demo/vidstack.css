@@ -1,4 +1,4 @@
-vds-media {
+media-player {
   --primary-color: hotpink;
   --text-primary: rgba(255, 255, 255, 1);
   --text-secondary: rgba(255,255,255, 0.5);
@@ -93,8 +93,8 @@ vds-media {
   stroke-dasharray: 100;
   stroke-dashoffset: 50;
 }
-vds-media:not([can-play]) .media-buffering-icon,
-vds-media[waiting] .media-buffering-icon {
+media-player:not([can-play]) .media-buffering-icon,
+media-player[waiting] .media-buffering-icon {
   opacity: 1;
   animation: spin 1s linear infinite;
 }
@@ -105,7 +105,7 @@ vds-media[waiting] .media-buffering-icon {
 }
 
 /******** Timeline ********/
-vds-time-slider {
+media-time-slider {
   --media-slider-height: 26px;
   --media-slider-thumb-size: 13px;
   --media-slider-focused-thumb-size: calc(var(--thumb-size) * 1.1);
@@ -113,16 +113,16 @@ vds-time-slider {
   --media-slider-focused-track-height: calc(var(--track-height) * 1.25);
 }
 /* Apply styles to all tracks. */
-vds-time-slider [part~='track'] {
+media-time-slider [part~='track'] {
   background: rgba(255,255,255,.1);
   border-radius: 25px;
 }
 /* Apply styles to track fill (played portion of slider). */
-vds-time-slider [part~='track-fill'] {
+media-time-slider [part~='track-fill'] {
   background: var(--primary-color);
 }
 /* Apply styles to track progress (buffered). */
-vds-time-slider [part~='track-progress'] {
+media-time-slider [part~='track-progress'] {
   background: rgba(255,105,180, 0.2);
 }
 
@@ -132,68 +132,62 @@ vds-time-slider [part~='track-progress'] {
   display: flex;
   align-items: center;  
 }
-vds-volume-slider {
-  --media-slider-height: 2em;
+media-volume-slider {
+  --media-slider-height: .8em;
   --media-slider-thumb-size: 8px;
   --media-slider-focused-thumb-size: calc(var(--thumb-size) * 1.1);
   --media-slider-track-height: 4px;
   --media-slider-focused-track-height: calc(var(--track-height) * 1.25);
   margin-right: 0.5em;
 }
-vds-volume-slider [part~='track'] {
+media-volume-slider [part~='track'] {
   background: rgba(255,255,255,.1);
   border-radius: 25px;
 }
 /* Apply styles to track fill (played portion of slider). */
-vds-volume-slider [part~='track-fill'] {
+media-volume-slider [part~='track-fill'] {
   background: var(--primary-color);
 }
-vds-time {
+media-time {
   font-size: 13px;
   color: var(--text-secondary);
-}
-vds-fullscreen-button {
-  transform: rotate(90deg);
-}
-vds-fullscreen-button:hover {
-  transform: rotate(90deg) scale(1.1);
 }
 
 
 /******* Hide on idle ********/
-vds-media .media_controls {
+media-player .media_controls {
   opacity: 1;
   visibility: visible;  
   transition: all .3s ease;
 }
 
-vds-media[user-idle] .media_controls {
+media-player[user-idle] .media_controls {
   opacity: 0;
   visibility: hidden;
 }
 
 /*
-vds-media[user-idle] .controls_header {
+media-player[user-idle] .controls_header {
   opacity: 0;
   visibility: hidden;
 }
-vds-media[user-idle] .controls_body {
+media-player[user-idle] .controls_body {
   opacity: 0;
   visibility: hidden;
 }
-vds-media[user-idle] .row_title {
+media-player[user-idle] .row_title {
   opacity: 0;
   visibility: hidden;
 }
-vds-media[user-idle] .row_time {
+media-player[user-idle] .row_time {
   opacity: 0;
   visibility: hidden;
   height: 0;
 }
-vds-media[user-idle] vds-time-slider [part~='track-fill'] {
+media-player[user-idle] media-time-slider [part~='track-fill'] {
   background: rgba(255, 255, 255, .1);
 }
-vds-media[user-idle] vds-time-slider {
+media-player[user-idle] media-time-slider {
   --media-slider-height: 2px;
   --media-slider-track-height: 2px;
 }
