@@ -5,8 +5,8 @@
   <title>Caption Reader Web Component - Music with Lyrics</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark light">
-  <link href="/demo/demo.css" rel="stylesheet" type="text/css">
-  <script type="module" src="/captions-viewer.js"></script>
+  <link href="../../demo.css" rel="stylesheet" type="text/css">
+  <script type="module" src="../../../captions-viewer.js"></script>
   <script defer src="/_vercel/insights/script.js"></script>
 
   <style>
@@ -65,7 +65,7 @@
 
   <script defer src="https://www.youtube.com/iframe_api"></script>
   <script>
-    const component = document.querySelector('captions-viewer');
+    const captions = document.querySelector('captions-viewer');
 
     let player;
     function onYouTubeIframeAPIReady() {
@@ -82,15 +82,15 @@
       });
     }
 
-    // While playing, update the component with the current time.
+    // While playing, update the captions with the current time.
     // The faster 50ms is to make sure the sub cues are showing on time.
     let pingInterval;
     const playheadUpdate = 100;
     function onPlayerStateChange(event) {
       if (event.data === YT.PlayerState.PLAYING) {
-        component.playhead = player.getCurrentTime();
+        captions.playhead = player.getCurrentTime();
         pingInterval = setInterval(() => {
-          component.playhead = player.getCurrentTime();
+          captions.playhead = player.getCurrentTime();
         }, playheadUpdate);
       } else {
         clearInterval(pingInterval);
@@ -98,7 +98,7 @@
     }
 
     // On click, Seek's player to caption location.
-    component.addEventListener('seek', e => {
+    captions.addEventListener('seek', e => {
       player.seekTo(e.detail.value);
     });
   </script>

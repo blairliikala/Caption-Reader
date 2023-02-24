@@ -287,23 +287,11 @@ function sortCues(cues) {
   });
 }
 function removeDuplicateCues(cues) {
-  if (!cues)
-    return cues;
-  const cuesDeduplicated = [];
-  for (let index = 0; index < cues.length; index += 1) {
-    const cue = cues[index];
-    let match = 0;
-    for (let i = 0; i < cues.length; i += 1) {
-      const _cue = cues[i];
-      if (_cue.seconds.start === cue.seconds.start && _cue.seconds.end === cue.seconds.end) {
-        match = i;
-      }
-    }
-    if (index === match) {
-      cuesDeduplicated.push(cue);
-    }
-  }
-  return cuesDeduplicated;
+  const cuesFlat = cues.map((cue) => JSON.stringify(cue));
+  return cues.filter((cue, index) => {
+    const match = cues.findIndex((c, i) => cuesFlat[i] === cuesFlat[index]);
+    return index === match;
+  });
 }
 
 // src/themes/stylesheet.js
@@ -824,7 +812,7 @@ var CaptionsViewer = class extends HTMLElement {
       this.#debounceScrolling = true;
       clearTimeout(timeout);
       addScrollStyle();
-    });
+    }, { passive: true });
     this.#divs.root.addEventListener("touchend", () => {
       isTouch = false;
       timeout = setTimeout(() => {
@@ -940,16 +928,6 @@ var CaptionsViewer = class extends HTMLElement {
         style="animation-duration: ${Math.round(cue.seconds.end - cue.seconds.start)}s"
       >${!disabled.includes("timecode") && cue.type !== "spacer" ? timecode : ""} ${!disabled.includes("chapters") ? chapter : ""} ${!disabled.includes("text") ? text : ""} ${spacerProgress}
       </button></li>`;
-  }
-  #puneHTMLCues(total = 200) {
-    const li = this.querySelectorAll("li");
-    if (li.length <= total)
-      return;
-    let n = 0;
-    while (li.length > total) {
-      li[n].remove();
-      n += 1;
-    }
   }
   #updateCaptionClasses() {
     const divs = this.#divs.root.querySelectorAll(".cueitem");
@@ -1101,8 +1079,7 @@ var CaptionsViewer = class extends HTMLElement {
     newCues = cues.filter((cue) => cue.text[0] && cue.text[0].length !== 0);
     return newCues;
   }
-  // ********* Public Methods ********* //
-  async setTrack(player, lang) {
+  async #connectCaptions(player, lang) {
     const track = await CaptionsViewer.trackReady(player, lang).catch(() => void 0);
     if (!track) {
       return new Error("No subtitle track found.", player.textTracks);
@@ -1114,6 +1091,62 @@ var CaptionsViewer = class extends HTMLElement {
       this.updateCues(e.target);
     });
     return track;
+  }
+  #connectPlayhead(player, refresh = 0) {
+    if (!player) {
+      this.#event("error", "player is not defined.");
+      return;
+    }
+    if (refresh === 0) {
+      player.addEventListener("timeupdate", () => {
+        this.#playhead = player.currentTime;
+        this.#update(this.#playhead);
+      });
+    }
+    let hasPlayed = false;
+    player.addEventListener("play", () => {
+      hasPlayed = true;
+    });
+    if (refresh > 0) {
+      let pingInterval;
+      player.addEventListener("play", () => {
+        this.#playhead = player.currentTime;
+        pingInterval = setInterval(() => {
+          this.#playhead = player.currentTime;
+          this.#update(this.#playhead);
+        });
+      }, refresh);
+      player.addEventListener("pause", () => {
+        clearInterval(pingInterval);
+      });
+    }
+    player.addEventListener("seeking", () => {
+      this.#debounceScrolling = false;
+    });
+    this.addEventListener("seek", (e) => {
+      if (!hasPlayed)
+        player.play();
+      player.currentTime = e.detail.value;
+    });
+  }
+  // ********* Public Methods ********* //
+  async setTrack(player, lang) {
+    console.warn("setTrack was renamed to config.");
+    return this.config({ player, lang });
+  }
+  config(CONFIG) {
+    if (!CONFIG.player) {
+      this.#event("error", "player is not defined.");
+      return;
+    }
+    const refresh = CONFIG.refresh || void 0;
+    const lang = CONFIG.language || void 0;
+    const setPlayhead = CONFIG.setPlayhead === void 0 || CONFIG.setPlayhead === false;
+    const setCaptions = CONFIG.setCaptions === void 0 || CONFIG.setCaptions === false;
+    if (setPlayhead)
+      this.#connectPlayhead(CONFIG.player, refresh);
+    if (setCaptions)
+      this.#connectCaptions(CONFIG.player, lang);
   }
   // textTrack.cues would be the complete cue list plus more.
   async updateCues(textTrack) {

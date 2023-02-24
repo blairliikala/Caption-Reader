@@ -93,37 +93,11 @@
   </main>
 
   <script type="module">
-    const components = document.querySelectorAll('captions-viewer');
+    const captions = document.querySelectorAll('captions-viewer');
     const player = document.querySelector('video');
-
-    // iOS needs the video to have played before seeking.  Because... Safari.
-    let hasPlayed = false;
-    player.addEventListener('play', () => {
-      hasPlayed = true;
-    })
-
-    // Updates the captions.
-    player.ontimeupdate = () => {
-      components.forEach(component => {
-        component.playhead = player.currentTime;
-      });
-    };
-
-    // On click, Seek's player to caption location.
-    components.forEach(component => {
-      component.addEventListener('seek', e => {
-        if (!hasPlayed) player.play();
-        player.currentTime = e.detail.value;
-      });
-    })
-
-    // (optional) Scroll to the cue when user skips in the player timeline.
-    player.onseeking = () => {
-      components.forEach(component => {
-        component.debounceScrolling = false;
-      });
-    };
+    captions.forEach(caption => {
+      caption.config({ player });
+    });
   </script>
-
 </body>
 </html>

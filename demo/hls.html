@@ -5,7 +5,7 @@
   <title>Caption Reader Web Component - HLS.js</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark light">
-  <link href="demo.css" rel="stylesheet" type="text/css">
+  <link href="/demo/demo.css" rel="stylesheet" type="text/css">
   <script type="module" src="/captions-viewer.js"></script>
   <script defer src="/_vercel/insights/script.js"></script>
 
@@ -49,7 +49,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script type="module">
-    const component = document.querySelector('captions-viewer');
+    const captions = document.querySelector('captions-viewer');
     const player = document.querySelector('video');
 
     // const videoSrc = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8'; // Bunny.
@@ -62,45 +62,15 @@
       hls.attachMedia(player);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         player.addEventListener('loadedmetadata', async () => {
-          component.setTrack(player);
+          captions.config({ player, refresh: 100 });
         });
       });
     } else if (player.canPlayType('application/vnd.apple.mpegurl')) {
       player.src = videoSrc;
       player.addEventListener('play', () => {
-        component.setTrack(player, 'en');
+        captions.config({ player, refresh: 100, lang: 'en' });
       });
-    } else {
-      console.warn('There be issues batman.');
     }
-
-    // Using intervals to check for caption updates instead of play,
-    // so that 1 second cues show quicker.
-    let pingInterval;
-    const update = 100;
-    player.addEventListener('play', () => {
-      component.playhead = player.currentTime;
-      pingInterval = setInterval(() => {
-        component.playhead = player.currentTime;
-      });
-    }, update);
-    player.addEventListener('pause', () => {
-      clearInterval(pingInterval);
-    });
-
-    // On click, Seek's player to caption location.
-    component.addEventListener('seek', e => {
-      player.currentTime = e.detail.value;
-    });
-
-    // (optional) Scroll to the cue when user skips in the player timeline.
-    player.onseeking = () => {
-      component.debounceScrolling = false;
-    };
-
-    component.addEventListener('all', e => {
-      console.log(e.detail);
-    });
   </script>
 
 </body>

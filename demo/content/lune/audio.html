@@ -5,8 +5,8 @@
   <title>Caption Reader Web Component - Music with Lyrics</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark light">
-  <link href="/demo/demo.css" rel="stylesheet" type="text/css">
-  <script type="module" src="/captions-viewer.js"></script>
+  <link href="../../demo.css" rel="stylesheet" type="text/css">
+  <script type="module" src="../../../captions-viewer.js"></script>
   <script defer src="/_vercel/insights/script.js"></script>
 
   <style>
@@ -102,7 +102,7 @@
 
   <script type="module">
     import 'https://unpkg.com/wavesurfer.js';
-    const component = document.querySelector('captions-viewer');
+    const captions = document.querySelector('captions-viewer');
     const playButton = document.querySelector('#play');
     const pauseButton = document.querySelector('#pause');
 
@@ -121,9 +121,9 @@
     const playheadUpdate = 200;
 
     function startInterval() {
-      component.playhead = wavesurfer.getCurrentTime();
+      captions.playhead = wavesurfer.getCurrentTime();
       pingInterval = setInterval(() => {
-        component.playhead = wavesurfer.getCurrentTime();
+        captions.playhead = wavesurfer.getCurrentTime();
       }, playheadUpdate);
     }
     function stopInterval() {
@@ -131,7 +131,7 @@
     }
 
     // On click, Seek's player to caption location.
-    component.addEventListener('seek', e => {
+    captions.addEventListener('seek', e => {
       const duration = wavesurfer.getDuration();
       const seekTime = e.detail.value;
       const percent = seekTime / duration;
@@ -147,7 +147,7 @@
     */
 
     wavesurfer.on('seek', () => {
-      component.playhead = wavesurfer.getCurrentTime();
+      captions.playhead = wavesurfer.getCurrentTime();
     });
     wavesurfer.on('play', () => {
       startInterval();

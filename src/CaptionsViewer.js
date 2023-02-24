@@ -403,7 +403,7 @@ export class CaptionsViewer extends HTMLElement {
       this.#debounceScrolling = true;
       clearTimeout(timeout);
       addScrollStyle();
-    });
+    }, { passive: true });
     this.#divs.root.addEventListener('touchend', () => {
       isTouch = false;
       timeout = setTimeout(() => {
@@ -715,8 +715,7 @@ export class CaptionsViewer extends HTMLElement {
     return newCues;
   }
 
-  // ********* Public Methods ********* //
-  async setTrack(player, lang) {
+  async #connectCaptions(player, lang) {
     const track = await CaptionsViewer.trackReady(player, lang).catch(() => undefined);
     if (!track) {
       return new Error('No subtitle track found.', player.textTracks);
@@ -728,6 +727,64 @@ export class CaptionsViewer extends HTMLElement {
       this.updateCues(e.target);
     });
     return track;
+  }
+
+  #connectPlayhead(player, refresh = 0) {
+    if (!player) {
+      this.#event('error', 'player is not defined.');
+      return;
+    }
+    if (refresh === 0) {
+      player.addEventListener('timeupdate', () => {
+        this.#playhead = player.currentTime;
+        this.#update(this.#playhead);
+      });
+    }
+
+    let hasPlayed = false;
+    player.addEventListener('play', () => {
+      hasPlayed = true;
+    });
+    if (refresh > 0) {
+      let pingInterval;
+      player.addEventListener('play', () => {
+        this.#playhead = player.currentTime;
+        pingInterval = setInterval(() => {
+          this.#playhead = player.currentTime;
+          this.#update(this.#playhead);
+        });
+      }, refresh);
+      player.addEventListener('pause', () => {
+        clearInterval(pingInterval);
+      });
+    }
+    player.addEventListener('seeking', () => {
+      this.#debounceScrolling = false;
+    });
+    this.addEventListener('seek', e => {
+      if (!hasPlayed) player.play();
+      // eslint-disable-next-line no-param-reassign
+      player.currentTime = e.detail.value;
+    });
+  }
+
+  // ********* Public Methods ********* //
+  async setTrack(player, lang) {
+    console.warn('setTrack was renamed to config.');
+    return this.config({ player, lang });
+  }
+
+  config(CONFIG) {
+    if (!CONFIG.player) {
+      this.#event('error', 'player is not defined.');
+      return;
+    }
+    const refresh = CONFIG.refresh || undefined;
+    const lang = CONFIG.language || undefined;
+    const setPlayhead = CONFIG.setPlayhead === undefined || CONFIG.setPlayhead === false;
+    const setCaptions = CONFIG.setCaptions === undefined || CONFIG.setCaptions === false;
+    if (setPlayhead) this.#connectPlayhead(CONFIG.player, refresh);
+    if (setCaptions) this.#connectCaptions(CONFIG.player, lang);
   }
 
   // textTrack.cues would be the complete cue list plus more.

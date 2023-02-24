@@ -2,26 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Caption Reader Web Component Demo</title>
+  <title>Caption Reader Web captions Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark light">
   <link href="/demo/demo.css" rel="stylesheet" type="text/css">
   <script type="module" src="/captions-viewer.js"></script>
-  <script src="https://kit.fontawesome.com/41aa90cc96.js" crossorigin="anonymous"></script>
   <script defer src="/_vercel/insights/script.js"></script>
+  <script src="https://kit.fontawesome.com/41aa90cc96.js" crossorigin="anonymous"></script>
 
   <!-- Vidstack -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.3.2/styles/base.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.3.2/styles/ui/buttons.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.3.2/styles/ui/sliders.min.css">
-  <link rel="stylesheet" href="vidstack.css">
+  <link rel="stylesheet" href="/demo/vidstack.css">
   <script type="module" src="https://cdn.jsdelivr.net/npm/vidstack@0.3.2/dist/cdn/prod.js"></script>
 
   <style>
     .dark {
       --caption-background: rgba(0,0,0,.2);
     }
-    /* Hides the component until it has loaded */
+    /* Hides the captions until it has loaded */
     captions-viewer:not(:defined) {
       visibility: hidden
     }
@@ -65,17 +65,6 @@
       aspect-ratio="16/9"
       >
       <media-outlet></media-outlet>
-      <!--
-      <media-video playsinline>
-        <video playsinline>
-          <source src="https://blairliikala.com/testvids/captionreader/dune-av1-1080.mp4" type="video/mp4; codecs=av01.0.05M.08">
-          <source src="https://blairliikala.com/testvids/captionreader/dune.mp4" type="video/mp4">
-          <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" />
-          <track label="French" kind="subtitles" srclang="fr" src="content/dune/dune_fr.vtt" />
-          <track label="Spanish" kind="subtitles" srclang="es" src="content/dune/dune_es.vtt" />
-        </video>
-      </media-video>
-      -->
       <article class="media_controls">
         <header class="controls_header">
           <media-fullscreen-button>
@@ -121,16 +110,6 @@
       </div>
     </media-player>
 
-    <!-- Plain video element for refrence.
-    <video controls width="100%" playsinline>
-      <source src="/demo/content/dune/dune-av1-1080.mp4" type="video/mp4; codecs=av01.0.05M.08"">
-      <source src="/demo/content/dune/dune.mp4" type="video/mp4">
-      <track label="English" kind="subtitles" srclang="en" src="content/dune/dune_en.vtt" />
-      <track label="French" kind="subtitles" srclang="fr" src="content/dune/dune_fr.vtt" />
-      <track label="Spanish" kind="subtitles" srclang="es" src="content/dune/dune_fr.es" />
-    </video>
-    -->
-
     <captions-viewer
       src="/demo/content/dune/dune_en.vtt"
       height="25vh"
@@ -164,10 +143,10 @@
   </main>
 
   <script type="module">
-    const component = document.querySelector('captions-viewer');
+    const captions = document.querySelector('captions-viewer');
     const player = document.querySelector('media-player');
-    // const player = media.querySelector('video');
 
+    // Add multiple renditions to choose from, AV1, x264.
     player.onAttach(() => {
       player.src = [
         { src: 'https://blairliikala.com/testvids/captionreader/dune-av1-1080.mp4', type: 'video/mp4; codecs=av01.0.05M.08' },
@@ -175,39 +154,23 @@
       ];
     });
 
-    // iOS may need the video to have played before seeking.  Because... Safari.
-    let hasPlayed = false;
-    player.addEventListener('play', () => {
-      hasPlayed = true;
+    // To setup the caption viewer in Vidstack.
+    player.addEventListener('provider-setup', () => {
+      captions.config({
+        player: player.provider.video, // Vidstack's path to the <video> element.
+        refresh: 200,
+      });
     });
 
-    /* ************* Required ************* */
 
-    // Updates the captions.
-    player.addEventListener('time-update', () => {
-      component.playhead = player.currentTime;
-    });
-
-    // On click, Seek's player to caption location.
-    component.addEventListener('seek', e => {
-      if (!hasPlayed) player.play();
-      player.currentTime = e.detail.value;
-    });
-
-    // (optional) Scroll to the cue when user skips in the player timeline.
-    player.addEventListener('seeked', () => {
-      component.debounceScrolling = false;
-    });
-
-    /* ************* Optional ************ */
-
+    /* ************* Demo ************ */
     document.querySelector('#pause').addEventListener('click', () => {
-      component.pause();
+      captions.pause();
     });
 
     document.querySelector('#lang_change').addEventListener('click', e => {
       const file = e.target.value;
-      if (file) component.src = file;
+      if (file) captions.src = file;
     });
 
     function toggleDisabledProp(prop, disabled) {
@@ -223,19 +186,19 @@
     }
 
     document.querySelector('#toggleTimecode').addEventListener('click', () => {
-      component.disable = toggleDisabledProp('timecode', component.disable);
+      captions.disable = toggleDisabledProp('timecode', captions.disable);
     });
     document.querySelector('#toggleChapters').addEventListener('click', () => {
-      component.disable = toggleDisabledProp('chapters', component.disable);
+      captions.disable = toggleDisabledProp('chapters', captions.disable);
     });
     document.querySelector('#toggleText').addEventListener('click', () => {
-      component.disable = toggleDisabledProp('text', component.disable);
+      captions.disable = toggleDisabledProp('text', captions.disable);
     });
     document.querySelector('#toggleSingleLine').addEventListener('click', () => {
-      component.singleline = (!component.singleline);
+      captions.singleline = (!captions.singleline);
     });
 
-    component.addEventListener('all', e => {
+    captions.addEventListener('all', e => {
       console.log(e.detail);
     });
 
@@ -246,7 +209,5 @@
       player.currentTime = Math.round(player.currentTime + 15);
     });
   </script>
-
-
 </body>
 </html>

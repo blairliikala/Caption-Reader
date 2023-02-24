@@ -2,7 +2,7 @@
 <html lang="en-GB">
 <head>
   <meta charset="utf-8">
-  <title>Caption Reader Web Component - Agent 327</title>
+  <title>Caption Reader Web captions - Agent 327</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="dark light">
   <link href="/demo/demo.css" rel="stylesheet" type="text/css">
@@ -10,7 +10,7 @@
   <script defer src="/_vercel/insights/script.js"></script>
 
   <style>
-    /* Hides the component until it has loaded */
+    /* Hides the captions until it has loaded */
     captions-viewer:not(:defined) {
       visibility: hidden
     }
@@ -34,22 +34,20 @@
     <video controls width="100%" playsinline autopictureinpicture>
       <source src="https://blairliikala.com/testvids/captionreader/agent-av1.mp4" type="video/mp4; codecs=av01.0.05M.08" />
       <source src="https://blairliikala.com/testvids/captionreader/agent-720.mp4" type="video/mp4" />
-      <track label="English" kind="subtitles" srclang="en" src="content/agent/agent_en.vtt" />
-      <track label="Spanish" kind="subtitles" srclang="es" src="content/agent/agent_es.vtt" />
-      <track label="French" kind="subtitles" srclang="fr" src="content/agent/agent_fr.vtt" />
-      <track label="German" kind="subtitles" srclang="de" src="content/agent/agent_fr.vtt" />
+      <track label="English" kind="subtitles" srclang="en" src="./agent_en.vtt" />
+      <track label="Spanish" kind="subtitles" srclang="es" src="./agent_en.vtt" />
+      <track label="French" kind="subtitles" srclang="fr" src="./agent_en.vtt" />
+      <track label="German" kind="subtitles" srclang="de" src="./agent_en.vtt" />
     </video>
 
     <captions-viewer
-      src="/demo/content/agent/agent_en.vtt"
+      src="./agent_en.vtt"
       height="30vw"
       color="300"
       theme="dark"
     >
       <captions-viewer-empty></captions-viewer-empty>
     </captions-viewer>
-
-    <button id="pause" type="button" title="Turns the UI updates on/off">Toggle Caption Reading</button>
 
     <fieldset id="lang_change">
       <legend>Language</legend>
@@ -75,61 +73,41 @@
   </main>
 
   <script type="module">
-    const component = document.querySelector('captions-viewer');
+    const captions = document.querySelector('captions-viewer');
     const player = document.querySelector('video');
 
-    /***** Required *****/
+    captions.config({ player });
 
-    // Updates the captions.
-    player.ontimeupdate = () => {
-      component.playhead = player.currentTime;
-    };
-
-    // On click, Seek's player to caption location.
-    component.addEventListener('seek', e => {
-      player.currentTime = e.detail.value;
-    });
-
-    // (optional) Scroll to the cue when user skips in the player timeline.
-    player.onseeking = () => {
-      component.debounceScrolling = false;
-    };
-
-    /****** Optional *****/
-
-    document.querySelector('#pause').addEventListener('click', () => {
-      component.pause();
-    });
-
+    /* ********* Demo ********* */
     document.querySelector('#lang_change').addEventListener('click', e => {
       const file = e.target.value;
-      if (file) component.src = file;
+      if (file) captions.src = file;
     });
 
     function toggleDisabledProp(prop, split) {
       if (split.indexOf(prop) > 0) {
         const disable = split.filter(dis => dis !== prop).join('|');
-        component.disable = disable;
+        captions.disable = disable;
       } else {
         split.push(prop);
-        component.disable = split.join('|');
+        captions.disable = split.join('|');
       }
     }
 
     document.querySelector('#toggleTimecode').addEventListener('click', () => {
-      const split = component.disable.split('|');
+      const split = captions.disable.split('|');
       toggleDisabledProp('timecode', split);
     });
     document.querySelector('#toggleChapters').addEventListener('click', () => {
-      const split = component.disable.split('|');
+      const split = captions.disable.split('|');
       toggleDisabledProp('chapters', split);
     });
     document.querySelector('#toggleText').addEventListener('click', () => {
-      const split = component.disable.split('|');
+      const split = captions.disable.split('|');
       toggleDisabledProp('text', split);
     });
     document.querySelector('#toggleSingleLine').addEventListener('click', () => {
-      component.singleline = (!component.singleline);
+      captions.singleline = (!captions.singleline);
     });
   </script>
 
