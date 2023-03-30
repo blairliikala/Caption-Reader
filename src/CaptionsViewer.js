@@ -783,8 +783,9 @@ export class CaptionsViewer extends HTMLElement {
     const lang = CONFIG.language || undefined;
     const setPlayhead = CONFIG.setPlayhead === undefined || CONFIG.setPlayhead === false;
     const setCaptions = CONFIG.setCaptions === undefined || CONFIG.setCaptions === false;
+    const useSRC = (this.#src !== '');
     if (setPlayhead) this.#connectPlayhead(CONFIG.player, refresh);
-    if (setCaptions) this.#connectCaptions(CONFIG.player, lang);
+    if (setCaptions && !useSRC) this.#connectCaptions(CONFIG.player, lang);
   }
 
   // textTrack.cues would be the complete cue list plus more.
