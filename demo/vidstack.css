@@ -93,8 +93,8 @@ media-player {
   stroke-dasharray: 100;
   stroke-dashoffset: 50;
 }
-media-player:not([can-play]) .media-buffering-icon,
-media-player[waiting] .media-buffering-icon {
+media-player:not([data-can-play]) .media-buffering-icon,
+media-player[data-waiting] .media-buffering-icon {
   opacity: 1;
   animation: spin 1s linear infinite;
 }
@@ -160,34 +160,33 @@ media-player .media_controls {
   visibility: visible;  
   transition: all .3s ease;
 }
-
-media-player[user-idle] .media_controls {
+media-player:not(:hover) media-player[data-user-idle] .media_controls {
   opacity: 0;
   visibility: hidden;
 }
 
 /*
-media-player[user-idle] .controls_header {
+media-player[data-user-idle] .controls_header {
   opacity: 0;
   visibility: hidden;
 }
-media-player[user-idle] .controls_body {
+media-player[data-user-idle] .controls_body {
   opacity: 0;
   visibility: hidden;
 }
-media-player[user-idle] .row_title {
+media-player[data-user-idle] .row_title {
   opacity: 0;
   visibility: hidden;
 }
-media-player[user-idle] .row_time {
+media-player[data-user-idle] .row_time {
   opacity: 0;
   visibility: hidden;
   height: 0;
 }
-media-player[user-idle] media-time-slider [part~='track-fill'] {
+media-player[data-user-idle] media-time-slider [part~='track-fill'] {
   background: rgba(255, 255, 255, .1);
 }
-media-player[user-idle] media-time-slider {
+media-player[data-user-idle] media-time-slider {
   --media-slider-height: 2px;
   --media-slider-track-height: 2px;
 }
