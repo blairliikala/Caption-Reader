@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import { fixture, assert, waitUntil, oneEvent } from '@open-wc/testing';
+import { fixture, assert, waitUntil, oneEvent, aTimeout } from '@open-wc/testing';
 import { expect } from '@esm-bundle/chai';
 import '../captions-viewer.js';
 
@@ -107,4 +107,38 @@ describe('<captions-viewer>', () => {
     await waitUntil(() => ('cues' in component.captions), 'Captions parsed');
     expect(component.captions.cues.length).to.equal(5);
   });
+
+  it('tests config setup.', async () => {
+    const component = await fixture('<captions-viewer src="/test/dune_en.vtt"></captions-viewer>');
+    const player = await fixture('<video src="/test/dune.mp4" muted></video>');
+    await waitUntil(() => ('cues' in component.captions), 'Captions parsed');
+    component.config({ player });
+    player.play();
+    await aTimeout(1100);
+    // setTimeout(() => player.pause(), 1100);
+    expect(Math.round(component.playhead)).to.equal(1);
+  });
+
+  /* NOt working yet
+  it('tests config setup.', async () => {
+    const component = await fixture('<captions-viewer src="/test/dune_en.vtt"></captions-viewer>');
+    const player = await fixture('<video src="/test/dune.mp4" muted></video>');
+    await waitUntil(() => ('cues' in component.captions), 'Captions parsed');
+    component.config({ player });
+
+    const clickEvent = new MouseEvent('click', {
+      view: window,
+      bubbles: true,
+      cancelable: false,
+    });
+    const li = component.querySelectorAll('li');
+    const first = li[10];
+    console.log(first);
+    first.querySelector('button').dispatchEvent(clickEvent);
+    const test = await oneEvent(component, 'seek');
+    console.log(test);
+    await aTimeout(900);
+    console.log(player.currentTime);
+  });
+  */
 });
