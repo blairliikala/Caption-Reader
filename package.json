@@ -12,7 +12,7 @@
   "author": "Blair Liikala",
   "homepage": "https://github.com/blairliikala/Caption-Reader",
   "repository": "github:blairliikala/Caption-Reader",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "type": "module",
   "module": "index.js",
   "browser": "index.js",
@@ -29,9 +29,9 @@
     "test:watch": "web-test-runner --watch"
   },
   "devDependencies": {
-    "@custom-elements-manifest/analyzer": "^0.6.00",
-    "@esm-bundle/chai": "^4.3.4",
-    "@open-wc/eslint-config": "^9.2.0",
+    "@custom-elements-manifest/analyzer": "^0.8.0",
+    "@esm-bundle/chai": "^4.3",
+    "@open-wc/eslint-config": "^10.0.0",
     "@open-wc/testing": "3.1.7",
     "@web/dev-server": "^0.1.28",
     "@web/test-runner": "^0.15.0",
