@@ -823,7 +823,7 @@ export class CaptionsViewer extends HTMLElement {
     this.#paused = !this.#paused;
   }
 
-  setTheme(userPreference = undefined) {
+  setTheme(userPreference) {
     const theme = getTheme(userPreference || this.#theme || '');
     this.#theme = theme;
     this.#divs.root.dataset.theme = theme;

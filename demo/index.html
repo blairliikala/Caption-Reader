@@ -8,14 +8,13 @@
   <link href="/demo/demo.css" rel="stylesheet" type="text/css">
   <script type="module" src="/captions-viewer.js"></script>
   <script defer src="/_vercel/insights/script.js"></script>
-  <script src="https://kit.fontawesome.com/41aa90cc96.js" crossorigin="anonymous"></script>
 
   <!-- Vidstack -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.4.2/styles/base.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.4.2/styles/ui/buttons.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.4.2/styles/ui/sliders.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.5.3/styles/base.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.5.3/styles/ui/buttons.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.5.3/styles/ui/sliders.min.css">
   <link rel="stylesheet" href="/demo/vidstack.css">
-  <script type="module" src="https://cdn.jsdelivr.net/npm/vidstack@0.4.2/dist/cdn/prod.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/vidstack@0.5.3/dist/cdn/prod.js"></script>
 
   <style>
     .dark {
@@ -62,7 +61,6 @@
     <media-player
       poster="/demo/content/dune/poster.webp"
       playsinline
-      aspect-ratio="16/9"
       >
       <media-outlet></media-outlet>
       <article class="media_controls">
@@ -75,12 +73,10 @@
           </div>
         </header>
         <section class="controls_body">
-          <button type="button" id="skipbackwards">15 <i class="fa-solid fa-rotate-left"></i></button>
-          <media-play-button class="big_play">
-            <i class="fa-solid fa-play" slot="play"></i>
-            <i class="fa-solid fa-pause" slot="pause"></i>
+          <media-play-button>
+            <media-icon type="play" slot="play"></media-icon>
+            <media-icon type="pause" slot="pause"></media-icon>
           </media-play-button>
-          <button type="button" id="skipforwards"><i class="fa-solid fa-rotate-right"></i> 15</button>
         </section>
         <footer class="controls_footer">
           <div class="row row_title">
@@ -198,13 +194,6 @@
 
     captions.addEventListener('all', e => {
       console.log(e.detail);
-    });
-
-    document.querySelector('#skipbackwards').addEventListener('click', () => {
-      player.currentTime = Math.round(player.currentTime - 15);
-    });
-    document.querySelector('#skipforwards').addEventListener('click', () => {
-      player.currentTime = Math.round(player.currentTime + 15);
     });
   </script>
 </body>
