@@ -10,11 +10,17 @@
   <script defer src="/_vercel/insights/script.js"></script>
 
   <!-- Vidstack -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.5.3/styles/base.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.5.3/styles/ui/buttons.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.5.3/styles/ui/sliders.min.css">
+  <!--
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.6.13/styles/base.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.6.13/styles/ui/buttons.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.6.13/styles/ui/sliders.min.css">
   <link rel="stylesheet" href="/demo/vidstack.css">
-  <script type="module" src="https://cdn.jsdelivr.net/npm/vidstack@0.5.3/dist/cdn/prod.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/vidstack@0.6.13/dist/cdn/prod.js"></script>
+  -->
+
+  <link rel="stylesheet" href="https://cdn.vidstack.io/player/theme.css" />
+  <link rel="stylesheet" href="https://cdn.vidstack.io/player/video.css" />
+  <script src="https://cdn.vidstack.io/player" type="module"></script>
 
   <style>
     .dark {
@@ -58,6 +64,20 @@
       <p>Basic demo showing captions and toggling some of the options.</p>
     </section>
 
+    <media-player playsinline>
+      <media-provider>
+        <source src="./unpublished/videos/dune-av1-1080.mp4" data-width="1280" type="video/mp4; codecs=av01.0.05M.08" />
+        <source src="./unpublished/videos/dune-av1-720.mp4" data-width="720" type="video/mp4; codecs=av01.0.05M.08" />
+        <source src="./unpublished/videos/dune.mp4" type="video/mp4" />
+        <media-poster class="vds-poster" src="./content/dune/poster.webp" alt="Dune Movie Trailer"></media-poster>
+        <media-audio-layout></media-audio-layout>
+        <media-video-layout></media-video-layout>
+      </media-provider>
+      <!--<media-video-layout thumbnails="https://files.vidstack.io/sprite-fight/thumbnails.vtt"></media-video-layout>-->
+    </media-player>
+
+
+    <!--
     <media-player
       poster="/demo/content/dune/poster.webp"
       playsinline
@@ -103,6 +123,7 @@
         </svg>
       </div>
     </media-player>
+    -->
 
     <captions-viewer
       src="/demo/content/dune/dune_en.vtt"
@@ -137,64 +158,59 @@
   </main>
 
   <script type="module">
-    const captions = document.querySelector('captions-viewer');
-    const player = document.querySelector('media-player');
 
-    // Add multiple renditions to choose from, AV1, x264.
-    player.onAttach(() => {
-      player.src = [
-        { src: 'https://blairliikala.com/testvids/captionreader/dune-av1-1080.mp4', type: 'video/mp4; codecs=av01.0.05M.08' },
-        { src: 'https://blairliikala.com/testvids/captionreader/dune.mp4', type: 'video/mp4' },
-      ];
-    });
+    function run() {
+      const captions = document.querySelector('captions-viewer');
+      const player = document.querySelector('media-player');
 
-    // To setup the caption viewer in Vidstack.
-    player.addEventListener('provider-setup', () => {
-      captions.config({
-        player: player.provider.video, // Vidstack's path to the <video> element.
-        refresh: 200,
+      // To setup the caption viewer in Vidstack.
+      player.addEventListener('provider-setup', () => {
+        captions.config({
+          player: player.provider.video, // Vidstack's path to the <video> element.
+          refresh: 200,
+        });
       });
-    });
 
+      /* ************* Demo ************ */
+      document.querySelector('#pause').addEventListener('click', () => {
+        captions.pause();
+      });
 
-    /* ************* Demo ************ */
-    document.querySelector('#pause').addEventListener('click', () => {
-      captions.pause();
-    });
+      document.querySelector('#lang_change').addEventListener('click', e => {
+        const file = e.target.value;
+        if (file) captions.src = file;
+      });
 
-    document.querySelector('#lang_change').addEventListener('click', e => {
-      const file = e.target.value;
-      if (file) captions.src = file;
-    });
-
-    function toggleDisabledProp(prop, disabled) {
-      const split = disabled.split('|');
-      let newDisabled = '';
-      if (split.indexOf(prop) >= 0) {
-        newDisabled = split.filter(dis => dis !== prop);
-      } else {
-        split.push(prop);
-        newDisabled = split;
+      function toggleDisabledProp(prop, disabled) {
+        const split = disabled.split('|');
+        let newDisabled = '';
+        if (split.indexOf(prop) >= 0) {
+          newDisabled = split.filter(dis => dis !== prop);
+        } else {
+          split.push(prop);
+          newDisabled = split;
+        }
+        return newDisabled?.join('|');
       }
-      return newDisabled?.join('|');
+
+      document.querySelector('#toggleTimecode').addEventListener('click', () => {
+        captions.disable = toggleDisabledProp('timecode', captions.disable);
+      });
+      document.querySelector('#toggleChapters').addEventListener('click', () => {
+        captions.disable = toggleDisabledProp('chapters', captions.disable);
+      });
+      document.querySelector('#toggleText').addEventListener('click', () => {
+        captions.disable = toggleDisabledProp('text', captions.disable);
+      });
+      document.querySelector('#toggleSingleLine').addEventListener('click', () => {
+        captions.singleline = (!captions.singleline);
+      });
+
+      captions.addEventListener('all', e => {
+        console.log(e.detail);
+      });
     }
-
-    document.querySelector('#toggleTimecode').addEventListener('click', () => {
-      captions.disable = toggleDisabledProp('timecode', captions.disable);
-    });
-    document.querySelector('#toggleChapters').addEventListener('click', () => {
-      captions.disable = toggleDisabledProp('chapters', captions.disable);
-    });
-    document.querySelector('#toggleText').addEventListener('click', () => {
-      captions.disable = toggleDisabledProp('text', captions.disable);
-    });
-    document.querySelector('#toggleSingleLine').addEventListener('click', () => {
-      captions.singleline = (!captions.singleline);
-    });
-
-    captions.addEventListener('all', e => {
-      console.log(e.detail);
-    });
+  run();
   </script>
 </body>
 </html>
