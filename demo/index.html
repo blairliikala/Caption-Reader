@@ -9,15 +9,6 @@
   <script type="module" src="/captions-viewer.js"></script>
   <script defer src="/_vercel/insights/script.js"></script>
 
-  <!-- Vidstack -->
-  <!--
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.6.13/styles/base.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.6.13/styles/ui/buttons.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@0.6.13/styles/ui/sliders.min.css">
-  <link rel="stylesheet" href="/demo/vidstack.css">
-  <script type="module" src="https://cdn.jsdelivr.net/npm/vidstack@0.6.13/dist/cdn/prod.js"></script>
-  -->
-
   <link rel="stylesheet" href="https://cdn.vidstack.io/player/theme.css" />
   <link rel="stylesheet" href="https://cdn.vidstack.io/player/video.css" />
   <script src="https://cdn.vidstack.io/player" type="module"></script>
@@ -66,64 +57,15 @@
 
     <media-player playsinline>
       <media-provider>
-        <source src="./unpublished/videos/dune-av1-1080.mp4" data-width="1280" type="video/mp4; codecs=av01.0.05M.08" />
-        <source src="./unpublished/videos/dune-av1-720.mp4" data-width="720" type="video/mp4; codecs=av01.0.05M.08" />
-        <source src="./unpublished/videos/dune.mp4" type="video/mp4" />
+        <source src="https://blairliikala.com/testvids/captionreader/dune-av1-1080.mp4" data-width="1280" type="video/mp4; codecs=av01.0.05M.08" />
+        <source src="https://blairliikala.com/testvids/captionreader/dune-av1-720.mp4" data-width="720" type="video/mp4; codecs=av01.0.05M.08" />
+        <source src="https://blairliikala.com/testvids/captionreader/dune.mp4" type="video/mp4" />
         <media-poster class="vds-poster" src="./content/dune/poster.webp" alt="Dune Movie Trailer"></media-poster>
         <media-audio-layout></media-audio-layout>
         <media-video-layout></media-video-layout>
       </media-provider>
       <!--<media-video-layout thumbnails="https://files.vidstack.io/sprite-fight/thumbnails.vtt"></media-video-layout>-->
     </media-player>
-
-
-    <!--
-    <media-player
-      poster="/demo/content/dune/poster.webp"
-      playsinline
-      >
-      <media-outlet></media-outlet>
-      <article class="media_controls">
-        <header class="controls_header">
-          <div class="position_end volume">
-            <media-volume-slider>
-              <media-slider-value-text type="pointer" format="percent" slot="preview" />
-            </media-volume-slider>
-            <media-mute-button></media-mute-button>
-          </div>
-        </header>
-        <section class="controls_body">
-          <media-play-button>
-            <media-icon type="play" slot="play"></media-icon>
-            <media-icon type="pause" slot="pause"></media-icon>
-          </media-play-button>
-        </section>
-        <footer class="controls_footer">
-          <div class="row row_title">
-            <p>Dune Trailer</p>
-          </div>
-          <div class="row row_slider">
-            <media-time-slider>
-              <div slot="preview">
-                <media-slider-video src="https://blairliikala.com/testvids/captionreader/dune.mp4"></media-slider-video>
-                <media-slider-value-text type="pointer" format="time" />
-              </div>
-            </media-time-slider>
-          </div>
-          <div class="row row_time">
-            <media-time type="current"></media-time>
-            <media-time type="current" remainder class="position_end"></media-time>
-          </div>
-        </footer>
-      </article>
-      <div class="media-buffering-container">
-        <svg class="media-buffering-icon" fill="none" viewBox="0 0 120 120" aria-hidden="true">
-          <circle class="media-buffering-track" cx="60" cy="60" r="54" stroke="currentColor" stroke-width="8"></circle>
-          <circle class="media-buffering-track-fill" cx="60" cy="60" r="54" stroke="currentColor" stroke-width="10" pathLength="100"></circle>
-        </svg>
-      </div>
-    </media-player>
-    -->
 
     <captions-viewer
       src="/demo/content/dune/dune_en.vtt"
