@@ -1,26 +1,8 @@
-/*
-  TODO
-  - Handling for tons of caption cues.
-    - Prune.  Method to prune x number of captions from the start, and refresh.
-    - load x captions at a time.
-  - Split HTML into file?
-  - Migrate from data properties for speed.
-*/
-
-/* eslint-disable lines-between-class-members */
 import { parseVTT, parseTextTrack } from './utilities/parsers.js';
-import {
-  prettyTimecode,
-  getTheme,
-  getSupportedFileType,
-  isElementInViewport,
-} from './utilities/utilities.js';
-import {
-  parseSubTextCues,
-  addCueSpaces,
-  sortCues,
-  removeDuplicateCues,
-} from './utilities/cues.js';
+import { getSupportedFileType, isElementInViewport } from './utilities/utilities.js';
+import { CueParser } from './utilities/cues.js';
+import { getTheme, CustomStyles } from './themes/themes.js';
+import { cueToHTML, renderAllCaptions, updateCaptionClasses } from './utilities/dom.js';
 import { defaultStyles } from './themes/stylesheet.js';
 
 export class CaptionsViewer extends HTMLElement {
@@ -29,6 +11,7 @@ export class CaptionsViewer extends HTMLElement {
 
   // Params
   #src = ''; // location of a vtt src.
+  #elementName;
   #playhead = 0; // current seconds from start.
   #height = '400px'; // Hight of container, applied as inline style.
   #debounce = 4000; // In seconds how long to
@@ -304,8 +287,10 @@ export class CaptionsViewer extends HTMLElement {
     this.#create();
   }
 
+  //********************** Startup **********************//
   async #create(params) {
     this.#src = this.getAttribute('src') || this.#src;
+    this.#elementName = this.getAttribute('player') || this.#elementName;
     this.#playhead = parseInt(this.getAttribute('playhead'), 10) || this.#playhead;
     this.#height = this.getAttribute('height') || this.#height;
     this.#debounce = parseInt(this.getAttribute('debounce'), 10) || this.#debounce;
@@ -327,15 +312,8 @@ export class CaptionsViewer extends HTMLElement {
     }
 
     this.setTheme();
-
-    const customStyles = [];
-    if (this.#height !== '400px') {
-      customStyles.push(`height: ${this.#height}`);
-    }
-    if (this.#color) {
-      customStyles.push(`--base: ${this.#color}`);
-    }
-    this.#divs.root?.setAttribute('style', customStyles.join('; '));
+    const customStyles = new CustomStyles({ height: this.#height, color: this.#color })
+    this.#divs.root?.setAttribute('style', customStyles.toCss);
 
     if (params?.changes.name === 'src' || params?.changes.name === 'textTrack') {
       this.#captions = await this.#parse(this.#textTrack, this.#src);
@@ -347,8 +325,26 @@ export class CaptionsViewer extends HTMLElement {
     }
 
     this.#removeNoCaptions();
-    this.#divs.root.innerHTML = this.#renderAllCaptions(this.#captions);
+    this.#divs.root.innerHTML = renderAllCaptions(this.#captions, this.#disable, this.#singleline);
+
+    if (this.#elementName) {
+      this.#connectPlayhead();
+    }
   }
+
+  #displayNoCaptions() {
+    this.#divs.root?.classList.add('hidden');
+    if (!this.#divs.empty) {
+      this.#divs.root.innerHTML = '';
+      return;
+    }
+    if (this.#divs.empty?.innerHTML === '') {
+      this.#divs.empty.innerHTML = 'No captions.';
+      return;
+    }
+
+    this.#divs.empty.classList.remove('hidden');
+  }  
 
   async #parse(TEXTTRACK, SRC) {
     let captions;
@@ -372,19 +368,68 @@ export class CaptionsViewer extends HTMLElement {
     }
 
     if (!captions || !captions.cues) {
-      // console.error('Not able to find and render captions.', captions);
       this.#displayNoCaptions();
       return null;
     }
 
-    // captions.cues = pruneCues(captions.cues, 200); // TODO does not work yet.
-    captions.cues = parseSubTextCues(captions.cues);
-    captions.cues = removeDuplicateCues(captions.cues);
-    captions.cues = addCueSpaces(captions.cues, this.#spacer);
-    captions.cues = sortCues(captions.cues);
+    captions.cues = new CueParser(captions.cues)
+      .parseSubTextCues()
+      .removeDuplicateCues()
+      .addCueSpaces(this.#spacer)
+      .sortCues().cues;
 
     this.#textTrack = textTrack;
     return captions;
+  }
+
+  #setCuesStatus() {
+    if (!this.#captions || !('cues' in this.#captions)) return;
+    this.#captions.cues = this.#captions.cues.map(cue => {
+      if (cue.seconds.end - this.#nudge < this.#playhead) {
+        cue.active = false;
+        cue.status = 'passed';
+      }
+      if (cue.seconds.start - this.#nudge > this.#playhead) {
+        cue.active = false;
+        cue.status = 'upcoming';
+      }
+      if (cue.seconds.start - this.#nudge < this.#playhead
+            && cue.seconds.end - this.#nudge > this.#playhead) {
+        cue.active = true;
+        cue.status = 'active';
+      }
+      return cue;
+    });
+
+    const passed = this.#captions.cues.filter(cue => cue.status === 'passed');
+
+    // Mark the upcoming cue.
+    const upcomingIndex = this.#captions.cues.findIndex(cue => cue.status === 'upcoming');
+    if (upcomingIndex > 0) {
+      this.#captions.cues[upcomingIndex].status = 'next';
+    }
+
+    // Mark the previous cue.
+    if (passed && passed.length > 0) {
+      this.#captions.cues[passed.length - 1].status = 'previous';
+    }
+
+    // Mark sub cues if they exist.
+    this.#captions.cues = this.#captions.cues.map(cue => {
+      if (cue.subCues) {
+        cue.subCues.map(sub => {
+          // Disabling becuase a deep clone is a performane hit.
+          // eslint-disable-next-line no-param-reassign
+          sub.status = sub.seconds < this.#playhead ? 'sub_active' : 'sub_upcoming';
+          return sub;
+        });
+      }
+      return cue;
+    });
+  }
+
+  #removeNoCaptions() {
+    this.#divs.empty?.classList.add('hidden');
   }
 
   #setScrollingEvents() {
@@ -488,106 +533,8 @@ export class CaptionsViewer extends HTMLElement {
       }
     }
 
-    this.#updateCaptionClasses();
+    updateCaptionClasses(this.#divs, this.#captions);
     this.#scrollToCue();
-  }
-
-  #renderAllCaptions(captions) {
-    if (!captions) return '';
-    const disabled = this.#disable ? this.#disable.split('|') : [];
-    let html = '<ol>';
-    captions.cues?.forEach((cue, index) => {
-      html += this.#cueToHTML(cue, index, disabled);
-    });
-    html += '</ol>';
-    return html;
-  }
-
-  #cueToHTML(cue, index, disabled) {
-    if (!cue.timecode) return '';
-    const styleName = cue.status || '';
-    const timecode = `<span class="timecode">${prettyTimecode(cue.timecode.start)}</span>`;
-    const chapter = cue.chapter ? `<span class="chapter">${cue.chapter}</span>` : '';
-    const textJoiner = this.#singleline ? ' ' : '<br />';
-
-    let spacerProgress = '';
-    if (cue.type === 'spacer') {
-      const progMax = Math.round(cue.seconds.end - cue.seconds.start);
-      spacerProgress = `<progress max="${progMax}" value="0" data-progress="${index}"></progress>`;
-    }
-
-    let text = `<span class="text">${cue.text.join(textJoiner)}</span>`;
-    if (cue.subCues) {
-      text = '<span class="text">';
-      text += cue.subCues.map(sub => `<span class="${sub.status}">${sub.text}</span>`).join('');
-      text += '</span>';
-    }
-
-    return `<li class="cueitem">
-      <button
-        type="button"
-        tabindex="0"
-        data-start="${cue.seconds.start}"
-        class="cue ${styleName} ${cue.type || ''}"
-        data-index="${index}"
-        style="animation-duration: ${Math.round(cue.seconds.end - cue.seconds.start)}s"
-      >${!disabled.includes('timecode') && cue.type !== 'spacer' ? timecode : ''} ${!disabled.includes('chapters') ? chapter : ''} ${!disabled.includes('text') ? text : ''} ${spacerProgress}
-      </button></li>`;
-  }
-
-  #updateCaptionClasses() {
-    const divs = this.#divs.root.querySelectorAll('.cueitem');
-    divs.forEach((item, index) => {
-      const cue = this.#captions.cues[index];
-      item.firstElementChild.classList.remove('upcoming', 'next', 'active', 'previous', 'passed');
-      item.firstElementChild.classList.add(cue?.status);
-    });
-  }
-
-  #setCuesStatus() {
-    if (!this.#captions || !('cues' in this.#captions)) return;
-    this.#captions.cues = this.#captions.cues.map(cue => {
-      if (cue.seconds.end - this.#nudge < this.#playhead) {
-        cue.active = false;
-        cue.status = 'passed';
-      }
-      if (cue.seconds.start - this.#nudge > this.#playhead) {
-        cue.active = false;
-        cue.status = 'upcoming';
-      }
-      if (cue.seconds.start - this.#nudge < this.#playhead
-            && cue.seconds.end - this.#nudge > this.#playhead) {
-        cue.active = true;
-        cue.status = 'active';
-      }
-      return cue;
-    });
-
-    const passed = this.#captions.cues.filter(cue => cue.status === 'passed');
-
-    // Mark the upcoming cue.
-    const upcomingIndex = this.#captions.cues.findIndex(cue => cue.status === 'upcoming');
-    if (upcomingIndex > 0) {
-      this.#captions.cues[upcomingIndex].status = 'next';
-    }
-
-    // Mark the previous cue.
-    if (passed && passed.length > 0) {
-      this.#captions.cues[passed.length - 1].status = 'previous';
-    }
-
-    // Mark sub cues if they exist.
-    this.#captions.cues = this.#captions.cues.map(cue => {
-      if (cue.subCues) {
-        cue.subCues.map(sub => {
-          // Disabling becuase a deep clone is a performane hit.
-          // eslint-disable-next-line no-param-reassign
-          sub.status = sub.seconds < this.#playhead ? 'sub_active' : 'sub_upcoming';
-          return sub;
-        });
-      }
-      return cue;
-    });
   }
 
   #scrollToCue() {
@@ -602,24 +549,6 @@ export class CaptionsViewer extends HTMLElement {
     this.#isAutoScroll = true;
     // About how long a browser smooth-scroll will take:
     setTimeout(() => { this.#isAutoScroll = false; }, 1000);
-  }
-
-  #displayNoCaptions() {
-    this.#divs.root?.classList.add('hidden');
-    if (!this.#divs.empty) {
-      this.#divs.root.innerHTML = '';
-      return;
-    }
-    if (this.#divs.empty?.innerHTML === '') {
-      this.#divs.empty.innerHTML = 'No captions.';
-      return;
-    }
-
-    this.#divs.empty.classList.remove('hidden');
-  }
-
-  #removeNoCaptions() {
-    this.#divs.empty?.classList.add('hidden');
   }
 
   #event(name, value, object) {
@@ -729,11 +658,31 @@ export class CaptionsViewer extends HTMLElement {
     return track;
   }
 
-  #connectPlayhead(player, refresh = 0) {
-    if (!player) {
-      this.#event('error', 'player is not defined.');
+  #findPlayerElement(playerDiv, elementName) {
+    const player_candidate = playerDiv ? playerDiv : document.querySelector(`${elementName}`);
+
+    if (!player_candidate) {
       return;
     }
+
+    let player_search;
+    if (player_candidate.tagName !== 'VIDEO' && player_candidate.tagName !== 'AUDIO') {
+      player_search = player_candidate.querySelector('video') ?? player_candidate.querySelector('audio');
+    } else {
+      player_search = player_candidate
+    }
+    return player_search;
+  }
+
+  #connectPlayhead(playerDiv, refresh = 0) {
+
+    const player = this.#findPlayerElement(playerDiv, this.#elementName);
+
+    if (!player) {
+      this.#event('error', 'A video or audio player element can not be found for automatic setup.');
+      return;
+    }
+
     if (refresh === 0) {
       player.addEventListener('timeupdate', () => {
         this.#playhead = player.currentTime;
@@ -769,11 +718,6 @@ export class CaptionsViewer extends HTMLElement {
   }
 
   // ********* Public Methods ********* //
-  async setTrack(player, lang) {
-    console.warn('setTrack was renamed to config.');
-    return this.config({ player, lang });
-  }
-
   config(CONFIG) {
     if (!CONFIG.player) {
       this.#event('error', 'player is not defined.');
@@ -805,7 +749,7 @@ export class CaptionsViewer extends HTMLElement {
     // Update DOM.
     let html = '';
     newCaptions.cues.forEach((cue, index) => {
-      html += this.#cueToHTML(cue, index + prevLength, this.#disable);
+      html += cueToHTML(cue, index + prevLength, this.#disable, this.#singleline);
     });
     const contianer = this.#divs.root.querySelector('ol');
     if (contianer) contianer.innerHTML += html;
@@ -827,5 +771,6 @@ export class CaptionsViewer extends HTMLElement {
     const theme = getTheme(userPreference || this.#theme || '');
     this.#theme = theme;
     this.#divs.root.dataset.theme = theme;
+    return theme;
   }
 }

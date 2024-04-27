@@ -28,17 +28,24 @@ npm i captions-viewer
 </script>
 ```
 
-Or
-
 ```html
-<script src="https://cdn.jsdelivr.net/npm/captions-viewer/dist/captions-viewer.min.js"></script>
+<script type="module" src="'https://cdn.jsdelivr.net/npm/captions-viewer/+esm"></script>
 ```
 
-## Add Caption File
+## Quickstart
 
-Provide the path to a caption file the `src` parameter on the element.  The caption file procesesd by the browser-native caption parser for vtt with a backup lightweight parser for srt or if there is a problem.
+```html
+<video controls src="video.mp4" id="my_player"></video>
+<captions-viewer src="caption.vtt" player="#my_player"></caption-viewer>
+```
 
-This example will display captions, but nothing else just yet:
+## Guide
+
+### Add Caption File
+
+First, provide the path to a caption file the `src` parameter on the element.  This must be an already created vtt or srt captions file.  The caption file procesesd by the browser-native caption parser for vtt with a backup lightweight parser for srt or if there is a problem.
+
+This example will display captions, but will not follow the video yet:
 
 ```html
 <video controls src="video.mp4"></video>
@@ -46,9 +53,9 @@ This example will display captions, but nothing else just yet:
 <captions-viewer src="caption.vtt"></caption-viewer>
 ```
 
-## Link the Video Player and Captions Reader
+### Link the Video Player and Captions Reader
 
-To make the captions to update when the video is playing, and respond to clicks, the captiosn component needs to be linked to the video player. Simply use the `config` setup and pass the video element shown below. Most (if not all) have a property to get the native `<video>` or `<audio>` element, but if not there is a way describe later on to manually connect the listeners.
+To make the captions to update when the video is playing, and respond to clicks, the captions component needs to be linked to the video player. Simply use the `config` setup and pass the video element shown below. Most (if not all) have a property to get the native `<video>` or `<audio>` element, but if not there is a way describe later on to manually connect the listeners.
 
 Simple example connecting a native video tag to the component:
 
@@ -129,19 +136,31 @@ If the captions/subtitles are in the HLS stream, such as during a live stream, c
 
 ## Tag Parameters
 
+### Setup
+
 |  Name | Default | Description |
 | - | - | - |
 | `src`       | null   | Location of the vtt/srt file. |
-| `playhead`   | 0      | The current player time, in seconds, to keep the player and reader in-sync. (see more below) |
-| `debounce`   | 5000   | Control the time between scrolling. Time in ms between the last scroll (user or automatic) |
+| `playhead`   | 0      | The current video/audio player time, in seconds, to keep the player and reader in-sync. (see more below) |
+| `youtube` | false | Enable `true` if the caption vtt track came from YouTube for some special handling. |
+| `textTrack` | undefined |  Will hold the HTMLTextTrack.  The native browser text track object.  Pass this along for more custom player implementations. |
+| `captions` | undefined | Read-only property of the internal caption cues list. Useful for debugging. |
+| `paused` | false | The on/off button.  If the reader system is enabled or not. |
+
+### Display
+
+|  Name | Default | Description |
+| - | - | - |
 | `singleline` | false  | True will show all text for a cue on a single line.  False will obey the line breaks in the caption file. |
 | `disable`    | empty  | Turn off displaying `timecode` `chapters` or `text`. Use a pipe `\|` between each option, such as `timecode\|chapters` |
-| `youtube` | false | Enable `true` if the caption vtt track came from YouTube for some special handling. |
+
+### Adjusting Playback
+
+|  Name | Default | Description |
+| - | - | - |
+| `debounce`   | 5000   | Control the time between scrolling. Time in ms between the last scroll (user or automatic) |
 | `nudge` | 0.5 | Amount in seconds to adjust the cues to trigger sooner. 0.5 means the cue will show 500ms sooner than the timecode. |
 | `spacer` | 5 | Time in seconds between cues where a spacer (progress bar) will display |
-| `captions` | undefined | Read-only property of the internal object of caption cues. |
-| `paused` | false | If the reader system is enabled or not. |
-| `textTrack` | undefined |  HTMLTextTrack. |
 
 ### Simple Theming
 
@@ -162,6 +181,8 @@ If the captions/subtitles are in the HLS stream, such as during a live stream, c
 | `lang` | Language code that matches the tracks code. | string | `en` |
 | `refresh` | Time in milliseconds to update cues as player plays. | number | player `timeUpdate` |
 
+Example:
+
 ```javascript
 const captions = document.querySelector('captions-viewer');
 captions.config({
@@ -173,13 +194,12 @@ captions.config({
 
 ### `pause()`
 
-A toggle to stop/start the component without removing it.  All events, scrolling and updating stop.
+A toggle to stop/start the component without removing it.  All events, scrolling and updating will stop.
 
 ```html
-<button>Toggle Caption Reading</button>
+<button type="button">Toggle Caption Reading</button>
 <script>
-...
-button.addEventListener('click', () => {
+document.querySelector('button').addEventListener('click', () => {
   captions.pause();
 });
 </script>
@@ -195,7 +215,7 @@ captions.setTheme('dark');
 
 ### `updateCues(textTrack.cues)`
 
-For cue updates such as live streaming or HLS when using a manual setup instead of `config()`. This method expects a `textTrack` cue list of all the current cues, plus new cues. It has better performance by only rendering the new cues, while updating the `textTrack` property is a complete refresh and re-render of all the cues.
+Live streaming and HLS can push text cue updates as the video plays.  To update the reader with new use, this method will append those cues. This method expects a `textTrack` cue list of all the current cues, plus new cues. It has better performance by only rendering the new cues than pushing updates to the `textTrack` property as `textTrack` is a complete refresh and re-render of all the cues.
 
 ```javascript
 const tracks = player.textTracks;
@@ -238,7 +258,7 @@ Show captions for a video using the native caption tracy system, with a dynamic 
   captions-viewer:not(:defined) {
     visibility: hidden
   }
-  /* set the container styles */
+  /* set some container styles */
   captions-viewer {
     font-family: arial;
     display: block;
@@ -246,7 +266,7 @@ Show captions for a video using the native caption tracy system, with a dynamic 
   }
 </style>
 
-<video controls>
+<video controls id="demo_video">
   <source src="movie.mp4" type="video/mp4">
   <!-- Not required for the reader,
       but best for accessibility to keep them here for the actual player. -->
@@ -255,6 +275,7 @@ Show captions for a video using the native caption tracy system, with a dynamic 
 
 <captions-viewer
   src="subtitle.vtt"
+  player="#demo_video"
   height="30vw"
   singleline="true"
   color="300"
@@ -265,31 +286,6 @@ Show captions for a video using the native caption tracy system, with a dynamic 
 </captions-viewer>
 
 <script type="module" src="/dist/captions-viewer.js"></script>
-<script type="module">
-
-  const captions = document.querySelector('captions-viewer');
-  const player = document.querySelector('video');
-
-  // Auto Setup
-    captions.config({ player });
-
-  // Manual:
-
-    // Updates the captions.
-    player.ontimeupdate = () => {
-      captions.playhead = player.currentTime;
-    }
-
-    // On click, Seek's player to caption location.
-    captions.addEventListener('seek', e => {
-      player.currentTime = e.detail.value;
-    });
-
-    // (optional) Scroll to the cue when user skips in the player timeline.
-    player.onseeking = () => {
-      captions.debounceScrolling = false;
-    };
-</script>
 ```
 
 ### YouTube

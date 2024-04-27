@@ -38,6 +38,8 @@
 
     <h1>< captions-viewer ></h1>
 
+    <p>Captions Viewer is a native web component that shows captions while a video plays, similar to Apple or Spotify lyrics.  It takes a pre-made vtt file, and a link to a video player.</p>
+
     <h2>Examples</h2>
     <nav>
       <ul>
@@ -52,10 +54,10 @@
     </nav>
 
     <section class="info">
-      <p>Basic demo showing captions and toggling some of the options.</p>
+      <p>This is a basic demo showing captions with the ability to toggle several component options.</p>
     </section>
 
-    <media-player playsinline>
+    <media-player playsinline id="video_player_demo">
       <media-provider>
         <source src="https://blairliikala.com/testvids/captionreader/dune-av1-1080.mp4" data-width="1280" type="video/mp4; codecs=av01.0.05M.08" />
         <source src="https://blairliikala.com/testvids/captionreader/dune-av1-720.mp4" data-width="720" type="video/mp4; codecs=av01.0.05M.08" />
@@ -69,7 +71,8 @@
 
     <captions-viewer
       src="/demo/content/dune/dune_en.vtt"
-      height="25vh"
+      player="#video_player_demo"
+      height="40vh"
       singleline="true"
       color="300"
       theme="dark"
@@ -100,59 +103,58 @@
   </main>
 
   <script type="module">
+    const captions = document.querySelector('captions-viewer');
+    const player = document.querySelector('media-player');
 
-    function run() {
-      const captions = document.querySelector('captions-viewer');
-      const player = document.querySelector('media-player');
-
-      // To setup the caption viewer in Vidstack.
-      player.addEventListener('provider-setup', () => {
-        captions.config({
-          player: player.provider.video, // Vidstack's path to the <video> element.
-          refresh: 200,
-        });
+    // To setup the caption viewer in Vidstack the video element has to be passed to the caption reader component.
+    /*
+    player.addEventListener('provider-setup', () => {
+      captions.config({
+        player: player.provider.video, // Vidstack's path to the <video> element.
+        refresh: 200,
       });
+    });
+    */
 
-      /* ************* Demo ************ */
-      document.querySelector('#pause').addEventListener('click', () => {
-        captions.pause();
-      });
 
-      document.querySelector('#lang_change').addEventListener('click', e => {
-        const file = e.target.value;
-        if (file) captions.src = file;
-      });
+    /* ************* Everything below is for the demo ************ */
+    document.querySelector('#pause').addEventListener('click', () => {
+      captions.pause();
+    });
 
-      function toggleDisabledProp(prop, disabled) {
-        const split = disabled.split('|');
-        let newDisabled = '';
-        if (split.indexOf(prop) >= 0) {
-          newDisabled = split.filter(dis => dis !== prop);
-        } else {
-          split.push(prop);
-          newDisabled = split;
-        }
-        return newDisabled?.join('|');
+    document.querySelector('#lang_change').addEventListener('click', e => {
+      const file = e.target.value;
+      if (file) captions.src = file;
+    });
+
+    function toggleDisabledProp(prop, disabled) {
+      const split = disabled.split('|');
+      let newDisabled = '';
+      if (split.indexOf(prop) >= 0) {
+        newDisabled = split.filter(dis => dis !== prop);
+      } else {
+        split.push(prop);
+        newDisabled = split;
       }
-
-      document.querySelector('#toggleTimecode').addEventListener('click', () => {
-        captions.disable = toggleDisabledProp('timecode', captions.disable);
-      });
-      document.querySelector('#toggleChapters').addEventListener('click', () => {
-        captions.disable = toggleDisabledProp('chapters', captions.disable);
-      });
-      document.querySelector('#toggleText').addEventListener('click', () => {
-        captions.disable = toggleDisabledProp('text', captions.disable);
-      });
-      document.querySelector('#toggleSingleLine').addEventListener('click', () => {
-        captions.singleline = (!captions.singleline);
-      });
-
-      captions.addEventListener('all', e => {
-        console.log(e.detail);
-      });
+      return newDisabled?.join('|');
     }
-  run();
+
+    document.querySelector('#toggleTimecode').addEventListener('click', () => {
+      captions.disable = toggleDisabledProp('timecode', captions.disable);
+    });
+    document.querySelector('#toggleChapters').addEventListener('click', () => {
+      captions.disable = toggleDisabledProp('chapters', captions.disable);
+    });
+    document.querySelector('#toggleText').addEventListener('click', () => {
+      captions.disable = toggleDisabledProp('text', captions.disable);
+    });
+    document.querySelector('#toggleSingleLine').addEventListener('click', () => {
+      captions.singleline = (!captions.singleline);
+    });
+
+    captions.addEventListener('all', e => {
+      console.log(e.detail);
+    });
   </script>
 </body>
 </html>

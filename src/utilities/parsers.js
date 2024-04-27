@@ -1,4 +1,3 @@
-/* eslint-disable brace-style */ // I think its more readable for this here.
 import { timecodeToSeconds, isTimecode, secondsToTimecode } from './utilities.js';
 
 // Create internal object from the HTML textTrack interface.

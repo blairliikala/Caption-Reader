@@ -52,20 +52,6 @@ export function secondsToTimecode(seconds = 0) {
   return new Date(seconds * 1000).toISOString().substring(11, 11 + 8);
 }
 
-export function getTheme(userPreference) {
-  if (userPreference === 'light') {
-    return 'light';
-  }
-  if (userPreference === 'dark') {
-    return 'dark';
-  }
-  // system
-  if (matchMedia('(prefers-color-scheme: light)').matches) {
-    return 'light';
-  }
-  return 'dark';
-}
-
 export function getSupportedFileType(file) {
   const split = file.split('.');
   const extension = split[split.length - 1];
