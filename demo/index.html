@@ -9,10 +9,6 @@
   <script type="module" src="/captions-viewer.js"></script>
   <script defer src="/_vercel/insights/script.js"></script>
 
-  <link rel="stylesheet" href="https://cdn.vidstack.io/player/theme.css" />
-  <link rel="stylesheet" href="https://cdn.vidstack.io/player/video.css" />
-  <script src="https://cdn.vidstack.io/player" type="module"></script>
-
   <style>
     .dark {
       --caption-background: rgba(0,0,0,.2);
@@ -57,17 +53,11 @@
       <p>This is a basic demo showing captions with the ability to toggle several component options.</p>
     </section>
 
-    <media-player playsinline id="video_player_demo">
-      <media-provider>
-        <source src="https://blairliikala.com/testvids/captionreader/dune-av1-1080.mp4" data-width="1280" type="video/mp4; codecs=av01.0.05M.08" />
-        <source src="https://blairliikala.com/testvids/captionreader/dune-av1-720.mp4" data-width="720" type="video/mp4; codecs=av01.0.05M.08" />
-        <source src="https://blairliikala.com/testvids/captionreader/dune.mp4" type="video/mp4" />
-        <media-poster class="vds-poster" src="./content/dune/poster.webp" alt="Dune Movie Trailer"></media-poster>
-        <media-audio-layout></media-audio-layout>
-        <media-video-layout></media-video-layout>
-      </media-provider>
-      <!--<media-video-layout thumbnails="https://files.vidstack.io/sprite-fight/thumbnails.vtt"></media-video-layout>-->
-    </media-player>
+    <video playsinline controls id="video_player_demo" poster="./content/dune/poster.webp" style="width: 100%">
+      <source src="https://blairliikala.com/testvids/captionreader/dune-av1-1080.mp4" width="1280" type="video/mp4; codecs=av01.0.05M.08" />
+      <source src="https://blairliikala.com/testvids/captionreader/dune-av1-720.mp4" width="720" type="video/mp4; codecs=av01.0.05M.08" />
+      <source src="https://blairliikala.com/testvids/captionreader/dune.mp4" type="video/mp4" />
+    </video>
 
     <captions-viewer
       src="/demo/content/dune/dune_en.vtt"
@@ -104,17 +94,7 @@
 
   <script type="module">
     const captions = document.querySelector('captions-viewer');
-    const player = document.querySelector('media-player');
-
-    // To setup the caption viewer in Vidstack the video element has to be passed to the caption reader component.
-    /*
-    player.addEventListener('provider-setup', () => {
-      captions.config({
-        player: player.provider.video, // Vidstack's path to the <video> element.
-        refresh: 200,
-      });
-    });
-    */
+    const player = document.querySelector('#video_player_demo');
 
 
     /* ************* Everything below is for the demo ************ */

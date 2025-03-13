@@ -568,65 +568,6 @@
     },
     {
       "kind": "javascript-module",
-      "path": "demo/unpublished/Remove Duplicates alterantives.js",
-      "declarations": [
-        {
-          "kind": "function",
-          "name": "removeDuplicateCuesA",
-          "parameters": [
-            {
-              "name": "cues"
-            }
-          ]
-        },
-        {
-          "kind": "function",
-          "name": "removeDuplicateCuesB",
-          "parameters": [
-            {
-              "name": "cues"
-            }
-          ]
-        },
-        {
-          "kind": "function",
-          "name": "removeDuplicateCuesC",
-          "parameters": [
-            {
-              "name": "cues"
-            }
-          ]
-        }
-      ],
-      "exports": [
-        {
-          "kind": "js",
-          "name": "removeDuplicateCuesA",
-          "declaration": {
-            "name": "removeDuplicateCuesA",
-            "module": "demo/unpublished/Remove Duplicates alterantives.js"
-          }
-        },
-        {
-          "kind": "js",
-          "name": "removeDuplicateCuesB",
-          "declaration": {
-            "name": "removeDuplicateCuesB",
-            "module": "demo/unpublished/Remove Duplicates alterantives.js"
-          }
-        },
-        {
-          "kind": "js",
-          "name": "removeDuplicateCuesC",
-          "declaration": {
-            "name": "removeDuplicateCuesC",
-            "module": "demo/unpublished/Remove Duplicates alterantives.js"
-          }
-        }
-      ]
-    },
-    {
-      "kind": "javascript-module",
       "path": "src/themes/stylesheet.js",
       "declarations": [
         {
@@ -695,6 +636,65 @@
           "declaration": {
             "name": "CustomStyles",
             "module": "src/themes/themes.js"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "demo/unpublished/Remove Duplicates alterantives.js",
+      "declarations": [
+        {
+          "kind": "function",
+          "name": "removeDuplicateCuesA",
+          "parameters": [
+            {
+              "name": "cues"
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "removeDuplicateCuesB",
+          "parameters": [
+            {
+              "name": "cues"
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "removeDuplicateCuesC",
+          "parameters": [
+            {
+              "name": "cues"
+            }
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "removeDuplicateCuesA",
+          "declaration": {
+            "name": "removeDuplicateCuesA",
+            "module": "demo/unpublished/Remove Duplicates alterantives.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "removeDuplicateCuesB",
+          "declaration": {
+            "name": "removeDuplicateCuesB",
+            "module": "demo/unpublished/Remove Duplicates alterantives.js"
+          }
+        },
+        {
+          "kind": "js",
+          "name": "removeDuplicateCuesC",
+          "declaration": {
+            "name": "removeDuplicateCuesC",
+            "module": "demo/unpublished/Remove Duplicates alterantives.js"
           }
         }
       ]
